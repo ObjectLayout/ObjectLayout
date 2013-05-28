@@ -303,12 +303,8 @@ public class LongStructuredArrayTest {
         }
     }
 
-    private static class MockStructureWithFinalField {
+    public static class MockStructureWithFinalField {
         private final int value = 888;
-
-        // Needs a public default constructor (without explicit public declaration,inherited constructor is private):
-        public MockStructureWithFinalField() {
-        }
     }
 
     private static class DefaultMockConstructorGenerator extends ElementConstructorGenerator<MockStructure> {
