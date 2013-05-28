@@ -89,7 +89,7 @@ public final class LongStructuredArray<T> extends AbstractStructuredArray<T> {
      * @param source The array to duplicate.
      * @throws NoSuchMethodException if the element class does not have a copy constructor.
      */
-    public static <T> LongStructuredArray<T> copyInstance(StructuredArray<T> source) throws NoSuchMethodException {
+    public static <T> LongStructuredArray<T> copyInstance(LongStructuredArray<T> source) throws NoSuchMethodException {
         return copyInstance(source, 0, source.getLength());
     }
 
@@ -101,7 +101,7 @@ public final class LongStructuredArray<T> extends AbstractStructuredArray<T> {
      * @param count of elements to copy.
      * @throws NoSuchMethodException if the element class does not have a copy constructor.
      */
-    public static <T> LongStructuredArray<T> copyInstance(StructuredArray<T> source, long sourceOffset, long count) throws NoSuchMethodException {
+    public static <T> LongStructuredArray<T> copyInstance(LongStructuredArray<T> source, long sourceOffset, long count) throws NoSuchMethodException {
         if (source.getLength() < sourceOffset + count) {
             throw new ArrayIndexOutOfBoundsException(
                     "source " + source + " length of " + source.getLength() +
@@ -110,7 +110,7 @@ public final class LongStructuredArray<T> extends AbstractStructuredArray<T> {
         @SuppressWarnings("unchecked")
         final ElementConstructorGenerator<T> copyConstructorGenerator =
                 (ElementConstructorGenerator<T>) new ElementCopyConstructorGenerator<T>(source.getElementClass(), source, sourceOffset);
-        return new LongStructuredArray<T>(source.getLength(), source.getElementClass(), copyConstructorGenerator);
+        return new LongStructuredArray<T>(count, source.getElementClass(), copyConstructorGenerator);
     }
 
     @SuppressWarnings("unchecked")
