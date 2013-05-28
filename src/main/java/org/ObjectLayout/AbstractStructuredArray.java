@@ -50,7 +50,7 @@ abstract class AbstractStructuredArray<T> implements Iterable<T>
             throw new NullPointerException("elementClass cannot be null");
         }
 
-        if (elementClass.getClass() != elementConstructorGenerator.getElementClass()) {
+        if (elementClass != elementConstructorGenerator.getElementClass()) {
             throw new IllegalArgumentException("elementClass and elementConstructorGenerator's generatedClass must match");
         }
 
@@ -127,7 +127,7 @@ abstract class AbstractStructuredArray<T> implements Iterable<T>
 
         final Field[] fields = src.fields;
         if (!allowFinalFieldOverwrite && dst.hasFinalFields) {
-            throw new IllegalStateException("cannot shallow copy onto final fields");
+            throw new IllegalArgumentException("cannot shallow copy onto final fields");
         }
 
         if (dst == src && (dstOffset >= srcOffset && (dstOffset + count) >= srcOffset)) {
