@@ -17,9 +17,6 @@
 
 package org.ObjectLayout;
 
-import java.util.concurrent.atomic.AtomicReference;
-import java.lang.reflect.Constructor;
-
 /**
  * <p>
  * Supports a general element construction API for {@link StructuredArray} by providing specific constructor
@@ -35,9 +32,6 @@ import java.lang.reflect.Constructor;
 abstract public class ElementConstructorGenerator<T> {
 
     private final Class<T> elementClass;
-
-    final AtomicReference<ConstructorAndArgs<T>> cachedConstructorAndArgsObject =
-            new AtomicReference<ConstructorAndArgs<T>>();
 
     /**
      * Used to apply a fixed constructor with a given set of arguments to all element.
@@ -63,9 +57,11 @@ abstract public class ElementConstructorGenerator<T> {
      * useful for avoiding a re-allocation of a new ConstructorAndArgs and an associated args array for
      * getElementConstructorAndArgsForIndex invocation in cases where the returned ConstructorAndArgs is not constant.
      * Recycling is optional, and is not guaranteed to occur. It will only be done if it is helpful.
+     * Overriding this method is optional for subclasses. See example in {@link ElementCopyConstructorGenerator}
      * @param constructorAndArgs the {@link ConstructorAndArgs} instance to recycle
      */
-    abstract public void recycleElementConstructorAndArgs(ConstructorAndArgs constructorAndArgs);
+    public void recycleElementConstructorAndArgs(ConstructorAndArgs constructorAndArgs) {
+    }
 
     /**
      * Get the {@link Class} of the elements to be constructed

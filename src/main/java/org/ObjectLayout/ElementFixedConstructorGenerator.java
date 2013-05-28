@@ -73,15 +73,4 @@ public class ElementFixedConstructorGenerator<T> extends ElementConstructorGener
     public ConstructorAndArgs<T> getElementConstructorAndArgsForIndex(final long index) throws NoSuchMethodException {
         return cachedConstructorAndArgsObject.get();
     }
-
-    /**
-     * Recycle a ConstructorAndArgs instance (place it back in the internal cache if desired). This is [very]
-     * useful for avoiding a re-allocation of a new ConstructorAndArgs and an associated args array for
-     * getElementConstructorAndArgsForIndex invocation in cases where the returned ConstructorAndArgs is not constant.
-     * Recycling is optional, and is not guaranteed to occur. It will only be done if it is helpful.
-     * @param constructorAndArgs the {@link org.ObjectLayout.ConstructorAndArgs} instance to recycle
-     */
-    public void recycleElementConstructorAndArgs(ConstructorAndArgs constructorAndArgs) {
-        // This class has a fixed-at-construction-time constructorAndArgs, so do nothing here.
-    }
 }

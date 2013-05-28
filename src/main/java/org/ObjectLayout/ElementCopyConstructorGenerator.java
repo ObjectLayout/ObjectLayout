@@ -18,6 +18,7 @@
 package org.ObjectLayout;
 
 import java.lang.reflect.Constructor;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Supports the construction of a new array's individual elements using a copy constructor to copy a source
@@ -28,6 +29,9 @@ public class ElementCopyConstructorGenerator<T> extends ElementConstructorGenera
     final Constructor<T> copyConstructor;
     final AbstractStructuredArray<T> source;
     final long sourceOffset;
+
+    final AtomicReference<ConstructorAndArgs<T>> cachedConstructorAndArgsObject =
+            new AtomicReference<ConstructorAndArgs<T>>();
 
     /**
      * Used to apply a copy constructor to a target array's elements, copying corresponding elements from a
@@ -86,8 +90,9 @@ public class ElementCopyConstructorGenerator<T> extends ElementConstructorGenera
     /**
      * Recycle a ConstructorAndArgs instance (place it back in the internal cache if desired). This is [very]
      * useful for avoiding a re-allocation of a new ConstructorAndArgs and an associated args array for
-     * getElementConstructorAndArgsForIndex invocation in cases where the returned ConstructorAndArgs is not constant.
-     * Recycling is optional, and is not guaranteed to occur. It will only be done if it is helpful.
+     * getElementConstructorAndArgsForIndex invocation in cases such as this (where the returned ConstructorAndArgs
+     * is not constant across all indexes).
+     * Recycling is optional, and is not guaranteed to occur.
      * @param constructorAndArgs the {@link ConstructorAndArgs} instance to recycle
      */
     @SuppressWarnings("unchecked")
