@@ -316,11 +316,9 @@ public class LongStructuredArrayTest {
 
         public ConstructorAndArgs<MockStructure> getElementConstructorAndArgsForIndex(long index) throws NoSuchMethodException {
             Object[] args = {index, index * 2};
+            // We could do this much more efficiently with atomic caching of a single allocated ConstructorAndArgs,
+            // as ElementCopyConstructorGenerator does, but no need to put in the effort in a test...
             return new ConstructorAndArgs<MockStructure>(MockStructure.class.getConstructor(argsTypes), args);
         }
-
-        public void recycleElementConstructorAndArgs(ConstructorAndArgs constructorAndArgs) {
-        }
-
     }
 }
