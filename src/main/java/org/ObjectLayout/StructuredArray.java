@@ -112,7 +112,7 @@ public final class StructuredArray<T> extends AbstractStructuredArray<T> {
         @SuppressWarnings("unchecked")
         final ElementConstructorGenerator<T> copyConstructorGenerator =
                 (ElementConstructorGenerator<T>) new ElementCopyConstructorGenerator<T>(source.getElementClass(), source, sourceOffset);
-        return new StructuredArray<T>(source.getLength(), source.getElementClass(), copyConstructorGenerator);
+        return new StructuredArray<T>(count, source.getElementClass(), copyConstructorGenerator);
     }
 
     @SuppressWarnings("unchecked")
