@@ -75,8 +75,7 @@ public final class StructuredArray<T> implements Iterable<T> {
      */
     public static <T> StructuredArray<T> newInstance(final long length,
                                                      final Class<T> elementClass) throws NoSuchMethodException {
-        final ConstructorAndArgsLocator<T> constructorAndArgsLocator =
-                new FixedConstructorAndArgsLocator<T>(elementClass);
+        final ConstructorAndArgsLocator<T> constructorAndArgsLocator = new FixedConstructorAndArgsLocator<T>(elementClass);
 
         return new StructuredArray<T>(length, elementClass, constructorAndArgsLocator);
     }
@@ -95,8 +94,7 @@ public final class StructuredArray<T> implements Iterable<T> {
     public static <T> StructuredArray<T> newInstance(final long length,
                                                      final Class<T> elementClass,
                                                      final ConstructorAndArgsLocator<T> constructorAndArgsLocator)
-        throws NoSuchMethodException {
-
+            throws NoSuchMethodException {
         return new StructuredArray<T>(length, elementClass, constructorAndArgsLocator);
     }
 
@@ -235,7 +233,7 @@ public final class StructuredArray<T> implements Iterable<T> {
 
     private static <E> void populateElements(final E[][] elements,
                                              final ConstructorAndArgsLocator<E> constructorAndArgsLocator)
-        throws NoSuchMethodException {
+            throws NoSuchMethodException {
         try {
             long index = 0;
             for (final E[] partition : elements) {
