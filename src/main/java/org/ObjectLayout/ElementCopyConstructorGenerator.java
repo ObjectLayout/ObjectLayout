@@ -27,7 +27,7 @@ import java.util.concurrent.atomic.AtomicReference;
  */
 public class ElementCopyConstructorGenerator<T> extends ElementConstructorGenerator {
     final Constructor<T> copyConstructor;
-    final AbstractStructuredArray<T> source;
+    final StructuredArray<T> source;
     final long sourceOffset;
 
     final AtomicReference<ConstructorAndArgs<T>> cachedConstructorAndArgsObject =
@@ -42,7 +42,7 @@ public class ElementCopyConstructorGenerator<T> extends ElementConstructorGenera
      * @throws NoSuchMethodException
      */
     public ElementCopyConstructorGenerator(final Class<T> elementClass,
-                                           AbstractStructuredArray<T> source) throws NoSuchMethodException {
+                                           StructuredArray<T> source) throws NoSuchMethodException {
         this(elementClass, source, 0);
     }
 
@@ -56,7 +56,7 @@ public class ElementCopyConstructorGenerator<T> extends ElementConstructorGenera
      * @throws NoSuchMethodException if a copy constructor is not found in element class
      */
     @SuppressWarnings("unchecked")
-    public ElementCopyConstructorGenerator(final Class<T> elementClass, AbstractStructuredArray<T> source,
+    public ElementCopyConstructorGenerator(final Class<T> elementClass, StructuredArray<T> source,
                                            long sourceOffset) throws NoSuchMethodException {
         super(elementClass);
         copyConstructor = elementClass.getConstructor(elementClass);
@@ -75,14 +75,13 @@ public class ElementCopyConstructorGenerator<T> extends ElementConstructorGenera
     @SuppressWarnings("unchecked")
     public ConstructorAndArgs<T> getElementConstructorAndArgsForIndex(final long index) throws NoSuchMethodException {
         // Try (but not too hard) to use a cached, previously allocated constructorAndArgs object:
-        ConstructorAndArgs<T> constructorAndArgs =
-                (ConstructorAndArgs<T>) cachedConstructorAndArgsObject.getAndSet(null);
+        ConstructorAndArgs<T> constructorAndArgs = cachedConstructorAndArgsObject.getAndSet(null);
         if (constructorAndArgs == null) {
             // Someone is using the previously cached instance. A bit of allocation in contended cases won't kill us:
             constructorAndArgs = new ConstructorAndArgs<T>(copyConstructor, new Object[1]);
         }
         // Set the source object for the copy constructor:
-        constructorAndArgs.getConstructorArgs()[0] = source.get(index + sourceOffset);
+        constructorAndArgs.getConstructorArgs()[0] = source.getL(index + sourceOffset);
 
         return constructorAndArgs;
     }
