@@ -1,6 +1,6 @@
 /*
  * Copyright 2013 Gil Tene
- * Copyright 2012, 2013 Real Logic Ltd.
+ * Copyright 2012, 2013 Martin Thompson
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,15 +22,17 @@ import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Supports the construction of a new array's individual elements using a copy constructor to copy a source
- * array's corresponding elements
+ * array's corresponding elements.
+ *
  * @param <T> type of the element occupying each array slot
  */
-public class ElementCopyConstructorGenerator<T> extends ElementConstructorGenerator {
+public class CopyConstructorAndArgsLocator<T> extends ConstructorAndArgsLocator<T> {
+
     final Constructor<T> copyConstructor;
     final StructuredArray<T> source;
     final long sourceOffset;
 
-    final AtomicReference<ConstructorAndArgs<T>> cachedConstructorAndArgsObject =
+    final AtomicReference<ConstructorAndArgs<T>> cachedConstructorAndArgs =
             new AtomicReference<ConstructorAndArgs<T>>();
 
     /**
@@ -41,8 +43,8 @@ public class ElementCopyConstructorGenerator<T> extends ElementConstructorGenera
      * @param source The source StructuredArray to copy from
      * @throws NoSuchMethodException
      */
-    public ElementCopyConstructorGenerator(final Class<T> elementClass,
-                                           StructuredArray<T> source) throws NoSuchMethodException {
+    public CopyConstructorAndArgsLocator(final Class<T> elementClass,
+                                         final StructuredArray<T> source) throws NoSuchMethodException {
         this(elementClass, source, 0);
     }
 
@@ -56,26 +58,29 @@ public class ElementCopyConstructorGenerator<T> extends ElementConstructorGenera
      * @throws NoSuchMethodException if a copy constructor is not found in element class
      */
     @SuppressWarnings("unchecked")
-    public ElementCopyConstructorGenerator(final Class<T> elementClass, StructuredArray<T> source,
-                                           long sourceOffset) throws NoSuchMethodException {
+    public CopyConstructorAndArgsLocator(final Class<T> elementClass,
+                                         final StructuredArray<T> source,
+                                         final long sourceOffset) throws NoSuchMethodException {
         super(elementClass);
+
         copyConstructor = elementClass.getConstructor(elementClass);
         this.source = source;
         this.sourceOffset = sourceOffset;
-        cachedConstructorAndArgsObject.set(new ConstructorAndArgs<T>(copyConstructor, new Object[1]));
+        cachedConstructorAndArgs.set(new ConstructorAndArgs<T>(copyConstructor, new Object[1]));
     }
 
     /**
      * Get a {@link ConstructorAndArgs} instance to be used in constructing a given element index in
-     * a {@link StructuredArray}
+     * a {@link StructuredArray}.                           .
+     *
      * @param index The index of the element to be constructed in the target array
      * @return {@link ConstructorAndArgs} instance to used in element construction
      * @throws NoSuchMethodException if expected constructor is not found in element class
      */
     @SuppressWarnings("unchecked")
-    public ConstructorAndArgs<T> getElementConstructorAndArgsForIndex(final long index) throws NoSuchMethodException {
+    public ConstructorAndArgs<T> getForIndex(final long index) throws NoSuchMethodException {
         // Try (but not too hard) to use a cached, previously allocated constructorAndArgs object:
-        ConstructorAndArgs<T> constructorAndArgs = cachedConstructorAndArgsObject.getAndSet(null);
+        ConstructorAndArgs<T> constructorAndArgs = cachedConstructorAndArgs.getAndSet(null);
         if (constructorAndArgs == null) {
             // Someone is using the previously cached instance. A bit of allocation in contended cases won't kill us:
             constructorAndArgs = new ConstructorAndArgs<T>(copyConstructor, new Object[1]);
@@ -87,20 +92,22 @@ public class ElementCopyConstructorGenerator<T> extends ElementConstructorGenera
     }
 
     /**
-     * Recycle a ConstructorAndArgs instance (place it back in the internal cache if desired). This is [very]
-     * useful for avoiding a re-allocation of a new ConstructorAndArgs and an associated args array for
-     * getElementConstructorAndArgsForIndex invocation in cases such as this (where the returned ConstructorAndArgs
-     * is not constant across all indexes).
+     * Recycle an {@link ConstructorAndArgs} instance (place it back in the internal cache if desired). This is [very]
+     * useful for avoiding a re-allocation of a new {@link ConstructorAndArgs} and an associated args array for
+     * {@link #getForIndex(long)} invocation in cases such as this (where the returned {@link ConstructorAndArgs}
+     * is not constant across indices).
      * Recycling is optional, and is not guaranteed to occur.
+     *
      * @param constructorAndArgs the {@link ConstructorAndArgs} instance to recycle
      */
     @SuppressWarnings("unchecked")
-    public void recycleElementConstructorAndArgs(ConstructorAndArgs constructorAndArgs) {
+    public void recycle(final ConstructorAndArgs constructorAndArgs) {
         // Only recycle constructorAndArgs if constructorAndArgs is compatible with our state:
-        if ((constructorAndArgs.getConstructor() != copyConstructor) ||
-                (constructorAndArgs.getConstructorArgs().length != 1)) {
+        if (constructorAndArgs.getConstructor() != copyConstructor ||
+            constructorAndArgs.getConstructorArgs().length != 1) {
             return;
         }
-        cachedConstructorAndArgsObject.set(constructorAndArgs);
+
+        cachedConstructorAndArgs.lazySet(constructorAndArgs);
     }
 }

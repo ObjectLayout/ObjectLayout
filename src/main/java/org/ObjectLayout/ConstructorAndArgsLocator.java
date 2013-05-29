@@ -1,6 +1,6 @@
 /*
  * Copyright 2013 Gil Tene
- * Copyright 2012, 2013 Real Logic Ltd.
+ * Copyright 2012, 2013 Martin Thompson
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,53 +18,57 @@
 package org.ObjectLayout;
 
 /**
- * <p>
  * Supports a general element construction API for {@link StructuredArray} by providing specific constructor
- * and arguments generator to used for constructing individual array elements during
- * array creation.
- * Subclasses can be created that would provide a fixed constructor (as in {@link ElementFixedConstructorGenerator}),
- * or to provide arguments and constructor values that would take the array index of the constructed element
- * into account. A good example of this latter pattern can be found in the implementation of
- * {@link ElementCopyConstructorGenerator}.
- * </p>
+ * and arguments factory to used for constructing individual array elements during array creation.
+ * <p>
+ * Subclasses can be created that would provide a fixed constructor (as in {@link FixedConstructorAndArgsLocator}),
+ * or to provide arguments and constructor values that would take the array index of the constructed element into account.
+ * An example of this latter pattern can be found in the implementation of a {@link CopyConstructorAndArgsLocator}.
+ *
  * @param <T> type of the element occupying each array slot.
  */
-abstract public class ElementConstructorGenerator<T> {
+public abstract class ConstructorAndArgsLocator<T> {
 
     private final Class<T> elementClass;
 
     /**
      * Used to apply a fixed constructor with a given set of arguments to all element.
+     *
      * @param elementClass The element class
      * @throws NoSuchMethodException if a constructor matching defaultArgTypes
      * @throws IllegalArgumentException if argTypes and args conflict
      */
-    public ElementConstructorGenerator(final Class<T> elementClass) throws NoSuchMethodException {
+    public ConstructorAndArgsLocator(final Class<T> elementClass) throws NoSuchMethodException {
         this.elementClass = elementClass;
     }
 
     /**
      * Get a {@link ConstructorAndArgs} instance to be used in constructing a given element index in
      * a {@link StructuredArray}
+     *
      * @param index The index of the element to be constructed in the target array
      * @return {@link ConstructorAndArgs} instance to used in element construction
      * @throws NoSuchMethodException if expected constructor is not found in element class
      */
-    abstract public ConstructorAndArgs<T> getElementConstructorAndArgsForIndex(final long index) throws NoSuchMethodException;
+    public abstract ConstructorAndArgs<T> getForIndex(final long index) throws NoSuchMethodException;
 
     /**
-     * Recycle a ConstructorAndArgs instance (place it back in the internal cache if desired). This is [very]
-     * useful for avoiding a re-allocation of a new ConstructorAndArgs and an associated args array for
-     * getElementConstructorAndArgsForIndex invocation in cases where the returned ConstructorAndArgs is not constant.
+     * Recycle a {@link ConstructorAndArgs} instance (place it back in the internal cache if desired).
+     * This is [very] useful for avoiding a re-allocation of a new {@link ConstructorAndArgs} and an
+     * associated args array for {@link #getForIndex(long)} invocation in cases where
+     * the returned {@link ConstructorAndArgs} is not constant.
+     * <p>
      * Recycling is optional, and is not guaranteed to occur. It will only be done if it is helpful.
-     * Overriding this method is optional for subclasses. See example in {@link ElementCopyConstructorGenerator}
+     * Overriding this method is optional for subclasses. See example in {@link CopyConstructorAndArgsLocator}
+     *
      * @param constructorAndArgs the {@link ConstructorAndArgs} instance to recycle
      */
-    public void recycleElementConstructorAndArgs(ConstructorAndArgs constructorAndArgs) {
+    public void recycle(final ConstructorAndArgs constructorAndArgs) {
     }
 
     /**
      * Get the {@link Class} of the elements to be constructed
+     *
      * @return {@link Class} of elements to be constructed
      */
     public Class<T> getElementClass() {

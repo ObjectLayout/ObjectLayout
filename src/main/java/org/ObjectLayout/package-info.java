@@ -18,7 +18,6 @@
  * When a JVM optimises StructuredArray in such a way, array access benefits from both direct (as opposed
  * to de-referenced) dead-reckoning index access, as well as from fixed memory strides during streaming
  * operations.
- *
  */
 
 package org.ObjectLayout;
