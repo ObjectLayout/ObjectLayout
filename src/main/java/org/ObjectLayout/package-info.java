@@ -11,9 +11,9 @@
  * The ObjectLayout package provides some core classes designed with optimised memory layout in mind.
  * The package classes provide full functionality on all JVMs (of Java SE 5 or above) at reasonable layouts
  * and execution speeds. However, the classes are carefully designed with semantics that would allow an
- * optimised JVM to implement them with improved memory layout not directly expressable in Java.
+ * optimised JVM to implement them with improved memory layout not directly expressible in Java.
  * <p>
- * The StructuredArray class is a good exmple of this design pattern. StucturedArray is carefully designed
+ * The {@link StructuredArray} class is a good example of this design pattern. StructuredArray is carefully designed
  * to allow a JVM to store it in memory with a layout similar to an array of structs in C-like languages.
  * When a JVM optimises StructuredArray in such a way, array access benefits from both direct (as opposed
  * to de-referenced) dead-reckoning index access, as well as from fixed memory strides during streaming
