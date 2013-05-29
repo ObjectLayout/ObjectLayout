@@ -26,7 +26,7 @@ import static java.lang.reflect.Modifier.isStatic;
 
 /**
  * <p>
- *     An immutable array of (potentially) mutable objects.
+ *     An array of (potentially) mutable but non-replaceable objects.
  * <p>
  *     A structured array contains array element objects of a fixed (at creation time, per array instance) class,
  *     and can support elements of any class that provides public constructors. The elements in a StructuredArray
