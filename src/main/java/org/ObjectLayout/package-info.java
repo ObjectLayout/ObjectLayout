@@ -6,7 +6,7 @@
  */
 
 /**
- * <h3>A ObjectLayout: An optimised memory layout package.</h3>
+ * <h3>ObjectLayout: An optimised memory layout package.</h3>
  * <p>
  * The ObjectLayout package provides some core classes designed with optimised memory layout in mind.
  * The package classes provide full functionality on all JVMs (of Java SE 5 or above) at reasonable layouts
