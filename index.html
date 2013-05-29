@@ -38,12 +38,16 @@
             The ObjectLayout package provides some core classes designed with optimised memory layout in mind.
         </p>
         <p>
-            This package is motivated by the wish to create ways to express optimised memory layout and
-            related execution semantics that are not currently directly expressible in Java, and to expose these
-            semantics to Java applications without requiring any language changes. All ObjectLayout package classes
-            are expected to provide and support their full functionality on all JVMs (of Java SE 5 or above) at
-            reasonable layouts and execution speeds. However, the classes are designed with semantics that would
-            allow an optimised JVM to implement them with improved memory and related execution optimizations.
+            This package expresses specifically useful memory layout and related execution semantics that can
+            be leveraged by JVMs to provide optimised behavior related to memory layout that is not (currently)
+            directly expressible in the Java language. The ObjectLayout package exposes these semantics to Java
+            applications without requiring any language changes.
+        </p>
+        <p>
+            All ObjectLayout package classes are expected to provide and support their full functionality on
+            all JVMs (of Java SE 5 or above) at reasonable layouts and execution speeds. However, the classes are
+            specifically designed with semantics that would allow an optimised JVM to implement them with improved
+            memory layouts and related execution optimizations.
         </p>
         <p>
             The StructuredArray class is a good example of this design pattern. StructuredArray is carefully
