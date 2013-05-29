@@ -1,6 +1,6 @@
 <!doctype html>
 <html>
-  <head>
+<head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="chrome=1">
     <title>ObjectLayout by giltene and mjpt777</title>
@@ -11,10 +11,10 @@
     <!--[if lt IE 9]>
     <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
     <![endif]-->
-  </head>
-  <body>
-    <div class="wrapper">
-      <header>
+</head>
+<body>
+<div class="wrapper">
+    <header>
         <h1>ObjectLayout</h1>
         <p>An optimised memory layout package</p>
 
@@ -23,44 +23,55 @@
 
         <p class="view"><a href="http://ObjectLayout.github.com/ObjectLayout/JavaDoc">
             View the Project JavaDoc <small>ObjectLayout.github.com/ObjectLayout/JavaDoc</small></a></p>
-        
+
         <ul>
-          <li><a href="https://github.com/ObjectLayout/ObjectLayout/zipball/master">Download <strong>ZIP File</strong></a></li>
-          <li><a href="https://github.com/ObjectLayout/ObjectLayout/tarball/master">Download <strong>TAR Ball</strong></a></li>
-          <li><a href="https://github.com/ObjectLayout/ObjectLayout">View On <strong>GitHub</strong></a></li>
+            <li><a href="https://github.com/ObjectLayout/ObjectLayout/zipball/master">Download <strong>ZIP File</strong></a></li>
+            <li><a href="https://github.com/ObjectLayout/ObjectLayout/tarball/master">Download <strong>TAR Ball</strong></a></li>
+            <li><a href="https://github.com/ObjectLayout/ObjectLayout">View On <strong>GitHub</strong></a></li>
         </ul>
 
-      </header>
-      <section>
-        <h3>ObjectLayout: An optimised memeory layout package.</h3>
+    </header>
+    <section>
+        <h3>ObjectLayout: An optimised memory layout package.</h3>
 
-<p>
-    The ObjectLayout package provides some core classes designed with optimised memory layout in mind.
-    the package classes provide full functionality on all JVMs (of Java SE 5 or above) at reasonable layouts
-    and execution speeds. However, the classes are carefully designed with semantics that would allow an
-    optimised JVM to implement them with improved memory layout not directly expressable in Java.
-<p>
-    The StructuredArray class is a good exmple of this design pattern. StucturedArray is carefully designed
-    to allow a JVM to store it in memory with a layout similar to an array of structs in C-like languages.
-    When a JVM optimises StructuredArray in such a way, array access benefits from both direct (as opposed to
-    de-referenced) dead-reckoning index access, as well as from fixed memory strides during streaming operations.
+        <p>
+            The ObjectLayout package provides some core classes designed with optimised memory layout in mind.
+        </p>
+        <p>
+            This package is motivated by the wish to create ways to express optimised memory layout and
+            related execution semantics that are not currently directly expressible in Java, and to expose these
+            semantics to Java applications without requiring any language changes. All ObjectLayout package classes
+            are expected to provide and support their full functionality on all JVMs (of Java SE 5 or above) at
+            reasonable layouts and execution speeds. However, the classes are designed with semantics that would
+            allow an optimised JVM to implement them with improved memory and related execution optimizations.
+        </p>
+        <p>
+            The StructuredArray class is a good example of this design pattern. StructuredArray is carefully
+            designed to allow a JVM to store it in memory with a layout similar to an array of structs
+            in C-like languages, and to internally use intrinsic representations for the related StructuredArray
+            methods, exposing them to common optimizations. When a JVM optimises StructuredArray in such a way,
+            array access benefits from both direct (as opposed to de-referenced) dead-reckoning index access, as
+            well as from fixed memory strides during streaming operations.
+        </p>
 
-<h3>Authors, Contributors, and License</h3>
+        <h3>Authors, Contributors, and License</h3>
 
-<p>
-ObjectLayout was authored by Gil Tene (<a href="https://github.com/giltene" class="user-mention">@giltene</a>) and Martin Thompson (<a href="https://github.com/mjpt777" class="user-mention">@mjpt777</a>) and
-    placed in the public domain, as explained at
-<a href="http://creativecommons.org/publicdomain/zero/1.0/">http://creativecommons.org/publicdomain/zero/1.0/</a>
-</p>
+        <p>
+            ObjectLayout was authored by Gil Tene
+            (<a href="https://github.com/giltene" class="user-mention">@giltene</a>)
+            and Martin Thompson (<a href="https://github.com/mjpt777" class="user-mention">@mjpt777</a>)
+            and placed in the public domain, as explained at
+            <a href="http://creativecommons.org/publicdomain/zero/1.0/">http://creativecommons.org/publicdomain/zero/1.0/</a>
+        </p>
 
-<h3>Support or Contact</h3>
-<p>Don't call us, We won't call you.</p>
+        <h3>Support or Contact</h3>
+        <p>Don't call us, We won't call you.</p>
 
-      </section>
+    </section>
 
-      </footer>
-    </div>
-    <script src="javascripts/scale.fix.js"></script>
-    
-  </body>
+    </footer>
+</div>
+<script src="javascripts/scale.fix.js"></script>
+
+</body>
 </html>
