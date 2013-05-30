@@ -62,8 +62,8 @@ public final class StructuredArray<T> implements Iterable<T> {
     private final Class<T> elementClass;
 
     private final long length;
-    private final T[][] elements; // Used to store elements at indexes above Integer.MAX_VALUE
-    private final T[] elements0;
+    private final T[][] longAddressableElements; // Used to store elements at indexes above Integer.MAX_VALUE
+    private final T[] intAddressableElements;
 
     /**
      * Create an array of <code>length</code> elements, each containing an element object of
@@ -188,25 +188,23 @@ public final class StructuredArray<T> implements Iterable<T> {
         // The first partition (accessed directly via elements0) holds up to the full range of
         // int-indexable elements:
         int intLength = (int) Math.min(length, Integer.MAX_VALUE);
-        elements0 = (T[])new Object[intLength];
+        intAddressableElements = (T[])new Object[intLength];
 
         // Subsequent partitions hold long-indexable-only elements:
         long extraLength = length - intLength;
         final int numFullPartitions = (int)(extraLength >>> MAX_EXTRA_PARTITION_SIZE_POW2_EXPONENT);
         final int lastPartitionSize = (int)extraLength & MASK;
 
-        elements = (T[][])new Object[numFullPartitions + 2][];
-        // int-indexable partition:
-        elements[0] = elements0;
+        longAddressableElements = (T[][])new Object[numFullPartitions + 1][];
         // full long-indexable partitions:
-        for (int i = 1; i <= numFullPartitions; i++) {
-            elements[i] = (T[])new Object[MAX_EXTRA_PARTITION_SIZE];
+        for (int i = 0; i < numFullPartitions; i++) {
+            longAddressableElements[i] = (T[])new Object[MAX_EXTRA_PARTITION_SIZE];
         }
         // Last partition with leftover long-indexable size:
-        elements[numFullPartitions + 1] = (T[])new Object[lastPartitionSize];
+        longAddressableElements[numFullPartitions] = (T[])new Object[lastPartitionSize];
 
 
-        populateElements(elements, constructorAndArgsLocator);
+        populateElements(constructorAndArgsLocator);
     }
 
     /**
@@ -229,10 +227,10 @@ public final class StructuredArray<T> implements Iterable<T> {
             return get((int)index);
         // Calculate index into extra partitions:
         long longIndex = (index - Integer.MAX_VALUE);
-        final int partitionIndex = (int)(longIndex >>> MAX_EXTRA_PARTITION_SIZE_POW2_EXPONENT) + 1;
+        final int partitionIndex = (int)(longIndex >>> MAX_EXTRA_PARTITION_SIZE_POW2_EXPONENT);
         final int partitionOffset = (int)longIndex & MASK;
 
-        return elements[partitionIndex][partitionOffset];
+        return longAddressableElements[partitionIndex][partitionOffset];
     }
 
     /**
@@ -242,17 +240,21 @@ public final class StructuredArray<T> implements Iterable<T> {
      * @return a reference to the indexed element.
      */
     public T get(final int index) {
-        return elements0[index];
+        return intAddressableElements[index];
     }
 
-    private static <E> void populateElements(final E[][] elements,
-                                             final ConstructorAndArgsLocator<E> constructorAndArgsLocator)
-            throws NoSuchMethodException {
+
+    private void populateElements(final ConstructorAndArgsLocator<T> constructorAndArgsLocator) throws NoSuchMethodException {
         try {
             long index = 0;
-            for (final E[] partition : elements) {
+            for (int i = 0; i < intAddressableElements.length; i++, index++) {
+                final ConstructorAndArgs<T> constructorAndArgs = constructorAndArgsLocator.getForIndex(index);
+                intAddressableElements[i] = constructorAndArgs.getConstructor().newInstance(constructorAndArgs.getConstructorArgs());
+                constructorAndArgsLocator.recycle(constructorAndArgs);
+            }
+            for (final T[] partition : longAddressableElements) {
                 for (int i = 0, size = partition.length; i < size; i++, index++) {
-                    final ConstructorAndArgs<E> constructorAndArgs = constructorAndArgsLocator.getForIndex(index);
+                    final ConstructorAndArgs<T> constructorAndArgs = constructorAndArgsLocator.getForIndex(index);
                     partition[i] = constructorAndArgs.getConstructor().newInstance(constructorAndArgs.getConstructorArgs());
                     constructorAndArgsLocator.recycle(constructorAndArgs);
                 }
