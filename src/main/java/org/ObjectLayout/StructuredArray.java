@@ -20,6 +20,7 @@ import java.lang.reflect.Field;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
+import static java.lang.reflect.Modifier.INTERFACE;
 import static java.lang.reflect.Modifier.isFinal;
 import static java.lang.reflect.Modifier.isStatic;
 
@@ -62,7 +63,7 @@ public final class StructuredArray<T> implements Iterable<T> {
     private final Class<T> elementClass;
 
     private final long length;
-    private final T[][] elements;
+    private final T[][] elements; // Used to store elements at indexes above Integer.MAX_VALUE
     private final T[] elements0;
 
     /**
@@ -185,16 +186,23 @@ public final class StructuredArray<T> implements Iterable<T> {
         }
         this.length = length;
 
-        final int numFullPartitions = (int)(length >>> MAX_PARTITION_SIZE_POW2_EXPONENT);
-        final int lastPartitionSize = (int)length & MASK;
+        int intLength = (int) Math.min(length, Integer.MAX_VALUE);
+        elements0 = (T[])new Object[intLength];
 
-        elements = (T[][])new Object[numFullPartitions + 1][];
-        for (int i = 0; i < numFullPartitions; i++) {
+        long extraLength = Math.max(0, (length - Integer.MAX_VALUE));
+        final int numFullPartitions = (int)(extraLength >>> MAX_PARTITION_SIZE_POW2_EXPONENT);
+        final int lastPartitionSize = (int)extraLength & MASK;
+
+        elements = (T[][])new Object[numFullPartitions + 2][];
+        // int-indexable partiotion:
+        elements[0] = elements0;
+        // full long-indexable partitions:
+        for (int i = 1; i <= numFullPartitions; i++) {
             elements[i] = (T[])new Object[MAX_PARTITION_SIZE];
         }
-        elements[numFullPartitions] = (T[])new Object[lastPartitionSize];
+        // Last partition with leftover long-indexable size:
+        elements[numFullPartitions + 1] = (T[])new Object[lastPartitionSize];
 
-        elements0 = elements[0];
 
         populateElements(elements, constructorAndArgsLocator);
     }
@@ -215,8 +223,11 @@ public final class StructuredArray<T> implements Iterable<T> {
      * @return a reference to the indexed element.
      */
     public T getL(final long index) {
-        final int partitionIndex = (int)(index >>> MAX_PARTITION_SIZE_POW2_EXPONENT);
-        final int partitionOffset = (int)index & MASK;
+        if (index < Integer.MAX_VALUE)
+            return get((int)index);
+        long longIndex = (index - Integer.MAX_VALUE);
+        final int partitionIndex = (int)(longIndex >>> MAX_PARTITION_SIZE_POW2_EXPONENT) + 1;
+        final int partitionOffset = (int)longIndex & MASK;
 
         return elements[partitionIndex][partitionOffset];
     }
@@ -312,7 +323,7 @@ public final class StructuredArray<T> implements Iterable<T> {
             throw new IllegalArgumentException("Cannot shallow copy onto final fields");
         }
 
-        if (((srcOffset + count) < MAX_PARTITION_SIZE) && ((dstOffset + count) < MAX_PARTITION_SIZE)) {
+        if (((srcOffset + count) < Integer.MAX_VALUE) && ((dstOffset + count) < Integer.MAX_VALUE)) {
             // use the (faster) int based get
             if (dst == src && (dstOffset >= srcOffset && (dstOffset + count) >= srcOffset)) {
                 for (int srcIdx = (int)(srcOffset + count), dstIdx = (int)(dstOffset + count), limit = (int)(srcOffset - 1);
@@ -369,11 +380,7 @@ public final class StructuredArray<T> implements Iterable<T> {
                 throw new NoSuchElementException();
             }
 
-            if (cursor > MAX_PARTITION_SIZE) {
-                return getL(cursor++);
-            }
-
-            return get((int)(cursor++));
+            return getL(cursor++);
         }
 
         /**
