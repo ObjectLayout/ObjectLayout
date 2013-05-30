@@ -185,22 +185,21 @@ public final class StructuredArray<T> implements Iterable<T> {
         }
         this.length = length;
 
-        // The first partition (accessed directly via elements0) holds up to the full range of
-        // int-indexable elements:
+        // int-addressable elements:
         int intLength = (int) Math.min(length, Integer.MAX_VALUE);
         intAddressableElements = (T[])new Object[intLength];
 
-        // Subsequent partitions hold long-indexable-only elements:
+        // Subsequent partitions hold long-addressable-only elements:
         long extraLength = length - intLength;
         final int numFullPartitions = (int)(extraLength >>> MAX_EXTRA_PARTITION_SIZE_POW2_EXPONENT);
         final int lastPartitionSize = (int)extraLength & MASK;
 
         longAddressableElements = (T[][])new Object[numFullPartitions + 1][];
-        // full long-indexable partitions:
+        // full long-addressable-only partitions:
         for (int i = 0; i < numFullPartitions; i++) {
             longAddressableElements[i] = (T[])new Object[MAX_EXTRA_PARTITION_SIZE];
         }
-        // Last partition with leftover long-indexable size:
+        // Last partition with leftover long-addressable-only size:
         longAddressableElements[numFullPartitions] = (T[])new Object[lastPartitionSize];
 
 
@@ -225,7 +224,7 @@ public final class StructuredArray<T> implements Iterable<T> {
     public T getL(final long index) {
         if (index < Integer.MAX_VALUE)
             return get((int)index);
-        // Calculate index into extra partitions:
+        // Calculate index into long-addressable-only partitions:
         long longIndex = (index - Integer.MAX_VALUE);
         final int partitionIndex = (int)(longIndex >>> MAX_EXTRA_PARTITION_SIZE_POW2_EXPONENT);
         final int partitionOffset = (int)longIndex & MASK;
