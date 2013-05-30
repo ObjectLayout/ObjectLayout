@@ -20,7 +20,6 @@ import java.lang.reflect.Field;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
-import static java.lang.reflect.Modifier.INTERFACE;
 import static java.lang.reflect.Modifier.isFinal;
 import static java.lang.reflect.Modifier.isStatic;
 
@@ -54,9 +53,9 @@ import static java.lang.reflect.Modifier.isStatic;
  */
 public final class StructuredArray<T> implements Iterable<T> {
 
-    private static final int MAX_PARTITION_SIZE_POW2_EXPONENT = 30;
-    private static final int MAX_PARTITION_SIZE = 1 << MAX_PARTITION_SIZE_POW2_EXPONENT;
-    private static final int MASK = MAX_PARTITION_SIZE  - 1;
+    private static final int MAX_EXTRA_PARTITION_SIZE_POW2_EXPONENT = 30;
+    private static final int MAX_EXTRA_PARTITION_SIZE = 1 << MAX_EXTRA_PARTITION_SIZE_POW2_EXPONENT;
+    private static final int MASK = MAX_EXTRA_PARTITION_SIZE - 1;
 
     private final Field[] fields;
     private final boolean hasFinalFields;
@@ -186,19 +185,22 @@ public final class StructuredArray<T> implements Iterable<T> {
         }
         this.length = length;
 
+        // The first partition (accessed directly via elements0) holds up to the full range of
+        // int-indexable elements:
         int intLength = (int) Math.min(length, Integer.MAX_VALUE);
         elements0 = (T[])new Object[intLength];
 
-        long extraLength = Math.max(0, (length - Integer.MAX_VALUE));
-        final int numFullPartitions = (int)(extraLength >>> MAX_PARTITION_SIZE_POW2_EXPONENT);
+        // Subsequent partitions hold long-indexable-only elements:
+        long extraLength = length - intLength;
+        final int numFullPartitions = (int)(extraLength >>> MAX_EXTRA_PARTITION_SIZE_POW2_EXPONENT);
         final int lastPartitionSize = (int)extraLength & MASK;
 
         elements = (T[][])new Object[numFullPartitions + 2][];
-        // int-indexable partiotion:
+        // int-indexable partition:
         elements[0] = elements0;
         // full long-indexable partitions:
         for (int i = 1; i <= numFullPartitions; i++) {
-            elements[i] = (T[])new Object[MAX_PARTITION_SIZE];
+            elements[i] = (T[])new Object[MAX_EXTRA_PARTITION_SIZE];
         }
         // Last partition with leftover long-indexable size:
         elements[numFullPartitions + 1] = (T[])new Object[lastPartitionSize];
@@ -225,8 +227,9 @@ public final class StructuredArray<T> implements Iterable<T> {
     public T getL(final long index) {
         if (index < Integer.MAX_VALUE)
             return get((int)index);
+        // Calculate index into extra partitions:
         long longIndex = (index - Integer.MAX_VALUE);
-        final int partitionIndex = (int)(longIndex >>> MAX_PARTITION_SIZE_POW2_EXPONENT) + 1;
+        final int partitionIndex = (int)(longIndex >>> MAX_EXTRA_PARTITION_SIZE_POW2_EXPONENT) + 1;
         final int partitionOffset = (int)longIndex & MASK;
 
         return elements[partitionIndex][partitionOffset];
