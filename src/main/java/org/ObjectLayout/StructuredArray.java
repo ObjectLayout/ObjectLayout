@@ -16,6 +16,7 @@
  */
 package org.ObjectLayout;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
@@ -24,7 +25,6 @@ import static java.lang.reflect.Modifier.isFinal;
 import static java.lang.reflect.Modifier.isStatic;
 
 /**
- * <p>
  *     An array of (potentially) mutable but non-replaceable objects.
  * <p>
  *     A structured array contains array element objects of a fixed (at creation time, per array instance) class,
@@ -186,11 +186,11 @@ public final class StructuredArray<T> implements Iterable<T> {
         this.length = length;
 
         // int-addressable elements:
-        int intLength = (int) Math.min(length, Integer.MAX_VALUE);
+        final int intLength = (int) Math.min(length, Integer.MAX_VALUE);
         intAddressableElements = (T[])new Object[intLength];
 
         // Subsequent partitions hold long-addressable-only elements:
-        long extraLength = length - intLength;
+        final long extraLength = length - intLength;
         final int numFullPartitions = (int)(extraLength >>> MAX_EXTRA_PARTITION_SIZE_POW2_EXPONENT);
         final int lastPartitionSize = (int)extraLength & MASK;
 
@@ -201,7 +201,6 @@ public final class StructuredArray<T> implements Iterable<T> {
         }
         // Last partition with leftover long-addressable-only size:
         longAddressableElements[numFullPartitions] = (T[])new Object[lastPartitionSize];
-
 
         populateElements(constructorAndArgsLocator);
     }
@@ -222,10 +221,12 @@ public final class StructuredArray<T> implements Iterable<T> {
      * @return a reference to the indexed element.
      */
     public T getL(final long index) {
-        if (index < Integer.MAX_VALUE)
+        if (index < Integer.MAX_VALUE) {
             return get((int)index);
+        }
+
         // Calculate index into long-addressable-only partitions:
-        long longIndex = (index - Integer.MAX_VALUE);
+        final long longIndex = (index - Integer.MAX_VALUE);
         final int partitionIndex = (int)(longIndex >>> MAX_EXTRA_PARTITION_SIZE_POW2_EXPONENT);
         final int partitionOffset = (int)longIndex & MASK;
 
@@ -242,19 +243,22 @@ public final class StructuredArray<T> implements Iterable<T> {
         return intAddressableElements[index];
     }
 
-
     private void populateElements(final ConstructorAndArgsLocator<T> constructorAndArgsLocator) throws NoSuchMethodException {
         try {
             long index = 0;
+
             for (int i = 0; i < intAddressableElements.length; i++, index++) {
                 final ConstructorAndArgs<T> constructorAndArgs = constructorAndArgsLocator.getForIndex(index);
-                intAddressableElements[i] = constructorAndArgs.getConstructor().newInstance(constructorAndArgs.getConstructorArgs());
+                final Constructor<T> constructor = constructorAndArgs.getConstructor();
+                intAddressableElements[i] = constructor.newInstance(constructorAndArgs.getConstructorArgs());
                 constructorAndArgsLocator.recycle(constructorAndArgs);
             }
+
             for (final T[] partition : longAddressableElements) {
                 for (int i = 0, size = partition.length; i < size; i++, index++) {
                     final ConstructorAndArgs<T> constructorAndArgs = constructorAndArgsLocator.getForIndex(index);
-                    partition[i] = constructorAndArgs.getConstructor().newInstance(constructorAndArgs.getConstructorArgs());
+                    final Constructor<T> constructor = constructorAndArgs.getConstructor();
+                    partition[i] = constructor.newInstance(constructorAndArgs.getConstructorArgs());
                     constructorAndArgsLocator.recycle(constructorAndArgs);
                 }
             }
