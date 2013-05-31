@@ -50,7 +50,10 @@
             memory layouts and related execution optimizations.
         </p>
         <p>
-            The StructuredArray class is a good example of this design pattern. StructuredArray is carefully
+            The
+            <a href="http://objectlayout.github.io/ObjectLayout/JavaDoc/index.html?org/ObjectLayout/StructuredArray.html"
+               class="user-mention">StructuredArray</a>
+            class is a good example of this design pattern. StructuredArray is carefully
             designed to allow a JVM to store it in memory with a layout similar to an array of structs
             in C-like languages, and to internally use intrinsic representations for the related StructuredArray
             methods, exposing them to common optimizations. When a JVM optimises StructuredArray in such a way,
