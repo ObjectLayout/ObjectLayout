@@ -154,7 +154,7 @@ public final class StructuredArray<T> implements Iterable<T> {
         }
 
         final ConstructorAndArgsLocator<T> constructorAndArgsLocator =
-                 new CopyConstructorAndArgsLocator<T>(source.getElementClass(), source, sourceOffset);
+                 new CopyConstructorAndArgsLocator<T>(source.getElementClass(), source, sourceOffset, false);
 
         return new StructuredArray<T>(count, source.getElementClass(), constructorAndArgsLocator);
     }

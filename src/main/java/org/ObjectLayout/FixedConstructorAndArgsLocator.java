@@ -31,8 +31,7 @@ public class FixedConstructorAndArgsLocator<T> extends ConstructorAndArgsLocator
     private static final Class[] EMPTY_ARG_TYPES = new Class[0];
     private static final Object[] EMPTY_ARGS = new Object[0];
 
-    final AtomicReference<ConstructorAndArgs<T>> cachedConstructorAndArgs =
-            new AtomicReference<ConstructorAndArgs<T>>();
+    final ConstructorAndArgs<T> cachedConstructorAndArgs;
 
     /**
      * Used to apply default constructor to all elements.
@@ -63,7 +62,7 @@ public class FixedConstructorAndArgsLocator<T> extends ConstructorAndArgsLocator
         }
 
         final Constructor<T> constructor = elementClass.getConstructor(argTypes);
-        cachedConstructorAndArgs.set(new ConstructorAndArgs<T>(constructor, args));
+        cachedConstructorAndArgs = new ConstructorAndArgs<T>(constructor, args);
     }
 
     /**
@@ -75,6 +74,6 @@ public class FixedConstructorAndArgsLocator<T> extends ConstructorAndArgsLocator
      * @throws NoSuchMethodException if expected constructor is not found in element class
      */
     public ConstructorAndArgs<T> getForIndex(final long index) throws NoSuchMethodException {
-        return cachedConstructorAndArgs.get();
+        return cachedConstructorAndArgs;
     }
 }
