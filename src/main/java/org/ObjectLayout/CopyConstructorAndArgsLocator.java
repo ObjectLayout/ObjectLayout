@@ -32,8 +32,9 @@ public class CopyConstructorAndArgsLocator<T> extends ConstructorAndArgsLocator<
     final StructuredArray<T> source;
     final long sourceOffset;
     final boolean keepInternalCachingThreadSafe;
-    final ConstructorAndArgs<T> nonThreadSafeCachedConstructorAndArgs;
-    final AtomicReference<ConstructorAndArgs<T>> cachedConstructorAndArgs;
+    ConstructorAndArgs<T> nonThreadSafeCachedConstructorAndArgs = null;
+    final AtomicReference<ConstructorAndArgs<T>> cachedConstructorAndArgs =
+            new AtomicReference<ConstructorAndArgs<T>>();
 
     /**
      * Used to apply a copy constructor to a target array's elements, copying corresponding elements from a
@@ -83,13 +84,6 @@ public class CopyConstructorAndArgsLocator<T> extends ConstructorAndArgsLocator<
         this.source = source;
         this.sourceOffset = sourceOffset;
         this.keepInternalCachingThreadSafe = keepInternalCachingThreadSafe;
-
-        // Choose whether to create a faster, non-thread-safe cache version, or the slower, atomic based
-        // cached version that will remain safe even when multiple threads reuse this instance:
-        nonThreadSafeCachedConstructorAndArgs =
-                keepInternalCachingThreadSafe ? null : new ConstructorAndArgs<T>(copyConstructor, new Object[1]);
-        cachedConstructorAndArgs =
-                keepInternalCachingThreadSafe ? new AtomicReference<ConstructorAndArgs<T>>() : null;
     }
 
     /**
@@ -102,12 +96,18 @@ public class CopyConstructorAndArgsLocator<T> extends ConstructorAndArgsLocator<
      */
     @SuppressWarnings("unchecked")
     public ConstructorAndArgs<T> getForIndex(final long index) throws NoSuchMethodException {
+        ConstructorAndArgs<T> constructorAndArgs;
+
         // Try (but not too hard) to use a cached, previously allocated constructorAndArgs object:
-        ConstructorAndArgs<T> constructorAndArgs = keepInternalCachingThreadSafe ?
-                cachedConstructorAndArgs.getAndSet(null) : nonThreadSafeCachedConstructorAndArgs;
+        if (keepInternalCachingThreadSafe) {
+            constructorAndArgs = cachedConstructorAndArgs.getAndSet(null);
+        } else {
+            constructorAndArgs = nonThreadSafeCachedConstructorAndArgs;
+            nonThreadSafeCachedConstructorAndArgs = null;
+        }
 
         if (constructorAndArgs == null) {
-            // Someone is using the previously cached instance. A bit of allocation in contended cases won't kill us:
+            // We have nothing cached that's not being used. A bit of allocation in contended cases won't kill us:
             constructorAndArgs = new ConstructorAndArgs<T>(copyConstructor, new Object[1]);
         }
 
@@ -128,16 +128,16 @@ public class CopyConstructorAndArgsLocator<T> extends ConstructorAndArgsLocator<
      */
     @SuppressWarnings("unchecked")
     public void recycle(final ConstructorAndArgs constructorAndArgs) {
-        // No need to recycle in the non-thread-safe caching case:
-        if (!keepInternalCachingThreadSafe)
-            return;
-
         // Only recycle constructorAndArgs if constructorAndArgs is compatible with our state:
         if (constructorAndArgs.getConstructor() != copyConstructor ||
             constructorAndArgs.getConstructorArgs().length != 1) {
             return;
         }
 
-        cachedConstructorAndArgs.lazySet(constructorAndArgs);
+        if (keepInternalCachingThreadSafe) {
+            cachedConstructorAndArgs.lazySet(constructorAndArgs);
+        } else {
+            nonThreadSafeCachedConstructorAndArgs = constructorAndArgs;
+        }
     }
 }
