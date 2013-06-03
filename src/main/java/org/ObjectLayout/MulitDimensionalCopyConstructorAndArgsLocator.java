@@ -99,16 +99,11 @@ public class MulitDimensionalCopyConstructorAndArgsLocator<T> extends Constructo
      * Get a {@link org.ObjectLayout.ConstructorAndArgs} instance to be used in constructing a given element index in
      * a {@link org.ObjectLayout.StructuredArray}.                           .
      *
-     * @param index The index of the element to be constructed in the target array
+     * @param indexes The indexes of the element to be constructed in the target array
      * @return {@link org.ObjectLayout.ConstructorAndArgs} instance to used in element construction
      * @throws NoSuchMethodException if expected constructor is not found in element class
      */
     @SuppressWarnings("unchecked")
-    public ConstructorAndArgs<T> getForIndex(final long index) throws NoSuchMethodException {
-        throw new IllegalArgumentException("getForIndex() not supported");
-    }
-
-
     public ConstructorAndArgs<T> getForIndexes(long[] indexes) throws NoSuchMethodException {
         ConstructorAndArgs<T> constructorAndArgs;
         long[] targetIndexes;
