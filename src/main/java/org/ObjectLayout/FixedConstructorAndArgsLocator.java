@@ -66,14 +66,28 @@ public class FixedConstructorAndArgsLocator<T> extends ConstructorAndArgsLocator
     }
 
     /**
+     * Used to apply a fixed constructor with a given set of arguments to all elements.
+     *
+     * @param constructor The element constructor
+     * @param args The arguments to be passed to the constructor for all elements
+     * @throws NoSuchMethodException if a constructor matching argTypes
+     * @throws IllegalArgumentException if argTypes and args conflict
+     */
+    public FixedConstructorAndArgsLocator(final Constructor<T> constructor,
+                                          final Object[] args) throws NoSuchMethodException {
+        super(constructor.getDeclaringClass());
+        cachedConstructorAndArgs = new ConstructorAndArgs<T>(constructor, args);
+    }
+
+    /**
      * Get a {@link ConstructorAndArgs} instance to be used in constructing a given element index in
      * a {@link StructuredArray}.
      *
-     * @param index of the element to be constructed in the target array
+     * @param indexes of the element to be constructed in the target array
      * @return {@link ConstructorAndArgs} instance to used in element construction
      * @throws NoSuchMethodException if expected constructor is not found in element class
      */
-    public ConstructorAndArgs<T> getForIndex(final long index) throws NoSuchMethodException {
+    public ConstructorAndArgs<T> getForIndexes(final long[] indexes) throws NoSuchMethodException {
         return cachedConstructorAndArgs;
     }
 }

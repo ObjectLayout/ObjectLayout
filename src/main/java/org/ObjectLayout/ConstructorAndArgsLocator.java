@@ -39,6 +39,9 @@ public abstract class ConstructorAndArgsLocator<T> {
      * @throws IllegalArgumentException if argTypes and args conflict
      */
     public ConstructorAndArgsLocator(final Class<T> elementClass) throws NoSuchMethodException {
+        if (null == elementClass) {
+            throw new IllegalArgumentException("elementClass cannot be null");
+        }
         this.elementClass = elementClass;
     }
 
@@ -46,16 +49,18 @@ public abstract class ConstructorAndArgsLocator<T> {
      * Get a {@link ConstructorAndArgs} instance to be used in constructing a given element index in
      * a {@link StructuredArray}
      *
-     * @param index The index of the element to be constructed in the target array
+     * @param indexes The indexes of the element to be constructed in the target array
      * @return {@link ConstructorAndArgs} instance to used in element construction
      * @throws NoSuchMethodException if expected constructor is not found in element class
      */
-    public abstract ConstructorAndArgs<T> getForIndex(final long index) throws NoSuchMethodException;
+    public ConstructorAndArgs<T> getForIndexes(final long[] indexes) throws NoSuchMethodException {
+        throw new IllegalArgumentException("No support for getForIndexes()");
+    }
 
     /**
      * Recycle a {@link ConstructorAndArgs} instance (place it back in the internal cache if desired).
      * This is [very] useful for avoiding a re-allocation of a new {@link ConstructorAndArgs} and an
-     * associated args array for {@link #getForIndex(long)} invocation in cases where
+     * associated args array for {@link #getForIndexes(long[])} invocation in cases where
      * the returned {@link ConstructorAndArgs} is not constant.
      * <p>
      * Recycling is optional, and is not guaranteed to occur. It will only be done if it is helpful.

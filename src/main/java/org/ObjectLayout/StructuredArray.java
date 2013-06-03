@@ -73,11 +73,11 @@ public final class StructuredArray<T> implements Iterable<T> {
      * @param elementClass of each element in the array
      * @throws NoSuchMethodException if the element class does not have a public default constructor
      */
-    public static <T> StructuredArray<T> newInstance(final long length,
-                                                     final Class<T> elementClass) throws NoSuchMethodException {
+    public static <T> StructuredArray<T> newInstance(final Class<T> elementClass,
+                                                     final long length) throws NoSuchMethodException {
         final ConstructorAndArgsLocator<T> constructorAndArgsLocator = new FixedConstructorAndArgsLocator<T>(elementClass);
 
-        return new StructuredArray<T>(length, elementClass, constructorAndArgsLocator);
+        return new StructuredArray<T>(constructorAndArgsLocator, length, null);
     }
 
     /**
@@ -87,15 +87,12 @@ public final class StructuredArray<T> implements Iterable<T> {
      * each element.
      *
      * @param length of the array to create.
-     * @param elementClass of each element in the array
      * @param constructorAndArgsLocator produces element constructors [potentially] on a per element basis.
      * @throws NoSuchMethodException if the element class does not not support a supplied constructor
      */
-    public static <T> StructuredArray<T> newInstance(final long length,
-                                                     final Class<T> elementClass,
-                                                     final ConstructorAndArgsLocator<T> constructorAndArgsLocator)
-            throws NoSuchMethodException {
-        return new StructuredArray<T>(length, elementClass, constructorAndArgsLocator);
+    public static <T> StructuredArray<T> newInstance(final ConstructorAndArgsLocator<T> constructorAndArgsLocator,
+                                                     final long length) throws NoSuchMethodException {
+        return new StructuredArray<T>(constructorAndArgsLocator, length, null);
     }
 
     /**
@@ -112,14 +109,14 @@ public final class StructuredArray<T> implements Iterable<T> {
      * @throws NoSuchMethodException if initArgTypes does not match a public constructor signature in elementClass
 
      */
-    public static <T> StructuredArray<T> newInstance(final long length,
-                                                     final Class<T> elementClass,
+    public static <T> StructuredArray<T> newInstance(final Class<T> elementClass,
+                                                     final long length,
                                                      final Class[] initArgTypes,
                                                      final Object... initArgs) throws NoSuchMethodException {
         final ConstructorAndArgsLocator<T> constructorAndArgsLocator =
                 new FixedConstructorAndArgsLocator<T>(elementClass, initArgTypes, initArgs);
 
-        return new StructuredArray<T>(length, elementClass, constructorAndArgsLocator);
+        return new StructuredArray<T>(constructorAndArgsLocator, length, null);
     }
 
     /**
@@ -156,22 +153,15 @@ public final class StructuredArray<T> implements Iterable<T> {
         final ConstructorAndArgsLocator<T> constructorAndArgsLocator =
                  new CopyConstructorAndArgsLocator<T>(source.getElementClass(), source, sourceOffset, false);
 
-        return new StructuredArray<T>(count, source.getElementClass(), constructorAndArgsLocator);
+        return new StructuredArray<T>(constructorAndArgsLocator, count, null);
     }
 
     @SuppressWarnings("unchecked")
-    private StructuredArray(final long length,
-                            final Class<T> elementClass,
-                            final ConstructorAndArgsLocator<T> constructorAndArgsLocator) throws NoSuchMethodException {
-        if (null == elementClass) {
-            throw new NullPointerException("elementClass cannot be null");
-        }
+    public StructuredArray(final ConstructorAndArgsLocator<T> constructorAndArgsLocator,
+                            final long length,
+                            final long[] containingIndexes) throws NoSuchMethodException {
 
-        if (elementClass != constructorAndArgsLocator.getElementClass()) {
-            throw new IllegalArgumentException("elementClass and constructorAndArgsLocator's generatedClass must match");
-        }
-
-        this.elementClass = elementClass;
+        this.elementClass = constructorAndArgsLocator.getElementClass();
 
         final Field[] fields = removeStaticFields(elementClass.getDeclaredFields());
         for (final Field field : fields) {
@@ -202,7 +192,7 @@ public final class StructuredArray<T> implements Iterable<T> {
         // Last partition with leftover long-addressable-only size:
         longAddressableElements[numFullPartitions] = (T[])new Object[lastPartitionSize];
 
-        populateElements(constructorAndArgsLocator);
+        populateElements(constructorAndArgsLocator, containingIndexes);
     }
 
     /**
@@ -243,20 +233,36 @@ public final class StructuredArray<T> implements Iterable<T> {
         return intAddressableElements[index];
     }
 
-    private void populateElements(final ConstructorAndArgsLocator<T> constructorAndArgsLocator) throws NoSuchMethodException {
+    private void populateElements(final ConstructorAndArgsLocator<T> constructorAndArgsLocator,
+                                  long[] containingIndexes) throws NoSuchMethodException {
         try {
+            final long[] indexes;
+
+            if (containingIndexes != null) {
+                indexes = new long[containingIndexes.length + 1];
+                for (int i = 0; i < containingIndexes.length; i++) {
+                    indexes[i] = containingIndexes[i];
+                }
+            } else {
+                indexes = new long[1];
+            }
+
+            final int thisIndex = indexes.length - 1;
+
             long index = 0;
 
             for (int i = 0; i < intAddressableElements.length; i++, index++) {
-                final ConstructorAndArgs<T> constructorAndArgs = constructorAndArgsLocator.getForIndex(index);
+                indexes[thisIndex] = index;
+                final ConstructorAndArgs<T> constructorAndArgs = constructorAndArgsLocator.getForIndexes(indexes);
                 final Constructor<T> constructor = constructorAndArgs.getConstructor();
                 intAddressableElements[i] = constructor.newInstance(constructorAndArgs.getConstructorArgs());
                 constructorAndArgsLocator.recycle(constructorAndArgs);
             }
 
             for (final T[] partition : longAddressableElements) {
+                indexes[thisIndex] = index;
                 for (int i = 0, size = partition.length; i < size; i++, index++) {
-                    final ConstructorAndArgs<T> constructorAndArgs = constructorAndArgsLocator.getForIndex(index);
+                    final ConstructorAndArgs<T> constructorAndArgs = constructorAndArgsLocator.getForIndexes(indexes);
                     final Constructor<T> constructor = constructorAndArgs.getConstructor();
                     partition[i] = constructor.newInstance(constructorAndArgs.getConstructorArgs());
                     constructorAndArgsLocator.recycle(constructorAndArgs);

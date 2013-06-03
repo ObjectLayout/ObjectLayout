@@ -29,11 +29,11 @@ public class StructuredArrayTest {
     @Test
     public void shouldConstructArrayOfGivenLength() throws NoSuchMethodException {
         final long length = 7;
-        final StructuredArray<MockStructure> structuredArray =
-                StructuredArray.newInstance(length, MockStructure.class);
+        final StructuredArray<MockStructure> array =
+                StructuredArray.newInstance(MockStructure.class, length);
 
-        assertThat(valueOf(structuredArray.getLength()), is(valueOf(length)));
-        assertTrue(structuredArray.getElementClass() == MockStructure.class);
+        assertThat(valueOf(array.getLength()), is(valueOf(length)));
+        assertTrue(array.getElementClass() == MockStructure.class);
     }
 
     @Test
@@ -43,10 +43,10 @@ public class StructuredArrayTest {
         final long expectedValue = 777L;
         final long length = 7;
 
-        final StructuredArray<MockStructure> structuredArray =
-                StructuredArray.newInstance(length, MockStructure.class, initArgTypes, expectedIndex, expectedValue);
+        final StructuredArray<MockStructure> array =
+                StructuredArray.newInstance(MockStructure.class, length, initArgTypes, expectedIndex, expectedValue);
 
-        assertCorrectInitialisation(expectedIndex, expectedValue, length, structuredArray);
+        assertCorrectInitialisation(expectedIndex, expectedValue, length, array);
     }
 
     @Test
@@ -54,14 +54,14 @@ public class StructuredArrayTest {
         final long length = 7;
         final ConstructorAndArgsLocator<MockStructure> constructorAndArgsLocator =
                 new DefaultMockConstructorAndArgsLocator();
-        final StructuredArray<MockStructure> structuredArray =
-                StructuredArray.newInstance(length, MockStructure.class, constructorAndArgsLocator);
+        final StructuredArray<MockStructure> array =
+                StructuredArray.newInstance(constructorAndArgsLocator, length);
 
-        assertThat(valueOf(structuredArray.getLength()), is(valueOf(length)));
-        assertTrue(structuredArray.getElementClass() == MockStructure.class);
+        assertThat(valueOf(array.getLength()), is(valueOf(length)));
+        assertTrue(array.getElementClass() == MockStructure.class);
         // We expect MockStructure elements to be initialized with index = index, and testValue = index * 2:
         for (int i = 0; i < length; i++) {
-            final MockStructure mockStructure = structuredArray.get(i);
+            final MockStructure mockStructure = array.get(i);
 
             assertThat(valueOf(mockStructure.getIndex()), is(valueOf(i)));
             assertThat(valueOf(mockStructure.getTestValue()), is(valueOf(i * 2)));
@@ -71,12 +71,13 @@ public class StructuredArrayTest {
     @Test
     public void shouldSetAndGetCorrectValueAtGivenIndex() throws NoSuchMethodException {
         final long length = 11;
-        final StructuredArray<MockStructure> structuredArray = StructuredArray.newInstance(length, MockStructure.class);
+        final StructuredArray<MockStructure> array =
+                StructuredArray.newInstance(MockStructure.class, length);
 
-        initValues(length, structuredArray);
+        initValues(length, array);
 
         for (long i = 0; i < length; i++) {
-            final MockStructure mockStructure = structuredArray.getL(i);
+            final MockStructure mockStructure = array.getL(i);
 
             assertThat(valueOf(mockStructure.getIndex()), is(valueOf(i)));
             assertThat(valueOf(mockStructure.getTestValue()), is(valueOf(i * 2)));
@@ -86,12 +87,13 @@ public class StructuredArrayTest {
     @Test
     public void shouldIterateOverArray() throws NoSuchMethodException {
         final int length = 11;
-        final StructuredArray<MockStructure> structuredArray = StructuredArray.newInstance(length, MockStructure.class);
+        final StructuredArray<MockStructure> array =
+                StructuredArray.newInstance(MockStructure.class, length);
 
-        initValues(length, structuredArray);
+        initValues(length, array);
 
         int i = 0;
-        for (final MockStructure mockStructure : structuredArray) {
+        for (final MockStructure mockStructure : array) {
             assertThat(valueOf(mockStructure.getIndex()), is(valueOf(i)));
             assertThat(valueOf(mockStructure.getTestValue()), is(valueOf(i * 2)));
             i++;
@@ -103,12 +105,13 @@ public class StructuredArrayTest {
     @Test
     public void shouldIterateOverArrayAndResetAgain() throws NoSuchMethodException {
         final long length = 11;
-        final StructuredArray<MockStructure> structuredArray = StructuredArray.newInstance(length, MockStructure.class);
+        final StructuredArray<MockStructure> array =
+                StructuredArray.newInstance(MockStructure.class, length);
 
-        initValues(length, structuredArray);
+        initValues(length, array);
 
         int i = 0;
-        final StructuredArray<MockStructure>.StructureIterator iter = structuredArray.iterator();
+        final StructuredArray<MockStructure>.StructureIterator iter = array.iterator();
         while (iter.hasNext()) {
             final MockStructure mockStructure = iter.next();
             assertThat(valueOf(mockStructure.getIndex()), is(valueOf(i)));
@@ -134,7 +137,7 @@ public class StructuredArrayTest {
         final ConstructorAndArgsLocator<MockStructure> constructorAndArgsLocator =
                 new DefaultMockConstructorAndArgsLocator();
         final StructuredArray<MockStructure> sourceArray =
-                StructuredArray.newInstance(length, MockStructure.class, constructorAndArgsLocator);
+                StructuredArray.newInstance(constructorAndArgsLocator, length);
 
         assertThat(valueOf(sourceArray.getLength()), is(valueOf(length)));
         assertTrue(sourceArray.getElementClass() == MockStructure.class);
@@ -156,7 +159,7 @@ public class StructuredArrayTest {
         final ConstructorAndArgsLocator<MockStructure> constructorAndArgsLocator =
                 new DefaultMockConstructorAndArgsLocator();
         final StructuredArray<MockStructure> sourceArray =
-                StructuredArray.newInstance(length, MockStructure.class, constructorAndArgsLocator);
+                StructuredArray.newInstance(constructorAndArgsLocator, length);
 
         assertThat(valueOf(sourceArray.getLength()), is(valueOf(length)));
         assertTrue(sourceArray.getElementClass() == MockStructure.class);
@@ -175,55 +178,58 @@ public class StructuredArrayTest {
     @Test
     public void shouldCopyRegionLeftInArray() throws NoSuchMethodException {
         final long length = 11;
-        final StructuredArray<MockStructure> structuredArray = StructuredArray.newInstance(length, MockStructure.class);
+        final StructuredArray<MockStructure> array =
+                StructuredArray.newInstance(MockStructure.class, length);
 
-        initValues(length, structuredArray);
+        initValues(length, array);
 
-        StructuredArray.shallowCopy(structuredArray, 4, structuredArray, 3, 2, false);
+        StructuredArray.shallowCopy(array, 4, array, 3, 2, false);
 
-        assertThat(valueOf(structuredArray.get(3).getIndex()), is(valueOf(4)));
-        assertThat(valueOf(structuredArray.get(4).getIndex()), is(valueOf(5)));
-        assertThat(valueOf(structuredArray.get(5).getIndex()), is(valueOf(5)));
+        assertThat(valueOf(array.get(3).getIndex()), is(valueOf(4)));
+        assertThat(valueOf(array.get(4).getIndex()), is(valueOf(5)));
+        assertThat(valueOf(array.get(5).getIndex()), is(valueOf(5)));
     }
 
     @Test
     public void shouldCopyRegionRightInArray() throws NoSuchMethodException {
         final long length = 11;
-        final StructuredArray<MockStructure> structuredArray = StructuredArray.newInstance(length, MockStructure.class);
+        final StructuredArray<MockStructure> array =
+                StructuredArray.newInstance(MockStructure.class, length);
 
-        initValues(length, structuredArray);
+        initValues(length, array);
 
-        StructuredArray.shallowCopy(structuredArray, 5, structuredArray, 6, 2, false);
+        StructuredArray.shallowCopy(array, 5, array, 6, 2, false);
 
-        assertThat(valueOf(structuredArray.get(5).getIndex()), is(valueOf(5)));
-        assertThat(valueOf(structuredArray.get(6).getIndex()), is(valueOf(5)));
-        assertThat(valueOf(structuredArray.get(7).getIndex()), is(valueOf(6)));
+        assertThat(valueOf(array.get(5).getIndex()), is(valueOf(5)));
+        assertThat(valueOf(array.get(6).getIndex()), is(valueOf(5)));
+        assertThat(valueOf(array.get(7).getIndex()), is(valueOf(6)));
     }
 
     @Test(expected = ArrayIndexOutOfBoundsException.class)
     public void shouldThrowOutOfBoundExceptionForAccessesOutOfBounds() throws NoSuchMethodException {
         final long length = 11;
-        final StructuredArray<MockStructure> structuredArray = StructuredArray.newInstance(length, MockStructure.class);
+        final StructuredArray<MockStructure> array =
+                StructuredArray.newInstance(MockStructure.class, length);
 
-        structuredArray.getL(length);
+        array.getL(length);
     }
 
     @Test
     public void shouldCopyEvenWithFinalFields() throws NoSuchMethodException {
         final long length = 11;
-        final StructuredArray<MockStructureWithFinalField> structuredArray =
-                StructuredArray.newInstance(length, MockStructureWithFinalField.class);
+        final StructuredArray<MockStructureWithFinalField> array =
+                StructuredArray.newInstance(MockStructureWithFinalField.class, length);
 
-        StructuredArray.shallowCopy(structuredArray, 1, structuredArray, 3, 1, true);
+        StructuredArray.shallowCopy(array, 1, array, 3, 1, true);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void shouldThrowExceptionWhenFinalFieldWouldBeCopied() throws NoSuchMethodException {
         final long length = 11;
-        final StructuredArray<MockStructureWithFinalField> structuredArray =
-                StructuredArray.newInstance(length, MockStructureWithFinalField.class);
+        final StructuredArray<MockStructureWithFinalField> array =
+                StructuredArray.newInstance(MockStructureWithFinalField.class, length);
 
-        StructuredArray.shallowCopy(structuredArray, 1, structuredArray, 3, 1);
+        StructuredArray.shallowCopy(array, 1, array, 3, 1);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -231,20 +237,20 @@ public class StructuredArrayTest {
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
     private void assertCorrectInitialisation(final long expectedIndex, final long expectedValue, final long length,
-                                             final StructuredArray<MockStructure> structuredArray) {
-        assertThat(valueOf(structuredArray.getLength()), is(valueOf(length)));
-        assertTrue(structuredArray.getElementClass() == MockStructure.class);
+                                             final StructuredArray<MockStructure> array) {
+        assertThat(valueOf(array.getLength()), is(valueOf(length)));
+        assertTrue(array.getElementClass() == MockStructure.class);
 
         for (long i = 0; i < length; i++) {
-            MockStructure mockStructure = structuredArray.getL(i);
+            MockStructure mockStructure = array.getL(i);
             assertThat(valueOf(mockStructure.getIndex()), is(valueOf(expectedIndex)));
             assertThat(valueOf(mockStructure.getTestValue()), is(valueOf(expectedValue)));
         }
     }
 
-    private void initValues(final long length, final StructuredArray<MockStructure> structuredArray) {
+    private void initValues(final long length, final StructuredArray<MockStructure> array) {
         for (long i = 0; i < length; i++) {
-            final MockStructure mockStructure = structuredArray.getL(i);
+            final MockStructure mockStructure = array.getL(i);
             mockStructure.setIndex(i);
             mockStructure.setTestValue(i * 2);
         }
@@ -326,6 +332,10 @@ public class StructuredArrayTest {
             // We could do this much more efficiently with atomic caching of a single allocated ConstructorAndArgs,
             // as CopyConstructorAndArgsLocator does, but no need to put in the effort in a test...
             return new ConstructorAndArgs<MockStructure>(MockStructure.class.getConstructor(argsTypes), args);
+        }
+
+        public ConstructorAndArgs<MockStructure> getForIndexes(final long[] indexes) throws NoSuchMethodException {
+            return getForIndex(indexes[0]);
         }
     }
 }
