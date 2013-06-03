@@ -58,8 +58,6 @@ public final class MultiDimensionalStructuredArray<T> implements Iterable<T> {
     private static final int MAX_EXTRA_PARTITION_SIZE = 1 << MAX_EXTRA_PARTITION_SIZE_POW2_EXPONENT;
     private static final int MASK = MAX_EXTRA_PARTITION_SIZE - 1;
 
-    private final Field[] fields;
-    private final boolean hasFinalFields;
     private final Class<T> elementClass;
 
     private final long[] lengths;
@@ -131,8 +129,7 @@ public final class MultiDimensionalStructuredArray<T> implements Iterable<T> {
      * @throws NoSuchMethodException if the element class does not not support a supplied constructor
      */
     public static <T> MultiDimensionalStructuredArray<T> newInstance(final ConstructorAndArgsLocator<T> constructorAndArgsLocator,
-                                                     final Long... lengths)
-            throws NoSuchMethodException {
+                                                     final Long... lengths) throws NoSuchMethodException {
         return new MultiDimensionalStructuredArray<T>(lengths.length, constructorAndArgsLocator, LongArrayToPrimitiveLongArray(lengths), null);
     }
 
@@ -160,7 +157,8 @@ public final class MultiDimensionalStructuredArray<T> implements Iterable<T> {
      * @param source The array to duplicate.
      * @throws NoSuchMethodException if the element class does not have a public copy constructor.
      */
-    public static <T> MultiDimensionalStructuredArray<T> copyInstance(final MultiDimensionalStructuredArray<T> source) throws NoSuchMethodException {
+    public static <T> MultiDimensionalStructuredArray<T> copyInstance(final MultiDimensionalStructuredArray<T> source)
+            throws NoSuchMethodException {
         return copyInstance(source, new long[source.getNumOfDimensions()], source.getLengths());
     }
 
@@ -237,13 +235,6 @@ public final class MultiDimensionalStructuredArray<T> implements Iterable<T> {
         }
 
         this.elementClass = constructorAndArgsLocator.getElementClass();
-
-        final Field[] fields = removeStaticFields(elementClass.getDeclaredFields());
-        for (final Field field : fields) {
-            field.setAccessible(true);
-        }
-        this.fields = fields;
-        this.hasFinalFields = containsFinalQualifiedFields(fields);
 
         // int-addressable elements:
         final int intLength = (int) Math.min(length, Integer.MAX_VALUE);
@@ -444,22 +435,25 @@ public final class MultiDimensionalStructuredArray<T> implements Iterable<T> {
 
     // Type specific public gets of first dimension:
 
+    @SuppressWarnings("unchecked")
     public StructuredArray<T> getOfStructuredArrayL(final long index) {
         // Note that there is no explicit numOfDimensions check here. Type casting failure will trigger if dimensions are wrong.
         return (StructuredArray<T>) getUnknownTypeL(index);
     }
 
+    @SuppressWarnings("unchecked")
     public MultiDimensionalStructuredArray<T> getOfMultiDimensionalStructuredArrayL(final long index) {
         // Note that there is no explicit numOfDimensions check here. Type casting failure will trigger if dimensions are wrong.
         return (MultiDimensionalStructuredArray<T>) getUnknownTypeL(index);
     }
 
-
+    @SuppressWarnings("unchecked")
     public StructuredArray<T> getOfStructuredArray(final int index) {
         // Note that there is no explicit numOfDimensions check here. Type casting failure will trigger if dimensions are wrong.
         return (StructuredArray<T>) getUnknownTypeL(index);
     }
 
+    @SuppressWarnings("unchecked")
     public MultiDimensionalStructuredArray<T> getOfDimensionalStructuredArray(final int index) {
         // Note that there is no explicit numOfDimensions check here. Type casting failure will trigger if dimensions are wrong.
         return (MultiDimensionalStructuredArray<T>) getUnknownTypeL(index);
