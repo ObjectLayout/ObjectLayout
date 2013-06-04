@@ -139,10 +139,10 @@ public class MulitDimensionalCopyConstructorAndArgsLocator<T> extends Constructo
 
 
     /**
-     * Recycle an {@link org.ObjectLayout.ConstructorAndArgs} instance (place it back in the internal cache if desired). This is [very]
-     * useful for avoiding a re-allocation of a new {@link org.ObjectLayout.ConstructorAndArgs} and an associated args array for
-     * {@link #getForIndex(long)} invocation in cases such as this (where the returned {@link org.ObjectLayout.ConstructorAndArgs}
-     * is not constant across indices).
+     * Recycle an {@link org.ObjectLayout.ConstructorAndArgs} instance (place it back in the internal cache if
+     * desired). This is [very] useful for avoiding a re-allocation of a new {@link org.ObjectLayout.ConstructorAndArgs}
+     * and an associated args array for {@link #getForIndexes(long[])} invocation in cases such as this (where the
+     * returned {@link org.ObjectLayout.ConstructorAndArgs} is not constant across indices).
      * Recycling is optional, and is not guaranteed to occur.
      *
      * @param constructorAndArgs the {@link org.ObjectLayout.ConstructorAndArgs} instance to recycle

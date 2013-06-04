@@ -68,8 +68,10 @@ public final class MultiDimensionalStructuredArray<T> implements Iterable<T> {
     private final Object[] intAddressableElements;
 
     /**
-     * Create an array of <code>length</code> elements, each containing an element object of
-     * type <code>elementClass</code>. Using the <code>elementClass</code>'s default constructor.
+     * Create a multi dimensional array of elements. Each dimension of the array will be of a length designated
+     * in the <code>lengths</code> parameters passed. Each element of the array will consist of
+     * an object of type <code>elementClass</code>. Elements will be constructed Using the
+     * <code>elementClass</code>'s default constructor.
      *
      * @param elementClass of each element in the array
      * @param lengths of the array dimensions to create.
@@ -82,8 +84,10 @@ public final class MultiDimensionalStructuredArray<T> implements Iterable<T> {
     }
 
     /**
-     * Create an array of <code>length</code> elements, each containing an element object of
-     * type <code>elementClass</code>. Using the <code>elementClass</code>'s default constructor.
+     * Create a multi dimensional array of elements. Each dimension of the array will be of a length designated
+     * in the <code>lengths[]</code>  passed. Each element of the array will consist of
+     * an object of type <code>elementClass</code>. Elements will be constructed Using the
+     * <code>elementClass</code>'s default constructor.
      *
      * @param elementClass of each element in the array
      * @param lengths of the array dimensions to create.
@@ -96,10 +100,11 @@ public final class MultiDimensionalStructuredArray<T> implements Iterable<T> {
     }
 
     /**
-     * Create an array of <code>length</code> elements, each containing an element object of
-     * type <code>elementClass</code>. Use a fixed (same for all elements) constructor identified by the argument
-     * classes specified in  <code>initArgs</code> to construct and initialize each element, passing the remaining
-     * arguments to that constructor.
+     * Create a multi dimensional array of elements. Each dimension of the array will be of a length designated
+     * in the <code>lengths[]</code>  passed. Each element of the array will consist of
+     * an object of type <code>elementClass</code>. Elements will be constructed using a fixed (same for all elements)
+     * constructor identified by the argument classes specified in  <code>initArgTypes</code> to construct and
+     * initialize each element, passing the <code>initArgs</code> arguments to that constructor.
      *
      * @param elementClass of each element in the array
      * @param lengths of the array dimensions to create.
@@ -119,10 +124,11 @@ public final class MultiDimensionalStructuredArray<T> implements Iterable<T> {
     }
 
     /**
-     * Create an array of <code>length</code> elements, each containing an element object of
-     * type <code>elementClass</code>. Use constructor and arguments supplied (on a potentially
-     * per element index basis) by the specified <code>constructorAndArgsLocator</code> to construct and initialize
-     * each element.
+     * Create a multi dimensional array of elements. Each dimension of the array will be of a length designated
+     * in the <code>lengths</code> arguments passed. Each element of the array will consist of
+     * an object of type <code>elementClass</code>. Elements will be constructed using the constructor and arguments
+     * supplied (on a potentially per element index basis) by the specified <code>constructorAndArgsLocator</code>.
+     * to construct and initialize each element.
      *
      * @param constructorAndArgsLocator produces element constructors [potentially] on a per element basis.
      * @param lengths of the array dimensions to create.
@@ -134,10 +140,11 @@ public final class MultiDimensionalStructuredArray<T> implements Iterable<T> {
     }
 
     /**
-     * Create an array of <code>length</code> elements, each containing an element object of
-     * type <code>elementClass</code>. Use constructor and arguments supplied (on a potentially
-     * per element index basis) by the specified <code>constructorAndArgsLocator</code> to construct and initialize
-     * each element.
+     * Create a multi dimensional array of elements. Each dimension of the array will be of a length designated
+     * in the <code>lengths[]</code> passed. Each element of the array will consist of
+     * an object of type <code>elementClass</code>. Elements will be constructed using the constructor and arguments
+     * supplied (on a potentially per element index basis) by the specified <code>constructorAndArgsLocator</code>.
+     * to construct and initialize each element.
      *
      * @param constructorAndArgsLocator produces element constructors [potentially] on a per element basis.
      * @param lengths of the array dimensions to create.
@@ -167,8 +174,8 @@ public final class MultiDimensionalStructuredArray<T> implements Iterable<T> {
      * by using the <code>elementClass</code> copy constructor to construct the individual member elements of
      * the new array based on the corresponding elements of the <code>source</code> array.
      *
-     * @param source The array to duplicate.
-     * @param sourceOffsets offset indexes in source where the region to be copied begins.
+     * @param source The array to copy from.
+     * @param sourceOffsets offset indexes for each dimension, indicating where the source region to be copied begins.
      * @param counts the number of elements in each dimension to copy.
      * @throws NoSuchMethodException if the element class does not have a public copy constructor.
      */
@@ -182,8 +189,8 @@ public final class MultiDimensionalStructuredArray<T> implements Iterable<T> {
      * by using the <code>elementClass</code> copy constructor to construct the individual member elements of
      * the new array based on the corresponding elements of the <code>source</code> array.
      *
-     * @param source The array to duplicate.
-     * @param sourceOffsets offset indexes in source where the region to be copied begins.
+     * @param source The array to copy from.
+     * @param sourceOffsets offset indexes for each dimension, indicating where the source region to be copied begins.
      * @param counts the number of elements in each dimension to copy.
      * @throws NoSuchMethodException if the element class does not have a public copy constructor.
      */
@@ -336,13 +343,13 @@ public final class MultiDimensionalStructuredArray<T> implements Iterable<T> {
 
 
     /**
-     * Get a reference to an element in the array, using a <code>long</code> indexes supplied in an array
-     * and indicating a strating point in the array at which the first index should be found.
+     * Get a reference to an element in the array, using <code>long</code> indexes supplied in an array.
+     * indexOffset indicates the starting point in the array at which the first index should be found.
      * This form is useful when passing index arrays through multiple levels to avoid construction of
      * temporary varargs containers or construction of new shorter index arrays.
      *
      * @param indexes The indexes (at each dimension) of the element to retrieve.
-     * @param indexOffset The beginiing offset in the indexes array related to this arrays contents.
+     * @param indexOffset The beginning offset in the indexes array related to this arrays contents.
      * @return a reference to the indexed element.
      */
     public T getL(long[] indexes, int indexOffset) {
@@ -385,11 +392,26 @@ public final class MultiDimensionalStructuredArray<T> implements Iterable<T> {
 
     // fast long index variants:
 
-    public T getL(long index0, long index1) {
+    /**
+     * Get a reference to an element in the array, using 2 <code>long</code> indexes.
+     * @param index0
+     * @param index1
+     * @return the element at [index0, index1]
+     * @throws ClassCastException if number of indexes does not match number of dimensions in the array
+     */
+    public T getL(long index0, long index1) throws ClassCastException {
         return getOfStructuredArrayL(index0).getL(index1);
     }
 
-    public T getL(long index0, long index1, long index2) {
+    /**
+     * Get a reference to an element in the array, using 3 <code>long</code> indexes.
+     * @param index0
+     * @param index1
+     * @param index2
+     * @return the element at [index0, index1, index2]
+     * @throws ClassCastException if number of indexes does not match number of dimensions in the array
+     */
+    public T getL(long index0, long index1, long index2) throws ClassCastException {
         if (numOfDimensions != 3) {
             throw new IllegalArgumentException("number of indexes passed must match numOfDimensions");
         }
@@ -398,7 +420,16 @@ public final class MultiDimensionalStructuredArray<T> implements Iterable<T> {
         return structuredArray.getL(index2);
     }
 
-    public T getL(long index0, long index1, long index2, long index3) {
+    /**
+     * Get a reference to an element in the array, using 4 <code>long</code> indexes.
+     * @param index0
+     * @param index1
+     * @param index2
+     * @param index3
+     * @return the element at [index0, index1, index2, index3]
+     * @throws ClassCastException if number of indexes does not match number of dimensions in the array
+     */
+    public T getL(long index0, long index1, long index2, long index3) throws ClassCastException {
         if (numOfDimensions != 4) {
             throw new IllegalArgumentException("number of indexes passed must match numOfDimensions");
         }
@@ -410,53 +441,101 @@ public final class MultiDimensionalStructuredArray<T> implements Iterable<T> {
 
     // fast int index variants:
 
-    public T get(int index0, int index1) {
+    /**
+     * Get a reference to an element in the array, using 2 <code>int</code> indexes.
+     * @param index0
+     * @param index1
+     * @return the element at [index0, index1]
+     * @throws ClassCastException if number of indexes does not match number of dimensions in the array
+     */
+    public T get(int index0, int index1) throws ClassCastException {
         return getOfStructuredArrayL(index0).getL(index1);
     }
 
-    public T get(int index0, int index1, int index2) {
+    /**
+     * Get a reference to an element in the array, using 3 <code>int</code> indexes.
+     * @param index0
+     * @param index1
+     * @param index2
+     * @return the element at [index0, index1, index2]
+     * @throws ClassCastException if number of indexes does not match number of dimensions in the array
+     */
+    public T get(int index0, int index1, int index2) throws ClassCastException {
         if (numOfDimensions != 3) {
             throw new IllegalArgumentException("number of indexes passed must match numOfDimensions");
         }
-        MultiDimensionalStructuredArray<T> level0element = getOfDimensionalStructuredArray(index0);
+        MultiDimensionalStructuredArray<T> level0element = getOfMultiDimensionalStructuredArray(index0);
         StructuredArray<T> structuredArray = level0element.getOfStructuredArray(index1);
         return structuredArray.get(index2);
     }
 
-    public T get(int index0, int index1, int index2, int index3) {
+    /**
+     * Get a reference to an element in the array, using 4 <code>int</code> indexes.
+     * @param index0
+     * @param index1
+     * @param index2
+     * @param index3
+     * @return the element at [index0, index1, index2, index3]
+     * @throws ClassCastException if number of indexes does not match number of dimensions in the array
+     */
+    public T get(int index0, int index1, int index2, int index3) throws ClassCastException {
         if (numOfDimensions != 4) {
             throw new IllegalArgumentException("number of indexes passed must match numOfDimensions");
         }
-        MultiDimensionalStructuredArray<T> level0element = getOfDimensionalStructuredArray(index0);
-        MultiDimensionalStructuredArray<T> level1element = level0element.getOfDimensionalStructuredArray(index1);
+        MultiDimensionalStructuredArray<T> level0element = getOfMultiDimensionalStructuredArray(index0);
+        MultiDimensionalStructuredArray<T> level1element = level0element.getOfMultiDimensionalStructuredArray(index1);
         StructuredArray<T> structuredArray = level1element.getOfStructuredArray(index2);
         return structuredArray.get(index3);
     }
 
     // Type specific public gets of first dimension:
 
+    /**
+     * Get a reference to a StructuredArray element in this array, using a <code>long</code> index.
+     * @param index
+     * @return a reference to the StructuredArray located in element [index] of this array
+     * @throws ClassCastException if array has more than two dimensions
+     */
     @SuppressWarnings("unchecked")
-    public StructuredArray<T> getOfStructuredArrayL(final long index) {
+    public StructuredArray<T> getOfStructuredArrayL(final long index) throws ClassCastException {
         // Note that there is no explicit numOfDimensions check here. Type casting failure will trigger if dimensions are wrong.
-        return (StructuredArray<T>) getUnknownTypeL(index);
+        return (StructuredArray<T>) getOfUnknownTypeL(index);
     }
 
+    /**
+     * Get a reference to a StructuredArray element in this array, using a <code>int</code> index.
+     * @param index
+     * @return a reference to the StructuredArray located in element [index] of this array
+     * @throws ClassCastException if array has only two dimensions
+     */
     @SuppressWarnings("unchecked")
-    public MultiDimensionalStructuredArray<T> getOfMultiDimensionalStructuredArrayL(final long index) {
+    public MultiDimensionalStructuredArray<T> getOfMultiDimensionalStructuredArrayL(final long index) throws ClassCastException {
         // Note that there is no explicit numOfDimensions check here. Type casting failure will trigger if dimensions are wrong.
-        return (MultiDimensionalStructuredArray<T>) getUnknownTypeL(index);
+        return (MultiDimensionalStructuredArray<T>) getOfUnknownTypeL(index);
     }
 
+    /**
+     * Get a reference to a MultiDimensionalStructuredArray element in this array, using a <code>long</code> index.
+     * @param index
+     * @return a reference to the StructuredArray located in element [index] of this array
+     * @throws ClassCastException if array has more than two dimensions
+     */
     @SuppressWarnings("unchecked")
-    public StructuredArray<T> getOfStructuredArray(final int index) {
+    public StructuredArray<T> getOfStructuredArray(final int index) throws ClassCastException {
         // Note that there is no explicit numOfDimensions check here. Type casting failure will trigger if dimensions are wrong.
-        return (StructuredArray<T>) getUnknownTypeL(index);
+        return (StructuredArray<T>) getOfUnknownTypeL(index);
     }
 
+    /**
+     * Get a reference to a MultiDimensionalStructuredArray element in this array, using a <code>int</code> index.
+     * @param index
+     * @return a reference to the StructuredArray located in element [index] of this array
+     * @throws ClassCastException if array has only two dimensions
+     */
     @SuppressWarnings("unchecked")
-    public MultiDimensionalStructuredArray<T> getOfDimensionalStructuredArray(final int index) {
+    public MultiDimensionalStructuredArray<T> getOfMultiDimensionalStructuredArray(final int index) throws ClassCastException {
         // Note that there is no explicit numOfDimensions check here. Type casting failure will trigger if dimensions are wrong.
-        return (MultiDimensionalStructuredArray<T>) getUnknownTypeL(index);
+        return (MultiDimensionalStructuredArray<T>) getOfUnknownTypeL(index);
     }
 
     // Type-unknown gets:
@@ -467,7 +546,7 @@ public final class MultiDimensionalStructuredArray<T> implements Iterable<T> {
      * @param index of the element to retrieve.
      * @return a reference to the indexed element.
      */
-    private Object getUnknownTypeL(final long index) {
+    private Object getOfUnknownTypeL(final long index) {
         if (index < Integer.MAX_VALUE) {
             return getOfUnknownType((int) index);
         }

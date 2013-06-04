@@ -234,9 +234,39 @@ public class MultiDimensionalStructuredArrayTest {
         final MultiDimensionalStructuredArray<MockStructure> array =
                 MultiDimensionalStructuredArray.newInstance(MockStructure.class, lengths);
 
-        array.getL(lengths);
+        MockStructure mockStructure = array.getL(lengths);
     }
 
+    @Test(expected = ClassCastException.class)
+    public void shouldThrowIncompatibleTypeExceptionForGetOfAnArrayInsteadOfElement() throws NoSuchMethodException {
+        final long[] lengths = {11, 7, 4};
+        final MultiDimensionalStructuredArray<MockStructure> array =
+                MultiDimensionalStructuredArray.newInstance(MockStructure.class, lengths);
+
+        MockStructure mockStructure = array.get(2, 2);
+    }
+
+    @Test(expected = ClassCastException.class)
+    public void shouldThrowIncompatibleTypeExceptionForGetOfWrongStructuredArrayType() throws NoSuchMethodException {
+        final long[] lengths = {11, 7, 4};
+        final MultiDimensionalStructuredArray<MockStructure> array =
+                MultiDimensionalStructuredArray.newInstance(MockStructure.class, lengths);
+
+        // The following will actually be a MultiDimensionalStructuredArray:
+        StructuredArray<MockStructure> subArray = array.getOfStructuredArray(2);
+    }
+
+    @Test(expected = ClassCastException.class)
+    public void shouldThrowIncompatibleTypeExceptionForGetOfWrongMultiDimensionalStructuredArrayType() throws NoSuchMethodException {
+        final long[] lengths = {11, 7, 4};
+        final MultiDimensionalStructuredArray<MockStructure> array =
+                MultiDimensionalStructuredArray.newInstance(MockStructure.class, lengths);
+
+        // The following will really be a MultiDimensionalStructuredArray:
+        MultiDimensionalStructuredArray<MockStructure> subArray1 = array.getOfMultiDimensionalStructuredArray(2);
+        // But the following will actually be a StructuredArray:
+        MultiDimensionalStructuredArray<MockStructure> subArray2 = subArray1.getOfMultiDimensionalStructuredArray(2);
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
     // Test support below
