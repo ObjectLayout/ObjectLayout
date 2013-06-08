@@ -26,7 +26,7 @@ import java.util.concurrent.atomic.AtomicReference;
  *
  * @param <T> type of the element occupying each array slot
  */
-public class MulitDimensionalCopyConstructorAndArgsLocator<T> extends ConstructorAndArgsLocator<T> {
+public class MultiDimensionalCopyConstructorAndArgsLocator<T> extends ConstructorAndArgsLocator<T> {
 
     final Constructor<T> copyConstructor;
     final MultiDimensionalStructuredArray<T> source;
@@ -47,7 +47,7 @@ public class MulitDimensionalCopyConstructorAndArgsLocator<T> extends Constructo
      * @param source The source StructuredArray to copy from
      * @throws NoSuchMethodException
      */
-    public MulitDimensionalCopyConstructorAndArgsLocator(final Class<T> elementClass,
+    public MultiDimensionalCopyConstructorAndArgsLocator(final Class<T> elementClass,
                                                          final MultiDimensionalStructuredArray<T> source) throws NoSuchMethodException {
         this(elementClass, source, null, true);
     }
@@ -61,7 +61,7 @@ public class MulitDimensionalCopyConstructorAndArgsLocator<T> extends Constructo
      * @param sourceOffsets The beginning index in the source from which to start copying
      * @throws NoSuchMethodException if a copy constructor is not found in element class
      */
-    public MulitDimensionalCopyConstructorAndArgsLocator(final Class<T> elementClass,
+    public MultiDimensionalCopyConstructorAndArgsLocator(final Class<T> elementClass,
                                                          final MultiDimensionalStructuredArray<T> source,
                                                          final long[] sourceOffsets) throws NoSuchMethodException {
         this(elementClass, source, sourceOffsets, true);
@@ -77,7 +77,7 @@ public class MulitDimensionalCopyConstructorAndArgsLocator<T> extends Constructo
      * @param keepInternalCachingThreadSafe Control whether or not internal caching is kept thread-safe
      * @throws NoSuchMethodException NoSuchMethodException if a copy constructor is not found in element class
      */
-    public MulitDimensionalCopyConstructorAndArgsLocator(final Class<T> elementClass,
+    public MultiDimensionalCopyConstructorAndArgsLocator(final Class<T> elementClass,
                                                          final MultiDimensionalStructuredArray<T> source,
                                                          final long[] sourceOffsets,
                                                          boolean keepInternalCachingThreadSafe) throws NoSuchMethodException {

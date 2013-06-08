@@ -212,7 +212,7 @@ public final class MultiDimensionalStructuredArray<T> implements Iterable<T> {
         }
 
         final ConstructorAndArgsLocator<T> constructorAndArgsLocator =
-                 new MulitDimensionalCopyConstructorAndArgsLocator<T>(source.getElementClass(), source, sourceOffsets, false);
+                 new MultiDimensionalCopyConstructorAndArgsLocator<T>(source.getElementClass(), source, sourceOffsets, false);
 
         return new MultiDimensionalStructuredArray<T>(source.getNumOfDimensions(),
                 constructorAndArgsLocator, counts, null);
@@ -272,9 +272,9 @@ public final class MultiDimensionalStructuredArray<T> implements Iterable<T> {
             Class targetClass = MultiDimensionalStructuredArray.class;
             Constructor<MultiDimensionalStructuredArray<T>> constructor =
                     targetClass.getDeclaredConstructor(subArrayArgTypes);
-            ConstructorAndArgsLocator<MultiDimensionalStructuredArray<T>> subArrayConstructorAndArgsLocatorA =
+            ConstructorAndArgsLocator<MultiDimensionalStructuredArray<T>> subArrayConstructorAndArgsLocator =
                     new ArrayConstructorAndArgsLocator<MultiDimensionalStructuredArray<T>>(constructor, subArrayArgs, 3);
-            populateElements(subArrayConstructorAndArgsLocatorA, containingIndexes);
+            populateElements(subArrayConstructorAndArgsLocator, containingIndexes);
         } else {
             final long subArrayLength = (Long)lengths[1];
             final Class[] subArrayArgTypes = {ConstructorAndArgsLocator.class, Long.TYPE, long[].class};
@@ -282,9 +282,9 @@ public final class MultiDimensionalStructuredArray<T> implements Iterable<T> {
                     null /* containingIndexes arg goes here */};
             Class targetClass = StructuredArray.class;
             Constructor<StructuredArray<T>> constructor = targetClass.getDeclaredConstructor(subArrayArgTypes);
-            ConstructorAndArgsLocator<StructuredArray<T>> subArrayConstructorAndArgsLocatorA =
+            ConstructorAndArgsLocator<StructuredArray<T>> subArrayConstructorAndArgsLocator =
                     new ArrayConstructorAndArgsLocator<StructuredArray<T>>(constructor, subArrayArgs, 2);
-            populateElements(subArrayConstructorAndArgsLocatorA, containingIndexes);
+            populateElements(subArrayConstructorAndArgsLocator, containingIndexes);
         }
     }
 
@@ -412,9 +412,6 @@ public final class MultiDimensionalStructuredArray<T> implements Iterable<T> {
      * @throws ClassCastException if number of indexes does not match number of dimensions in the array
      */
     public T getL(long index0, long index1, long index2) throws ClassCastException {
-        if (numOfDimensions != 3) {
-            throw new IllegalArgumentException("number of indexes passed must match numOfDimensions");
-        }
         MultiDimensionalStructuredArray<T> level0element = getOfMultiDimensionalStructuredArrayL(index0);
         StructuredArray<T> structuredArray = level0element.getOfStructuredArrayL(index1);
         return structuredArray.getL(index2);
@@ -430,9 +427,6 @@ public final class MultiDimensionalStructuredArray<T> implements Iterable<T> {
      * @throws ClassCastException if number of indexes does not match number of dimensions in the array
      */
     public T getL(long index0, long index1, long index2, long index3) throws ClassCastException {
-        if (numOfDimensions != 4) {
-            throw new IllegalArgumentException("number of indexes passed must match numOfDimensions");
-        }
         MultiDimensionalStructuredArray<T> level0element = getOfMultiDimensionalStructuredArrayL(index0);
         MultiDimensionalStructuredArray<T> level1element = level0element.getOfMultiDimensionalStructuredArrayL(index1);
         StructuredArray<T> structuredArray = level1element.getOfStructuredArrayL(index2);
@@ -461,9 +455,6 @@ public final class MultiDimensionalStructuredArray<T> implements Iterable<T> {
      * @throws ClassCastException if number of indexes does not match number of dimensions in the array
      */
     public T get(int index0, int index1, int index2) throws ClassCastException {
-        if (numOfDimensions != 3) {
-            throw new IllegalArgumentException("number of indexes passed must match numOfDimensions");
-        }
         MultiDimensionalStructuredArray<T> level0element = getOfMultiDimensionalStructuredArray(index0);
         StructuredArray<T> structuredArray = level0element.getOfStructuredArray(index1);
         return structuredArray.get(index2);
@@ -479,9 +470,6 @@ public final class MultiDimensionalStructuredArray<T> implements Iterable<T> {
      * @throws ClassCastException if number of indexes does not match number of dimensions in the array
      */
     public T get(int index0, int index1, int index2, int index3) throws ClassCastException {
-        if (numOfDimensions != 4) {
-            throw new IllegalArgumentException("number of indexes passed must match numOfDimensions");
-        }
         MultiDimensionalStructuredArray<T> level0element = getOfMultiDimensionalStructuredArray(index0);
         MultiDimensionalStructuredArray<T> level1element = level0element.getOfMultiDimensionalStructuredArray(index1);
         StructuredArray<T> structuredArray = level1element.getOfStructuredArray(index2);
@@ -503,7 +491,7 @@ public final class MultiDimensionalStructuredArray<T> implements Iterable<T> {
     }
 
     /**
-     * Get a reference to a StructuredArray element in this array, using a <code>int</code> index.
+     * Get a reference to a StructuredArray element in this array, using a <code>long</code> index.
      * @param index
      * @return a reference to the StructuredArray located in element [index] of this array
      * @throws ClassCastException if array has only two dimensions
@@ -515,7 +503,7 @@ public final class MultiDimensionalStructuredArray<T> implements Iterable<T> {
     }
 
     /**
-     * Get a reference to a MultiDimensionalStructuredArray element in this array, using a <code>long</code> index.
+     * Get a reference to a MultiDimensionalStructuredArray element in this array, using a <code>int</code> index.
      * @param index
      * @return a reference to the StructuredArray located in element [index] of this array
      * @throws ClassCastException if array has more than two dimensions
@@ -569,7 +557,7 @@ public final class MultiDimensionalStructuredArray<T> implements Iterable<T> {
         return intAddressableElements[index];
     }
 
-    private void populateElements(final ConstructorAndArgsLocator constructorAndArgsLocator,
+    private <E> void populateElements(final ConstructorAndArgsLocator<E> constructorAndArgsLocator,
                                   long[] containingIndexes) throws NoSuchMethodException {
         try {
             final long[] indexes;
@@ -589,8 +577,8 @@ public final class MultiDimensionalStructuredArray<T> implements Iterable<T> {
 
             for (int i = 0; i < intAddressableElements.length; i++, index++) {
                 indexes[thisIndex] = index;
-                final ConstructorAndArgs constructorAndArgs = constructorAndArgsLocator.getForIndexes(indexes);
-                final Constructor constructor = constructorAndArgs.getConstructor();
+                final ConstructorAndArgs<E> constructorAndArgs = constructorAndArgsLocator.getForIndexes(indexes);
+                final Constructor<E> constructor = constructorAndArgs.getConstructor();
                 intAddressableElements[i] = constructor.newInstance(constructorAndArgs.getConstructorArgs());
                 constructorAndArgsLocator.recycle(constructorAndArgs);
             }
@@ -598,8 +586,8 @@ public final class MultiDimensionalStructuredArray<T> implements Iterable<T> {
             for (final Object[] partition : longAddressableElements) {
                 indexes[thisIndex] = index;
                 for (int i = 0, size = partition.length; i < size; i++, index++) {
-                    final ConstructorAndArgs constructorAndArgs = constructorAndArgsLocator.getForIndexes(indexes);
-                    final Constructor constructor = constructorAndArgs.getConstructor();
+                    final ConstructorAndArgs<E> constructorAndArgs = constructorAndArgsLocator.getForIndexes(indexes);
+                    final Constructor<E> constructor = constructorAndArgs.getConstructor();
                     partition[i] = constructor.newInstance(constructorAndArgs.getConstructorArgs());
                     constructorAndArgsLocator.recycle(constructorAndArgs);
                 }
