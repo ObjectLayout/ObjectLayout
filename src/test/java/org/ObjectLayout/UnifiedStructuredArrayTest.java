@@ -236,31 +236,41 @@ public class UnifiedStructuredArrayTest {
         MockStructure mockStructure = array.getL(lengths);
     }
 
-    @Test(expected = ClassCastException.class)
-    public void shouldThrowIncompatibleTypeExceptionForGetOfAnArrayInsteadOfElement() throws NoSuchMethodException {
+    @Test(expected = NullPointerException.class)
+    public void shouldThrowIncompatibleTypeExceptionForGetOfAnElementInsteadOfArray() throws NoSuchMethodException {
         final long[] lengths = {11, 7, 4};
         final UnifiedStructuredArray<MockStructure> array =
                 UnifiedStructuredArray.newInstance(MockStructure.class, lengths);
 
+        // A 2D get in a 3D array is expected to throw an NPE:
         MockStructure mockStructure = array.get(2, 2);
     }
 
-    public void shouldNotThrowIncompatibleTypeExceptionForGetArrayType1D() throws NoSuchMethodException {
-        final long[] lengths = {11, 7, 4};
-        final UnifiedStructuredArray<MockStructure> array =
-                UnifiedStructuredArray.newInstance(MockStructure.class, lengths);
-
-        // The following will actually be a UnifiedStructuredArray:
-        UnifiedStructuredArray<MockStructure> subArray = array.getOfUnifiedStructuredArray(2);
-    }
-
-    public void shouldNotThrowIncompatibleTypeExceptionForGetArrayType2D() throws NoSuchMethodException {
+    @Test(expected = NullPointerException.class)
+    public void shouldThrowIncompatibleTypeExceptionForGetOfAnArrayInsteadOfElement() throws NoSuchMethodException {
         final long[] lengths = {11, 7, 4};
         final UnifiedStructuredArray<MockStructure> array =
                 UnifiedStructuredArray.newInstance(MockStructure.class, lengths);
 
         UnifiedStructuredArray<MockStructure> subArray1 = array.getOfUnifiedStructuredArray(2);
         UnifiedStructuredArray<MockStructure> subArray2 = subArray1.getOfUnifiedStructuredArray(2);
+        UnifiedStructuredArray<MockStructure> subArray3 = subArray2.getOfUnifiedStructuredArray(2);
+    }
+
+
+    @Test
+    public void shouldNotThrowIncompatibleTypeExceptionForGetsOfProperTypes() throws NoSuchMethodException {
+        final long[] lengths = {11, 7, 4};
+        final UnifiedStructuredArray<MockStructure> array =
+                UnifiedStructuredArray.newInstance(MockStructure.class, lengths);
+
+        // Step by step gets of the correct type (array vs. element) per dimension:
+        UnifiedStructuredArray<MockStructure> subArray1 = array.getOfUnifiedStructuredArray(2);
+        UnifiedStructuredArray<MockStructure> subArray2 = subArray1.getOfUnifiedStructuredArray(2);
+        MockStructure mockStructure1 = subArray2.get(2);
+
+        // The end result of the above is equivalent to this:
+        MockStructure mockStructure2 = array.get(2, 2, 2);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////

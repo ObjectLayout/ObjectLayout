@@ -64,8 +64,16 @@ public final class UnifiedStructuredArray<T> implements Iterable<T> {
 
     private final long length;
     private final int numOfDimensions;
-    private final Object[][] longAddressableElements; // Used to store elements at indexes above Integer.MAX_VALUE
-    private final Object[] intAddressableElements;
+
+    // Separated internal arrays by type for performance reasons, to avoid casting and checkcast at runtime.
+    // Wrong dimension count gets (of the wrong type for the dimension depth) will result in NPEs rather
+    // than class cast exceptions.
+
+    private final UnifiedStructuredArray<T>[][] longAddressableSubArrays; // Used to store subArrays at indexes above Integer.MAX_VALUE
+    private final UnifiedStructuredArray<T>[] intAddressableSubArrays;
+
+    private final T[][] longAddressableElements; // Used to store elements at indexes above Integer.MAX_VALUE
+    private final T[] intAddressableElements;
 
     // Single-dimensional newInstance forms:
 
@@ -302,24 +310,28 @@ public final class UnifiedStructuredArray<T> implements Iterable<T> {
 
         this.elementClass = constructorAndArgsLocator.getElementClass();
 
-        // int-addressable elements:
-        final int intLength = (int) Math.min(length, Integer.MAX_VALUE);
-        intAddressableElements = (T[])new Object[intLength];
-
-        // Subsequent partitions hold long-addressable-only elements:
-        final long extraLength = length - intLength;
-        final int numFullPartitions = (int)(extraLength >>> MAX_EXTRA_PARTITION_SIZE_POW2_EXPONENT);
-        final int lastPartitionSize = (int)extraLength & MASK;
-
-        longAddressableElements = (T[][])new Object[numFullPartitions + 1][];
-        // full long-addressable-only partitions:
-        for (int i = 0; i < numFullPartitions; i++) {
-            longAddressableElements[i] = (T[])new Object[MAX_EXTRA_PARTITION_SIZE];
-        }
-        // Last partition with leftover long-addressable-only size:
-        longAddressableElements[numFullPartitions] = (T[])new Object[lastPartitionSize];
-
         if (numOfDimensions > 1) {
+            // We have sub arrays, not elements:
+            intAddressableElements = null;
+            longAddressableElements = null;
+
+            // int-addressable sub arrays:
+            final int intLength = (int) Math.min(length, Integer.MAX_VALUE);
+            intAddressableSubArrays = (UnifiedStructuredArray<T>[])new UnifiedStructuredArray[intLength];
+
+            // Subsequent partitions hold long-addressable-only sub arrays:
+            final long extraLength = length - intLength;
+            final int numFullPartitions = (int)(extraLength >>> MAX_EXTRA_PARTITION_SIZE_POW2_EXPONENT);
+            final int lastPartitionSize = (int)extraLength & MASK;
+
+            longAddressableSubArrays = (UnifiedStructuredArray<T>[][])new UnifiedStructuredArray[numFullPartitions + 1][];
+            // full long-addressable-only partitions:
+            for (int i = 0; i < numFullPartitions; i++) {
+                longAddressableSubArrays[i] = (UnifiedStructuredArray<T>[])new Object[MAX_EXTRA_PARTITION_SIZE];
+            }
+            // Last partition with leftover long-addressable-only size:
+            longAddressableSubArrays[numFullPartitions] = (UnifiedStructuredArray<T>[])new UnifiedStructuredArray[lastPartitionSize];
+
             // This is an array of arrays. Pass the constructorAndArgsLocator through to
             // a subArrayConstructorAndArgsLocator that will be used to populate the sub-array:
             final long[] subArrayLengths = new long[lengths.length - 1];
@@ -335,10 +347,33 @@ public final class UnifiedStructuredArray<T> implements Iterable<T> {
                     targetClass.getDeclaredConstructor(subArrayArgTypes);
             ConstructorAndArgsLocator<UnifiedStructuredArray<T>> subArrayConstructorAndArgsLocator =
                     new ArrayConstructorAndArgsLocator<UnifiedStructuredArray<T>>(constructor, subArrayArgs, 3);
-            populateElements(subArrayConstructorAndArgsLocator, containingIndexes);
+            populateElements(subArrayConstructorAndArgsLocator,
+                    intAddressableSubArrays, longAddressableSubArrays, containingIndexes);
         } else {
+            // We have elements, no sub arrays:
+            intAddressableSubArrays = null;
+            longAddressableSubArrays = null;
+
+            // int-addressable elements:
+            final int intLength = (int) Math.min(length, Integer.MAX_VALUE);
+            intAddressableElements = (T[])new Object[intLength];
+
+            // Subsequent partitions hold long-addressable-only elements:
+            final long extraLength = length - intLength;
+            final int numFullPartitions = (int)(extraLength >>> MAX_EXTRA_PARTITION_SIZE_POW2_EXPONENT);
+            final int lastPartitionSize = (int)extraLength & MASK;
+
+            longAddressableElements = (T[][])new Object[numFullPartitions + 1][];
+            // full long-addressable-only partitions:
+            for (int i = 0; i < numFullPartitions; i++) {
+                longAddressableElements[i] = (T[])new Object[MAX_EXTRA_PARTITION_SIZE];
+            }
+            // Last partition with leftover long-addressable-only size:
+            longAddressableElements[numFullPartitions] = (T[])new Object[lastPartitionSize];
+
             // This is a single dimension array. Populate it:
-            populateElements(constructorAndArgsLocator, containingIndexes);
+            populateElements(constructorAndArgsLocator,
+                    intAddressableElements, longAddressableElements, containingIndexes);
         }
     }
 
@@ -390,6 +425,7 @@ public final class UnifiedStructuredArray<T> implements Iterable<T> {
      *
      * @param indexes The indexes (at each dimension) of the element to retrieve.
      * @return a reference to the indexed element.
+     * @throws NullPointerException if number of indexes does not match number of dimensions in the array
      */
     public T getL(long[] indexes) {
         return getL(indexes, 0);
@@ -405,10 +441,11 @@ public final class UnifiedStructuredArray<T> implements Iterable<T> {
      * @param indexes The indexes (at each dimension) of the element to retrieve.
      * @param indexOffset The beginning offset in the indexes array related to this arrays contents.
      * @return a reference to the indexed element.
+     * @throws NullPointerException if number of relevant indexes does not match number of dimensions in the array
      */
     public T getL(long[] indexes, int indexOffset) {
         if ((indexes.length - indexOffset) != numOfDimensions) {
-            throw new IllegalArgumentException("number of relevant elements in indexes must match numOfDimensions");
+            throw new NullPointerException("number of relevant elements in indexes must match numOfDimensions");
         }
         if (numOfDimensions > 1) {
             UnifiedStructuredArray<T> containedArray = getOfUnifiedStructuredArrayL(indexes[indexOffset]);
@@ -424,6 +461,7 @@ public final class UnifiedStructuredArray<T> implements Iterable<T> {
      *
      * @param indexes The indexes (at each dimension) of the element to retrieve.
      * @return a reference to the indexed element.
+     * @throws NullPointerException if number of indexes does not match number of dimensions in the array
      */
     public T getL(Long... indexes) {
         return getL(LongArrayToPrimitiveLongArray(indexes));
@@ -435,6 +473,7 @@ public final class UnifiedStructuredArray<T> implements Iterable<T> {
      *
      * @param indexes The indexes (at each dimension) of the element to retrieve.
      * @return a reference to the indexed element.
+     * @throws NullPointerException if number of indexes does not match number of dimensions in the array
      */
     public T get(Integer... indexes) {
         return getL(IntegerArrayToPrimitiveLongArray(indexes));
@@ -448,7 +487,7 @@ public final class UnifiedStructuredArray<T> implements Iterable<T> {
      * @param index0
      * @param index1
      * @return the element at [index0, index1]
-     * @throws ClassCastException if number of indexes does not match number of dimensions in the array
+     * @throws NullPointerException if number of indexes does not match number of dimensions in the array
      */
     public T getL(long index0, long index1) throws ClassCastException {
         return getOfUnifiedStructuredArrayL(index0).getL(index1);
@@ -460,7 +499,7 @@ public final class UnifiedStructuredArray<T> implements Iterable<T> {
      * @param index1
      * @param index2
      * @return the element at [index0, index1, index2]
-     * @throws ClassCastException if number of indexes does not match number of dimensions in the array
+     * @throws NullPointerException if number of indexes does not match number of dimensions in the array
      */
     public T getL(long index0, long index1, long index2) throws ClassCastException {
         UnifiedStructuredArray<T> level0element = getOfUnifiedStructuredArrayL(index0);
@@ -475,7 +514,7 @@ public final class UnifiedStructuredArray<T> implements Iterable<T> {
      * @param index2
      * @param index3
      * @return the element at [index0, index1, index2, index3]
-     * @throws ClassCastException if number of indexes does not match number of dimensions in the array
+     * @throws NullPointerException if number of indexes does not match number of dimensions in the array
      */
     public T getL(long index0, long index1, long index2, long index3) throws ClassCastException {
         UnifiedStructuredArray<T> level0element = getOfUnifiedStructuredArrayL(index0);
@@ -491,7 +530,7 @@ public final class UnifiedStructuredArray<T> implements Iterable<T> {
      * @param index0
      * @param index1
      * @return the element at [index0, index1]
-     * @throws ClassCastException if number of indexes does not match number of dimensions in the array
+     * @throws NullPointerException if number of indexes does not match number of dimensions in the array
      */
     public T get(int index0, int index1) throws ClassCastException {
         return getOfUnifiedStructuredArray(index0).getL(index1);
@@ -503,12 +542,9 @@ public final class UnifiedStructuredArray<T> implements Iterable<T> {
      * @param index1
      * @param index2
      * @return the element at [index0, index1, index2]
-     * @throws ClassCastException if number of indexes does not match number of dimensions in the array
+     * @throws NullPointerException if number of indexes does not match number of dimensions in the array
      */
     public T get(int index0, int index1, int index2) throws ClassCastException {
-        if (numOfDimensions != 3) {
-            throw new IllegalArgumentException("number of indexes passed must match numOfDimensions");
-        }
         UnifiedStructuredArray<T> level0element = getOfUnifiedStructuredArray(index0);
         UnifiedStructuredArray<T> level1element = level0element.getOfUnifiedStructuredArray(index1);
         return level1element.get(index2);
@@ -521,12 +557,9 @@ public final class UnifiedStructuredArray<T> implements Iterable<T> {
      * @param index2
      * @param index3
      * @return the element at [index0, index1, index2, index3]
-     * @throws ClassCastException if number of indexes does not match number of dimensions in the array
+     * @throws NullPointerException if number of indexes does not match number of dimensions in the array
      */
     public T get(int index0, int index1, int index2, int index3) throws ClassCastException {
-        if (numOfDimensions != 4) {
-            throw new IllegalArgumentException("number of indexes passed must match numOfDimensions");
-        }
         UnifiedStructuredArray<T> level0element = getOfUnifiedStructuredArray(index0);
         UnifiedStructuredArray<T> level1element = level0element.getOfUnifiedStructuredArray(index1);
         UnifiedStructuredArray<T> level2element = level1element.getOfUnifiedStructuredArray(index2);
@@ -539,60 +572,43 @@ public final class UnifiedStructuredArray<T> implements Iterable<T> {
      * Get a reference to a UnifiedStructuredArray element in this array, using a <code>long</code> index.
      * @param index
      * @return a reference to the UnifiedStructuredArray located in element [index] of this array
-     * @throws ClassCastException if array has less than two dimensions
+     * @throws NullPointerException if array has less than two dimensions
      */
     @SuppressWarnings("unchecked")
     public UnifiedStructuredArray<T> getOfUnifiedStructuredArrayL(final long index) throws ClassCastException {
-        // Note that there is no explicit numOfDimensions check here. Type casting failure will trigger if dimensions are wrong.
-        return (UnifiedStructuredArray<T>) getL(index);
+        if (index < Integer.MAX_VALUE) {
+            return getOfUnifiedStructuredArray((int) index);
+        }
+
+        // Calculate index into long-addressable-only partitions:
+        final long longIndex = (index - Integer.MAX_VALUE);
+        final int partitionIndex = (int)(longIndex >>> MAX_EXTRA_PARTITION_SIZE_POW2_EXPONENT);
+        final int partitionOffset = (int)longIndex & MASK;
+
+        return longAddressableSubArrays[partitionIndex][partitionOffset];
     }
 
     /**
      * Get a reference to a UnifiedStructuredArray element in this array, using a <code>int</code> index.
      * @param index
      * @return a reference to the UnifiedStructuredArray located in element [index] of this array
-     * @throws ClassCastException if array has less than two dimensions
+     * @throws NullPointerException if array has less than two dimensions
      */
     @SuppressWarnings("unchecked")
     public UnifiedStructuredArray<T> getOfUnifiedStructuredArray(final int index) throws ClassCastException {
-        // Note that there is no explicit numOfDimensions check here. Type casting failure will trigger if dimensions are wrong.
-        return (UnifiedStructuredArray<T>) get(index);
+        return intAddressableSubArrays[index];
     }
-
-    // Direct (top dimension) element gets:
 
     /**
      * Get a reference to an element in the array, using a <code>long</code> index.
      *
      * @param index of the element to retrieve.
      * @return a reference to the indexed element.
+     * @throws NullPointerException if array has more than one dimensions
      */
     public T getL(final long index) {
-        return (T) getOfUnknownTypeL(index);
-    }
-
-    /**
-     * Get a reference to an element in the array, using an <code>int</code> index.
-     *
-     * @param index of the element to retrieve.
-     * @return a reference to the indexed element.
-     */
-    public T get(final int index) {
-        return (T) getOfUnknownType(index);
-    }
-
-
-    // Type-unknown gets:
-
-    /**
-     * Get a reference to an element in the array, using a <code>long</code> index.
-     *
-     * @param index of the element to retrieve.
-     * @return a reference to the indexed element.
-     */
-    private Object getOfUnknownTypeL(final long index) {
         if (index < Integer.MAX_VALUE) {
-            return getOfUnknownType((int) index);
+            return get((int) index);
         }
 
         // Calculate index into long-addressable-only partitions:
@@ -608,12 +624,15 @@ public final class UnifiedStructuredArray<T> implements Iterable<T> {
      *
      * @param index of the element to retrieve.
      * @return a reference to the indexed element.
+     * @throws NullPointerException if array has more than one dimensions
      */
-    private Object getOfUnknownType(final int index) {
+    public T get(final int index) {
         return intAddressableElements[index];
     }
 
     private <E> void populateElements(final ConstructorAndArgsLocator<E> constructorAndArgsLocator,
+                                      E[] intAddressable,
+                                      E[][] longAddressable,
                                   long[] containingIndexes) throws NoSuchMethodException {
         try {
             final long[] indexes;
@@ -631,15 +650,15 @@ public final class UnifiedStructuredArray<T> implements Iterable<T> {
 
             long index = 0;
 
-            for (int i = 0; i < intAddressableElements.length; i++, index++) {
+            for (int i = 0; i < intAddressable.length; i++, index++) {
                 indexes[thisIndex] = index;
                 final ConstructorAndArgs<E> constructorAndArgs = constructorAndArgsLocator.getForIndexes(indexes);
                 final Constructor<E> constructor = constructorAndArgs.getConstructor();
-                intAddressableElements[i] = constructor.newInstance(constructorAndArgs.getConstructorArgs());
+                intAddressable[i] = constructor.newInstance(constructorAndArgs.getConstructorArgs());
                 constructorAndArgsLocator.recycle(constructorAndArgs);
             }
 
-            for (final Object[] partition : longAddressableElements) {
+            for (final E[] partition : longAddressable) {
                 indexes[thisIndex] = index;
                 for (int i = 0, size = partition.length; i < size; i++, index++) {
                     final ConstructorAndArgs<E> constructorAndArgs = constructorAndArgsLocator.getForIndexes(indexes);
