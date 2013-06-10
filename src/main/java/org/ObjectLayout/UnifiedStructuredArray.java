@@ -58,6 +58,8 @@ public final class UnifiedStructuredArray<T> implements Iterable<T> {
     private static final int MAX_EXTRA_PARTITION_SIZE = 1 << MAX_EXTRA_PARTITION_SIZE_POW2_EXPONENT;
     private static final int MASK = MAX_EXTRA_PARTITION_SIZE - 1;
 
+    private final Field[] fields;
+    private final boolean hasFinalFields;
     private final Class<T> elementClass;
 
     private final long[] lengths;
@@ -310,6 +312,13 @@ public final class UnifiedStructuredArray<T> implements Iterable<T> {
 
         this.elementClass = constructorAndArgsLocator.getElementClass();
 
+        final Field[] fields = removeStaticFields(elementClass.getDeclaredFields());
+        for (final Field field : fields) {
+            field.setAccessible(true);
+        }
+        this.fields = fields;
+        this.hasFinalFields = containsFinalQualifiedFields(fields);
+
         if (numOfDimensions > 1) {
             // We have sub arrays, not elements:
             intAddressableElements = null;
@@ -489,7 +498,7 @@ public final class UnifiedStructuredArray<T> implements Iterable<T> {
      * @return the element at [index0, index1]
      * @throws NullPointerException if number of indexes does not match number of dimensions in the array
      */
-    public T getL(long index0, long index1) throws ClassCastException {
+    public T getL(long index0, long index1) {
         return getOfUnifiedStructuredArrayL(index0).getL(index1);
     }
 
@@ -501,7 +510,7 @@ public final class UnifiedStructuredArray<T> implements Iterable<T> {
      * @return the element at [index0, index1, index2]
      * @throws NullPointerException if number of indexes does not match number of dimensions in the array
      */
-    public T getL(long index0, long index1, long index2) throws ClassCastException {
+    public T getL(long index0, long index1, long index2) {
         UnifiedStructuredArray<T> level0element = getOfUnifiedStructuredArrayL(index0);
         UnifiedStructuredArray<T> level1element = level0element.getOfUnifiedStructuredArrayL(index1);
         return level1element.getL(index2);
@@ -516,7 +525,7 @@ public final class UnifiedStructuredArray<T> implements Iterable<T> {
      * @return the element at [index0, index1, index2, index3]
      * @throws NullPointerException if number of indexes does not match number of dimensions in the array
      */
-    public T getL(long index0, long index1, long index2, long index3) throws ClassCastException {
+    public T getL(long index0, long index1, long index2, long index3) {
         UnifiedStructuredArray<T> level0element = getOfUnifiedStructuredArrayL(index0);
         UnifiedStructuredArray<T> level1element = level0element.getOfUnifiedStructuredArrayL(index1);
         UnifiedStructuredArray<T> level2element = level1element.getOfUnifiedStructuredArrayL(index2);
@@ -532,7 +541,7 @@ public final class UnifiedStructuredArray<T> implements Iterable<T> {
      * @return the element at [index0, index1]
      * @throws NullPointerException if number of indexes does not match number of dimensions in the array
      */
-    public T get(int index0, int index1) throws ClassCastException {
+    public T get(int index0, int index1) {
         return getOfUnifiedStructuredArray(index0).getL(index1);
     }
 
@@ -544,7 +553,7 @@ public final class UnifiedStructuredArray<T> implements Iterable<T> {
      * @return the element at [index0, index1, index2]
      * @throws NullPointerException if number of indexes does not match number of dimensions in the array
      */
-    public T get(int index0, int index1, int index2) throws ClassCastException {
+    public T get(int index0, int index1, int index2) {
         UnifiedStructuredArray<T> level0element = getOfUnifiedStructuredArray(index0);
         UnifiedStructuredArray<T> level1element = level0element.getOfUnifiedStructuredArray(index1);
         return level1element.get(index2);
@@ -559,7 +568,7 @@ public final class UnifiedStructuredArray<T> implements Iterable<T> {
      * @return the element at [index0, index1, index2, index3]
      * @throws NullPointerException if number of indexes does not match number of dimensions in the array
      */
-    public T get(int index0, int index1, int index2, int index3) throws ClassCastException {
+    public T get(int index0, int index1, int index2, int index3) {
         UnifiedStructuredArray<T> level0element = getOfUnifiedStructuredArray(index0);
         UnifiedStructuredArray<T> level1element = level0element.getOfUnifiedStructuredArray(index1);
         UnifiedStructuredArray<T> level2element = level1element.getOfUnifiedStructuredArray(index2);
@@ -575,7 +584,7 @@ public final class UnifiedStructuredArray<T> implements Iterable<T> {
      * @throws NullPointerException if array has less than two dimensions
      */
     @SuppressWarnings("unchecked")
-    public UnifiedStructuredArray<T> getOfUnifiedStructuredArrayL(final long index) throws ClassCastException {
+    public UnifiedStructuredArray<T> getOfUnifiedStructuredArrayL(final long index) {
         if (index < Integer.MAX_VALUE) {
             return getOfUnifiedStructuredArray((int) index);
         }
@@ -595,7 +604,7 @@ public final class UnifiedStructuredArray<T> implements Iterable<T> {
      * @throws NullPointerException if array has less than two dimensions
      */
     @SuppressWarnings("unchecked")
-    public UnifiedStructuredArray<T> getOfUnifiedStructuredArray(final int index) throws ClassCastException {
+    public UnifiedStructuredArray<T> getOfUnifiedStructuredArray(final int index) {
         return intAddressableSubArrays[index];
     }
 
@@ -816,5 +825,91 @@ public final class UnifiedStructuredArray<T> implements Iterable<T> {
             longLengths[i] = lengths[i];
         }
         return longLengths;
+    }
+
+    /**
+     * Shallow copy a region of element object contents from one array to the other.
+     * <p>
+     * shallowCopy will copy all fields from each of the source elements to the corresponding fields in each
+     * of the corresponding destination elements. If the same array is both the src and dst then the copy will
+     * happen as if a temporary intermediate array was used.
+     *
+     * @param src array to copy.
+     * @param srcOffset offset index in src where the region begins.
+     * @param dst array into which the copy should occur.
+     * @param dstOffset offset index in the dst where the region begins.
+     * @param count of structure elements to copy.
+     * @throws IllegalStateException if final fields are discovered.
+     * @throws ArrayStoreException if the element classes in src and dst are not identical.
+     */
+    public static void shallowCopy(final UnifiedStructuredArray src, final long srcOffset,
+                                   final UnifiedStructuredArray dst, final long dstOffset,
+                                   final long count) {
+        shallowCopy(src, srcOffset, dst, dstOffset, count, false);
+    }
+
+    /**
+     * Shallow copy a region of element object contents from one array to the other.
+     * <p>
+     * shallowCopy will copy all fields from each of the source elements to the corresponding fields in each
+     * of the corresponding destination elements. If the same array is both the src and dst then the copy will
+     * happen as if a temporary intermediate array was used.
+     *
+     * If <code>allowFinalFieldOverwrite</code> is specified as <code>true</code>, even final fields will be copied.
+     *
+     * @param src array to copy.
+     * @param srcOffset offset index in src where the region begins.
+     * @param dst array into which the copy should occur.
+     * @param dstOffset offset index in the dst where the region begins.
+     * @param count of structure elements to copy.
+     * @param allowFinalFieldOverwrite allow final fields to be overwritten during a copy operation.
+     * @throws IllegalArgumentException if final fields are discovered and all allowFinalFieldOverwrite is not true.
+     * @throws IllegalArgumentException if source or destination arrays have more than one dimension.
+     * @throws ArrayStoreException if the element classes in src and dst are not identical.
+     */
+    public static void shallowCopy(final UnifiedStructuredArray src, final long srcOffset,
+                                   final UnifiedStructuredArray dst, final long dstOffset,
+                                   final long count,
+                                   final boolean allowFinalFieldOverwrite) {
+        if (src.elementClass != dst.elementClass) {
+            throw new ArrayStoreException(String.format("Only objects of the same class can be copied: %s != %s",
+                    src.getClass(), dst.getClass()));
+        }
+        if ((src.numOfDimensions > 1) || (dst.numOfDimensions > 1)) {
+            throw new IllegalArgumentException("shallowCopy only supported for single dimension arrays");
+        }
+
+        final Field[] fields = src.fields;
+        if (!allowFinalFieldOverwrite && dst.hasFinalFields) {
+            throw new IllegalArgumentException("Cannot shallow copy onto final fields");
+        }
+
+        if (((srcOffset + count) < Integer.MAX_VALUE) && ((dstOffset + count) < Integer.MAX_VALUE)) {
+            // use the (faster) int based get
+            if (dst == src && (dstOffset >= srcOffset && (dstOffset + count) >= srcOffset)) {
+                for (int srcIdx = (int)(srcOffset + count), dstIdx = (int)(dstOffset + count), limit = (int)(srcOffset - 1);
+                     srcIdx > limit; srcIdx--, dstIdx--) {
+                    reverseShallowCopy(src.get(srcIdx), dst.get(dstIdx), fields);
+                }
+            } else {
+                for (int srcIdx = (int)srcOffset, dstIdx = (int)dstOffset, limit = (int)(srcOffset + count);
+                     srcIdx < limit; srcIdx++, dstIdx++) {
+                    shallowCopy(src.get(srcIdx), dst.get(dstIdx), fields);
+                }
+            }
+        } else {
+            // use the (slower) long based getL
+            if (dst == src && (dstOffset >= srcOffset && (dstOffset + count) >= srcOffset)) {
+                for (long srcIdx = srcOffset + count, dstIdx = dstOffset + count, limit = srcOffset - 1;
+                     srcIdx > limit; srcIdx--, dstIdx--) {
+                    reverseShallowCopy(src.getL(srcIdx), dst.getL(dstIdx), fields);
+                }
+            } else {
+                for (long srcIdx = srcOffset, dstIdx = dstOffset, limit = srcOffset + count;
+                     srcIdx < limit; srcIdx++, dstIdx++) {
+                    shallowCopy(src.getL(srcIdx), dst.getL(dstIdx), fields);
+                }
+            }
+        }
     }
 }

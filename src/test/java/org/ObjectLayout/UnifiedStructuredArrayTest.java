@@ -273,6 +273,55 @@ public class UnifiedStructuredArrayTest {
         MockStructure mockStructure2 = array.get(2, 2, 2);
     }
 
+    @Test
+    public void shouldCopyRegionLeftInArray() throws NoSuchMethodException {
+        final long length = 11;
+        final UnifiedStructuredArray<MockStructure> array =
+                UnifiedStructuredArray.newInstance(MockStructure.class, length);
+
+        initValues(new long[] { length }, array);
+
+        UnifiedStructuredArray.shallowCopy(array, 4, array, 3, 2, false);
+
+        assertThat(valueOf(array.get(3).getIndex()), is(valueOf(4)));
+        assertThat(valueOf(array.get(4).getIndex()), is(valueOf(5)));
+        assertThat(valueOf(array.get(5).getIndex()), is(valueOf(5)));
+    }
+
+    @Test
+    public void shouldCopyRegionRightInArray() throws NoSuchMethodException {
+        final long length = 11;
+        final UnifiedStructuredArray<MockStructure> array =
+                UnifiedStructuredArray.newInstance(MockStructure.class, length);
+
+        initValues(new long[] { length }, array);
+
+        UnifiedStructuredArray.shallowCopy(array, 5, array, 6, 2, false);
+
+        assertThat(valueOf(array.get(5).getIndex()), is(valueOf(5)));
+        assertThat(valueOf(array.get(6).getIndex()), is(valueOf(5)));
+        assertThat(valueOf(array.get(7).getIndex()), is(valueOf(6)));
+    }
+
+    @Test
+    public void shouldCopyEvenWithFinalFields() throws NoSuchMethodException {
+        final long length = 11;
+        final UnifiedStructuredArray<MockStructureWithFinalField> array =
+                UnifiedStructuredArray.newInstance(MockStructureWithFinalField.class, length);
+
+        UnifiedStructuredArray.shallowCopy(array, 1, array, 3, 1, true);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void shouldThrowExceptionWhenFinalFieldWouldBeCopied() throws NoSuchMethodException {
+        final long length = 11;
+        final UnifiedStructuredArray<MockStructureWithFinalField> array =
+                UnifiedStructuredArray.newInstance(MockStructureWithFinalField.class, length);
+
+        UnifiedStructuredArray.shallowCopy(array, 1, array, 3, 1);
+    }
+
+
     ///////////////////////////////////////////////////////////////////////////////////////////////
     // Test support below
     ///////////////////////////////////////////////////////////////////////////////////////////////
