@@ -334,8 +334,8 @@ public class SingleDimensionalStructuredArrayTest {
             return new ConstructorAndArgs<MockStructure>(MockStructure.class.getConstructor(argsTypes), args);
         }
 
-        public ConstructorAndArgs<MockStructure> getForIndexes(final long[] indexes) throws NoSuchMethodException {
-            return getForIndex(indexes[0]);
+        public ConstructorAndArgs<MockStructure> getForIndices(final long[] indices) throws NoSuchMethodException {
+            return getForIndex(indices[0]);
         }
     }
 }

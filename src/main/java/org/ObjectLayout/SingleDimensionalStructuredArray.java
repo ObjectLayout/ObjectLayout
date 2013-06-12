@@ -252,7 +252,7 @@ public final class SingleDimensionalStructuredArray<T> implements Iterable<T> {
 
             for (int i = 0; i < intAddressableElements.length; i++, index++) {
                 indexes[thisIndex] = index;
-                final ConstructorAndArgs<T> constructorAndArgs = constructorAndArgsLocator.getForIndexes(indexes);
+                final ConstructorAndArgs<T> constructorAndArgs = constructorAndArgsLocator.getForIndices(indexes);
                 final Constructor<T> constructor = constructorAndArgs.getConstructor();
                 intAddressableElements[i] = constructor.newInstance(constructorAndArgs.getConstructorArgs());
                 constructorAndArgsLocator.recycle(constructorAndArgs);
@@ -261,7 +261,7 @@ public final class SingleDimensionalStructuredArray<T> implements Iterable<T> {
             for (final T[] partition : longAddressableElements) {
                 indexes[thisIndex] = index;
                 for (int i = 0, size = partition.length; i < size; i++, index++) {
-                    final ConstructorAndArgs<T> constructorAndArgs = constructorAndArgsLocator.getForIndexes(indexes);
+                    final ConstructorAndArgs<T> constructorAndArgs = constructorAndArgsLocator.getForIndices(indexes);
                     final Constructor<T> constructor = constructorAndArgs.getConstructor();
                     partition[i] = constructor.newInstance(constructorAndArgs.getConstructorArgs());
                     constructorAndArgsLocator.recycle(constructorAndArgs);

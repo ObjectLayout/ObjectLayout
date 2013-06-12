@@ -271,9 +271,9 @@ public class StructuredArrayPerfTest {
             super(MockStructure.class);
         }
 
-        public ConstructorAndArgs<MockStructure> getForIndexes(long indexes[]) throws NoSuchMethodException {
+        public ConstructorAndArgs<MockStructure> getForIndices(long indices[]) throws NoSuchMethodException {
             long indexSum = 0;
-            for (long index : indexes) {
+            for (long index : indices) {
                 indexSum += index;
             }
             Object[] args = {indexSum, indexSum * 2};

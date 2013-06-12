@@ -90,7 +90,7 @@ public class ArrayConstructorAndArgsLocator<T> extends ConstructorAndArgsLocator
     }
 
 
-    public ConstructorAndArgs<T> getForIndexes(final long[] indexes) throws NoSuchMethodException {
+    public ConstructorAndArgs<T> getForIndices(final long[] indices) throws NoSuchMethodException {
         ConstructorAndArgs<T> constructorAndArgs;
         Object[] args;
         long[] containingIndexes;
@@ -109,10 +109,10 @@ public class ArrayConstructorAndArgsLocator<T> extends ConstructorAndArgsLocator
             nonThreadSafeCachedContainingIndexes = null;
         }
 
-        if ((containingIndexes == null) || (containingIndexes.length != indexes.length))  {
-            containingIndexes = new long[indexes.length];
+        if ((containingIndexes == null) || (containingIndexes.length != indices.length))  {
+            containingIndexes = new long[indices.length];
         }
-        System.arraycopy(indexes, 0, containingIndexes, 0, indexes.length);
+        System.arraycopy(indices, 0, containingIndexes, 0, indices.length);
 
         if (args == null) {
             args = Arrays.copyOf(originalArgs, originalArgs.length);

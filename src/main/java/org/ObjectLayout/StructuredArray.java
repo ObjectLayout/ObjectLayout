@@ -286,7 +286,7 @@ public final class StructuredArray<T> implements Iterable<T> {
     private StructuredArray(final int dimensionCount,
                             final ConstructorAndArgsLocator constructorAndArgsLocator,
                             final long[] lengths,
-                            final long[] containingIndexes) throws NoSuchMethodException {
+                            final long[] containingIndices) throws NoSuchMethodException {
         if (dimensionCount < 1) {
             throw new IllegalArgumentException("dimensionCount must be at least 1");
         }
@@ -343,14 +343,14 @@ public final class StructuredArray<T> implements Iterable<T> {
             final Class[] subArrayArgTypes = {Integer.TYPE, ConstructorAndArgsLocator.class,
                                               long[].class, long[].class};
             final Object[] subArrayArgs = {dimensionCount - 1, constructorAndArgsLocator,
-                                           subArrayLengths, null /* containingIndexes arg goes here */};
+                                           subArrayLengths, null /* containingIndices arg goes here */};
             final Class targetClass = StructuredArray.class;
             final Constructor<StructuredArray<T>> constructor = targetClass.getDeclaredConstructor(subArrayArgTypes);
             final ConstructorAndArgsLocator<StructuredArray<T>> subArrayConstructorAndArgsLocator =
                     new ArrayConstructorAndArgsLocator<StructuredArray<T>>(constructor, subArrayArgs, 3);
 
             populateElements(subArrayConstructorAndArgsLocator, intAddressableSubArrays,
-                             longAddressableSubArrays, containingIndexes);
+                             longAddressableSubArrays, containingIndices);
         } else {
             // We have elements, no sub arrays:
             intAddressableSubArrays = null;
@@ -375,7 +375,7 @@ public final class StructuredArray<T> implements Iterable<T> {
 
             // This is a single dimension array. Populate it:
             populateElements(constructorAndArgsLocator, intAddressableElements,
-                             longAddressableElements, containingIndexes);
+                             longAddressableElements, containingIndices);
         }
     }
 
@@ -425,57 +425,57 @@ public final class StructuredArray<T> implements Iterable<T> {
     /**
      * Get a reference to an element in the array, using a <code>long[]</code> index array.
      *
-     * @param indexes The indexes (at each dimension) of the element to retrieve.
+     * @param indices The indices (at each dimension) of the element to retrieve.
      * @return a reference to the indexed element.
-     * @throws IllegalArgumentException if number of indexes does not match number of dimensions in the array
+     * @throws IllegalArgumentException if number of indices does not match number of dimensions in the array
      */
-    public T get(final long[] indexes) throws IllegalArgumentException {
-        return get(indexes, 0);
+    public T get(final long[] indices) throws IllegalArgumentException {
+        return get(indices, 0);
     }
 
     /**
-     * Get a reference to an element in the array, using <code>long</code> indexes supplied in an array.
+     * Get a reference to an element in the array, using <code>long</code> indices supplied in an array.
      * indexOffset indicates the starting point in the array at which the first index should be found.
      * This form is useful when passing index arrays through multiple levels to avoid construction of
      * temporary varargs containers or construction of new shorter index arrays.
      *
-     * @param indexes The indexes (at each dimension) of the element to retrieve.
-     * @param indexOffset The beginning offset in the indexes array related to this arrays contents.
+     * @param indices The indices (at each dimension) of the element to retrieve.
+     * @param indexOffset The beginning offset in the indices array related to this arrays contents.
      * @return a reference to the indexed element.
-     * @throws IllegalArgumentException if number of relevant indexes does not match number of dimensions in the array
+     * @throws IllegalArgumentException if number of relevant indices does not match number of dimensions in the array
      */
-    public T get(final long[] indexes, final int indexOffset) throws IllegalArgumentException {
-        if ((indexes.length - indexOffset) != dimensionCount) {
-            throw new IllegalArgumentException("number of relevant elements in indexes must match array dimension count");
+    public T get(final long[] indices, final int indexOffset) throws IllegalArgumentException {
+        if ((indices.length - indexOffset) != dimensionCount) {
+            throw new IllegalArgumentException("number of relevant elements in indices must match array dimension count");
         }
         if (dimensionCount > 1) {
-            StructuredArray<T> containedArray = getSubArray(indexes[indexOffset]);
-            return containedArray.get(indexes, indexOffset + 1);
+            StructuredArray<T> containedArray = getSubArray(indices[indexOffset]);
+            return containedArray.get(indices, indexOffset + 1);
         } else {
-            return get(indexes[indexOffset]);
+            return get(indices[indexOffset]);
         }
     }
 
     /**
-     * Get a reference to an element in the array, using a varargs long indexes.
+     * Get a reference to an element in the array, using a varargs long indices.
      *
-     * @param indexes The indexes (at each dimension) of the element to retrieve.
+     * @param indices The indices (at each dimension) of the element to retrieve.
      * @return a reference to the indexed element.
-     * @throws IllegalArgumentException if number of indexes does not match number of dimensions in the array
+     * @throws IllegalArgumentException if number of indices does not match number of dimensions in the array
      */
-    public T get(final Long... indexes) throws IllegalArgumentException {
-        return get(LongArrayToPrimitiveLongArray(indexes));
+    public T get(final Long... indices) throws IllegalArgumentException {
+        return get(LongArrayToPrimitiveLongArray(indices));
     }
 
     /**
-     * Get a reference to an element in the array, using a varargs int indexes.
+     * Get a reference to an element in the array, using a varargs int indices.
      *
-     * @param indexes The indexes (at each dimension) of the element to retrieve.
+     * @param indices The indices (at each dimension) of the element to retrieve.
      * @return a reference to the indexed element.
-     * @throws IllegalArgumentException if number of indexes does not match number of dimensions in the array
+     * @throws IllegalArgumentException if number of indices does not match number of dimensions in the array
      */
-    public T get(final Integer... indexes) throws IllegalArgumentException {
-        return get(IntegerArrayToPrimitiveLongArray(indexes));
+    public T get(final Integer... indices) throws IllegalArgumentException {
+        return get(IntegerArrayToPrimitiveLongArray(indices));
     }
 
     // fast long index element get variants:
@@ -653,13 +653,13 @@ public final class StructuredArray<T> implements Iterable<T> {
     private <E> void populateElements(final ConstructorAndArgsLocator<E> constructorAndArgsLocator,
                                       final E[] intAddressable,
                                       final E[][] longAddressable,
-                                      long[] containingIndexes) throws NoSuchMethodException {
+                                      final long[] containingIndices) throws NoSuchMethodException {
         try {
             final long[] indexes;
 
-            if (containingIndexes != null) {
-                indexes = new long[containingIndexes.length + 1];
-                System.arraycopy(containingIndexes, 0, indexes, 0, containingIndexes.length);
+            if (containingIndices != null) {
+                indexes = new long[containingIndices.length + 1];
+                System.arraycopy(containingIndices, 0, indexes, 0, containingIndices.length);
             } else {
                 indexes = new long[1];
             }
@@ -670,7 +670,7 @@ public final class StructuredArray<T> implements Iterable<T> {
 
             for (int i = 0; i < intAddressable.length; i++, index++) {
                 indexes[thisIndex] = index;
-                final ConstructorAndArgs<E> constructorAndArgs = constructorAndArgsLocator.getForIndexes(indexes);
+                final ConstructorAndArgs<E> constructorAndArgs = constructorAndArgsLocator.getForIndices(indexes);
                 final Constructor<E> constructor = constructorAndArgs.getConstructor();
                 intAddressable[i] = constructor.newInstance(constructorAndArgs.getConstructorArgs());
                 constructorAndArgsLocator.recycle(constructorAndArgs);
@@ -679,7 +679,7 @@ public final class StructuredArray<T> implements Iterable<T> {
             for (final E[] partition : longAddressable) {
                 indexes[thisIndex] = index;
                 for (int i = 0, size = partition.length; i < size; i++, index++) {
-                    final ConstructorAndArgs<E> constructorAndArgs = constructorAndArgsLocator.getForIndexes(indexes);
+                    final ConstructorAndArgs<E> constructorAndArgs = constructorAndArgsLocator.getForIndices(indexes);
                     final Constructor<E> constructor = constructorAndArgs.getConstructor();
                     partition[i] = constructor.newInstance(constructorAndArgs.getConstructorArgs());
                     constructorAndArgsLocator.recycle(constructorAndArgs);

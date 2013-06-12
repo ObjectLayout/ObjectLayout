@@ -97,12 +97,12 @@ public class MultiDimensionalCopyConstructorAndArgsLocator<T> extends Constructo
      * Get a {@link org.ObjectLayout.ConstructorAndArgs} instance to be used in constructing a given element index in
      * a {@link MultiDimensionalStructuredArray}.                           .
      *
-     * @param indexes The indexes of the element to be constructed in the target array
+     * @param indices The indexes of the element to be constructed in the target array
      * @return {@link org.ObjectLayout.ConstructorAndArgs} instance to used in element construction
      * @throws NoSuchMethodException if expected constructor is not found in element class
      */
     @SuppressWarnings("unchecked")
-    public ConstructorAndArgs<T> getForIndexes(final long[] indexes) throws NoSuchMethodException {
+    public ConstructorAndArgs<T> getForIndices(final long[] indices) throws NoSuchMethodException {
         ConstructorAndArgs<T> constructorAndArgs;
         long[] targetIndexes;
 
@@ -125,8 +125,8 @@ public class MultiDimensionalCopyConstructorAndArgsLocator<T> extends Constructo
             targetIndexes = new long[sourceOffsets.length];
         }
 
-        for (int i = 0; i < indexes.length; i++) {
-            targetIndexes[i] = indexes[i] + sourceOffsets[i];
+        for (int i = 0; i < indices.length; i++) {
+            targetIndexes[i] = indices[i] + sourceOffsets[i];
         }
 
         // Set the source object for the copy constructor:
@@ -139,7 +139,7 @@ public class MultiDimensionalCopyConstructorAndArgsLocator<T> extends Constructo
     /**
      * Recycle an {@link org.ObjectLayout.ConstructorAndArgs} instance (place it back in the internal cache if
      * desired). This is [very] useful for avoiding a re-allocation of a new {@link org.ObjectLayout.ConstructorAndArgs}
-     * and an associated args array for {@link #getForIndexes(long[])} invocation in cases such as this (where the
+     * and an associated args array for {@link #getForIndices(long[])} invocation in cases such as this (where the
      * returned {@link org.ObjectLayout.ConstructorAndArgs} is not constant across indices).
      * Recycling is optional, and is not guaranteed to occur.
      *

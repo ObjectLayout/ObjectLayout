@@ -113,15 +113,15 @@ public class SingleDimensionalCopyConstructorAndArgsLocator<T> extends Construct
      * Get a {@link ConstructorAndArgs} instance to be used in constructing a given element index in
      * a {@link SingleDimensionalStructuredArray}. (supports only 1 dimensional array copies).                           .
      *
-     * @param indexes The index of the element to be constructed in the target array (supports only 1 dimensional copies)
+     * @param indices The index of the element to be constructed in the target array (supports only 1 dimensional copies)
      * @return {@link ConstructorAndArgs} instance to used in element construction
      * @throws NoSuchMethodException if expected constructor is not found in element class
      */
-    public ConstructorAndArgs<T> getForIndexes(final long[] indexes) throws NoSuchMethodException {
-        if (indexes.length != 1) {
+    public ConstructorAndArgs<T> getForIndices(final long[] indices) throws NoSuchMethodException {
+        if (indices.length != 1) {
             throw new IllegalArgumentException("Not supported for multi-dimensional copies");
         }
-        return getForIndex(indexes[0]);
+        return getForIndex(indices[0]);
     }
 
 

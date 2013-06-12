@@ -570,7 +570,7 @@ public final class MultiDimensionalStructuredArray<T> implements Iterable<T> {
 
             for (int i = 0; i < intAddressableElements.length; i++, index++) {
                 indexes[thisIndex] = index;
-                final ConstructorAndArgs<E> constructorAndArgs = constructorAndArgsLocator.getForIndexes(indexes);
+                final ConstructorAndArgs<E> constructorAndArgs = constructorAndArgsLocator.getForIndices(indexes);
                 final Constructor<E> constructor = constructorAndArgs.getConstructor();
                 intAddressableElements[i] = constructor.newInstance(constructorAndArgs.getConstructorArgs());
                 constructorAndArgsLocator.recycle(constructorAndArgs);
@@ -579,7 +579,7 @@ public final class MultiDimensionalStructuredArray<T> implements Iterable<T> {
             for (final Object[] partition : longAddressableElements) {
                 indexes[thisIndex] = index;
                 for (int i = 0, size = partition.length; i < size; i++, index++) {
-                    final ConstructorAndArgs<E> constructorAndArgs = constructorAndArgsLocator.getForIndexes(indexes);
+                    final ConstructorAndArgs<E> constructorAndArgs = constructorAndArgsLocator.getForIndices(indexes);
                     final Constructor<E> constructor = constructorAndArgs.getConstructor();
                     partition[i] = constructor.newInstance(constructorAndArgs.getConstructorArgs());
                     constructorAndArgsLocator.recycle(constructorAndArgs);
