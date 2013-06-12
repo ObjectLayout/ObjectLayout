@@ -253,7 +253,7 @@ public class MultiDimensionalStructuredArrayTest {
                 MultiDimensionalStructuredArray.newInstance(MockStructure.class, lengths);
 
         // The following will actually be a MultiDimensionalStructuredArray:
-        StructuredArray<MockStructure> subArray = array.getOfStructuredArray(2);
+        SingleDimensionalStructuredArray<MockStructure> subArray = array.getOfStructuredArray(2);
     }
 
     @Test(expected = ClassCastException.class)
@@ -264,7 +264,7 @@ public class MultiDimensionalStructuredArrayTest {
 
         // The following will really be a MultiDimensionalStructuredArray:
         MultiDimensionalStructuredArray<MockStructure> subArray1 = array.getOfMultiDimensionalStructuredArray(2);
-        // But the following will actually be a StructuredArray:
+        // But the following will actually be a SingleDimensionalStructuredArray:
         MultiDimensionalStructuredArray<MockStructure> subArray2 = subArray1.getOfMultiDimensionalStructuredArray(2);
     }
 
@@ -443,7 +443,7 @@ public class MultiDimensionalStructuredArrayTest {
             }
             Object[] args = {indexSum, indexSum * 2};
             // We could do this much more efficiently with atomic caching of a single allocated ConstructorAndArgs,
-            // as CopyConstructorAndArgsLocator does, but no need to put in the effort in a test...
+            // as SingleDimensionalCopyConstructorAndArgsLocator does, but no need to put in the effort in a test...
             return new ConstructorAndArgs<MockStructure>(MockStructure.class.getConstructor(argsTypes), args);
         }
 

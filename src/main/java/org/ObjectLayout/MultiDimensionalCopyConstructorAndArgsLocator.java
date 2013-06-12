@@ -44,7 +44,7 @@ public class MultiDimensionalCopyConstructorAndArgsLocator<T> extends Constructo
      * source array
      *
      * @param elementClass The class of the elements to be constructed
-     * @param source The source StructuredArray to copy from
+     * @param source The source MultiDimensionalStructuredArray to copy from
      * @throws NoSuchMethodException
      */
     public MultiDimensionalCopyConstructorAndArgsLocator(final Class<T> elementClass,
@@ -90,14 +90,14 @@ public class MultiDimensionalCopyConstructorAndArgsLocator<T> extends Constructo
             this.sourceOffsets = new long[source.getNumOfDimensions()];
         }
         if (sourceOffsets.length != source.getNumOfDimensions()) {
-            throw new IllegalArgumentException("number of sourceOffsets elements must match source.getNumOfDimensions()");
+            throw new IllegalArgumentException("number of sourceOffsets elements must match source.getDimensionCount()");
         }
         this.keepInternalCachingThreadSafe = keepInternalCachingThreadSafe;
     }
 
     /**
      * Get a {@link org.ObjectLayout.ConstructorAndArgs} instance to be used in constructing a given element index in
-     * a {@link org.ObjectLayout.StructuredArray}.                           .
+     * a {@link MultiDimensionalStructuredArray}.                           .
      *
      * @param indexes The indexes of the element to be constructed in the target array
      * @return {@link org.ObjectLayout.ConstructorAndArgs} instance to used in element construction

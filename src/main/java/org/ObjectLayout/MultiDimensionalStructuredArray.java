@@ -29,7 +29,7 @@ import static java.lang.reflect.Modifier.isStatic;
  *     An array of (potentially) mutable but non-replaceable objects.
  * <p>
  *     A structured array contains array element objects of a fixed (at creation time, per array instance) class,
- *     and can support elements of any class that provides public constructors. The elements in a StructuredArray
+ *     and can support elements of any class that provides public constructors. The elements in a MultiDimensionalStructuredArray
  *     are all allocated and constructed at array creation time, and individual elements cannot be removed or
  *     replaced after array creation. Array elements can be accessed using an index-based accessor methods in
  *     the form of {@link MultiDimensionalStructuredArray#get}() (for {@link int} indices) or {@link MultiDimensionalStructuredArray#getL}()
@@ -41,7 +41,7 @@ import static java.lang.reflect.Modifier.isStatic;
  *     options. The ConstructorAndArgsLocator API provides for array creation with arbitrary, user-supplied
  *     constructors and arguments, either of which can take the element index into account.
  * <p>
- *     StructuredArray is designed with semantics specifically restricted to be consistent with layouts of an
+ *     MultiDimensionalStructuredArray is designed with semantics specifically restricted to be consistent with layouts of an
  *     array of structures in C-like languages. While fully functional on all JVM implementation (of Java SE 5
  *     and above), the semantics are such that a JVM may transparently optimise the implementation to provide a
  *     compact contiguous layout that facilitates consistent stride based memory access and dead-reckoning
@@ -280,10 +280,10 @@ public final class MultiDimensionalStructuredArray<T> implements Iterable<T> {
             final Class[] subArrayArgTypes = {ConstructorAndArgsLocator.class, Long.TYPE, long[].class};
             final Object[] subArrayArgs = {constructorAndArgsLocator, subArrayLength,
                     null /* containingIndexes arg goes here */};
-            Class targetClass = StructuredArray.class;
-            Constructor<StructuredArray<T>> constructor = targetClass.getDeclaredConstructor(subArrayArgTypes);
-            ConstructorAndArgsLocator<StructuredArray<T>> subArrayConstructorAndArgsLocator =
-                    new ArrayConstructorAndArgsLocator<StructuredArray<T>>(constructor, subArrayArgs, 2);
+            Class targetClass = SingleDimensionalStructuredArray.class;
+            Constructor<SingleDimensionalStructuredArray<T>> constructor = targetClass.getDeclaredConstructor(subArrayArgTypes);
+            ConstructorAndArgsLocator<SingleDimensionalStructuredArray<T>> subArrayConstructorAndArgsLocator =
+                    new ArrayConstructorAndArgsLocator<SingleDimensionalStructuredArray<T>>(constructor, subArrayArgs, 2);
             populateElements(subArrayConstructorAndArgsLocator, containingIndexes);
         }
     }
@@ -362,8 +362,8 @@ public final class MultiDimensionalStructuredArray<T> implements Iterable<T> {
             return containedArray.getL(indexes, indexOffset + 1);
 
         } else {
-            StructuredArray<T> containedArray =
-                    (StructuredArray<T>) getOfStructuredArrayL(indexes[indexOffset]);
+            SingleDimensionalStructuredArray<T> containedArray =
+                    (SingleDimensionalStructuredArray<T>) getOfStructuredArrayL(indexes[indexOffset]);
             return containedArray.getL(indexes[indexOffset + 1]);
         }
     }
@@ -413,8 +413,8 @@ public final class MultiDimensionalStructuredArray<T> implements Iterable<T> {
      */
     public T getL(long index0, long index1, long index2) throws ClassCastException {
         MultiDimensionalStructuredArray<T> level0element = getOfMultiDimensionalStructuredArrayL(index0);
-        StructuredArray<T> structuredArray = level0element.getOfStructuredArrayL(index1);
-        return structuredArray.getL(index2);
+        SingleDimensionalStructuredArray<T> singleDimensionalStructuredArray = level0element.getOfStructuredArrayL(index1);
+        return singleDimensionalStructuredArray.getL(index2);
     }
 
     /**
@@ -429,8 +429,8 @@ public final class MultiDimensionalStructuredArray<T> implements Iterable<T> {
     public T getL(long index0, long index1, long index2, long index3) throws ClassCastException {
         MultiDimensionalStructuredArray<T> level0element = getOfMultiDimensionalStructuredArrayL(index0);
         MultiDimensionalStructuredArray<T> level1element = level0element.getOfMultiDimensionalStructuredArrayL(index1);
-        StructuredArray<T> structuredArray = level1element.getOfStructuredArrayL(index2);
-        return structuredArray.getL(index3);
+        SingleDimensionalStructuredArray<T> singleDimensionalStructuredArray = level1element.getOfStructuredArrayL(index2);
+        return singleDimensionalStructuredArray.getL(index3);
     }
 
     // fast int index variants:
@@ -456,8 +456,8 @@ public final class MultiDimensionalStructuredArray<T> implements Iterable<T> {
      */
     public T get(int index0, int index1, int index2) throws ClassCastException {
         MultiDimensionalStructuredArray<T> level0element = getOfMultiDimensionalStructuredArray(index0);
-        StructuredArray<T> structuredArray = level0element.getOfStructuredArray(index1);
-        return structuredArray.get(index2);
+        SingleDimensionalStructuredArray<T> singleDimensionalStructuredArray = level0element.getOfStructuredArray(index1);
+        return singleDimensionalStructuredArray.get(index2);
     }
 
     /**
@@ -472,28 +472,28 @@ public final class MultiDimensionalStructuredArray<T> implements Iterable<T> {
     public T get(int index0, int index1, int index2, int index3) throws ClassCastException {
         MultiDimensionalStructuredArray<T> level0element = getOfMultiDimensionalStructuredArray(index0);
         MultiDimensionalStructuredArray<T> level1element = level0element.getOfMultiDimensionalStructuredArray(index1);
-        StructuredArray<T> structuredArray = level1element.getOfStructuredArray(index2);
-        return structuredArray.get(index3);
+        SingleDimensionalStructuredArray<T> singleDimensionalStructuredArray = level1element.getOfStructuredArray(index2);
+        return singleDimensionalStructuredArray.get(index3);
     }
 
     // Type specific public gets of first dimension:
 
     /**
-     * Get a reference to a StructuredArray element in this array, using a <code>long</code> index.
+     * Get a reference to a SingleDimensionalStructuredArray element in this array, using a <code>long</code> index.
      * @param index
-     * @return a reference to the StructuredArray located in element [index] of this array
+     * @return a reference to the SingleDimensionalStructuredArray located in element [index] of this array
      * @throws ClassCastException if array has more than two dimensions
      */
     @SuppressWarnings("unchecked")
-    public StructuredArray<T> getOfStructuredArrayL(final long index) throws ClassCastException {
+    public SingleDimensionalStructuredArray<T> getOfStructuredArrayL(final long index) throws ClassCastException {
         // Note that there is no explicit numOfDimensions check here. Type casting failure will trigger if dimensions are wrong.
-        return (StructuredArray<T>) getOfUnknownTypeL(index);
+        return (SingleDimensionalStructuredArray<T>) getOfUnknownTypeL(index);
     }
 
     /**
-     * Get a reference to a StructuredArray element in this array, using a <code>long</code> index.
+     * Get a reference to a SingleDimensionalStructuredArray element in this array, using a <code>long</code> index.
      * @param index
-     * @return a reference to the StructuredArray located in element [index] of this array
+     * @return a reference to the SingleDimensionalStructuredArray located in element [index] of this array
      * @throws ClassCastException if array has only two dimensions
      */
     @SuppressWarnings("unchecked")
@@ -505,19 +505,19 @@ public final class MultiDimensionalStructuredArray<T> implements Iterable<T> {
     /**
      * Get a reference to a MultiDimensionalStructuredArray element in this array, using a <code>int</code> index.
      * @param index
-     * @return a reference to the StructuredArray located in element [index] of this array
+     * @return a reference to the SingleDimensionalStructuredArray located in element [index] of this array
      * @throws ClassCastException if array has more than two dimensions
      */
     @SuppressWarnings("unchecked")
-    public StructuredArray<T> getOfStructuredArray(final int index) throws ClassCastException {
+    public SingleDimensionalStructuredArray<T> getOfStructuredArray(final int index) throws ClassCastException {
         // Note that there is no explicit numOfDimensions check here. Type casting failure will trigger if dimensions are wrong.
-        return (StructuredArray<T>) getOfUnknownTypeL(index);
+        return (SingleDimensionalStructuredArray<T>) getOfUnknownTypeL(index);
     }
 
     /**
      * Get a reference to a MultiDimensionalStructuredArray element in this array, using a <code>int</code> index.
      * @param index
-     * @return a reference to the StructuredArray located in element [index] of this array
+     * @return a reference to the SingleDimensionalStructuredArray located in element [index] of this array
      * @throws ClassCastException if array has only two dimensions
      */
     @SuppressWarnings("unchecked")

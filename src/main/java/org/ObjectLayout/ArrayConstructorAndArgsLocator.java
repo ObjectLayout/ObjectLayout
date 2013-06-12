@@ -81,7 +81,7 @@ public class ArrayConstructorAndArgsLocator<T> extends ConstructorAndArgsLocator
 
     /**
      * Get a {@link org.ObjectLayout.ConstructorAndArgs} instance to be used in constructing a given element index in
-     * a {@link org.ObjectLayout.StructuredArray}.                           .
+     * a {@link StructuredArray}.                           .
      *
      * @param index The index of the element to be constructed in the target array
      * @return {@link org.ObjectLayout.ConstructorAndArgs} instance to used in element construction

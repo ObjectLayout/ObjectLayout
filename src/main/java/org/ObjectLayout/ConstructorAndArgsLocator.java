@@ -23,7 +23,7 @@ package org.ObjectLayout;
  * <p>
  * Subclasses can be created that would provide a fixed constructor (as in {@link FixedConstructorAndArgsLocator}),
  * or to provide arguments and constructor values that would take the array index of the constructed element into account.
- * An example of this latter pattern can be found in the implementation of a {@link CopyConstructorAndArgsLocator}.
+ * An example of this latter pattern can be found in the implementation of a {@link SingleDimensionalCopyConstructorAndArgsLocator}.
  *
  * @param <T> type of the element occupying each array slot.
  */
@@ -64,7 +64,7 @@ public abstract class ConstructorAndArgsLocator<T> {
      * the returned {@link ConstructorAndArgs} is not constant.
      * <p>
      * Recycling is optional, and is not guaranteed to occur. It will only be done if it is helpful.
-     * Overriding this method is optional for subclasses. See example in {@link CopyConstructorAndArgsLocator}
+     * Overriding this method is optional for subclasses. See example in {@link SingleDimensionalCopyConstructorAndArgsLocator}
      *
      * @param constructorAndArgs the {@link ConstructorAndArgs} instance to recycle
      */
