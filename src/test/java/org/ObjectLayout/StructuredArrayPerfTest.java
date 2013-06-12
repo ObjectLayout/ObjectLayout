@@ -50,8 +50,6 @@ public class StructuredArrayPerfTest {
     long loopSumTest() {
         long sum = 0;
         for (int i = 0 ; i < array.getLength(); i++) {
-//            if (array.get(i) != null)
-//                sum++;
             sum += array.get(i).getTestValue();
         }
         return sum;
@@ -66,10 +64,7 @@ public class StructuredArrayPerfTest {
     }
 
     @Test
-    public void shouldConstructArrayOfGivenLengthAndInitValues() throws NoSuchMethodException {
-        final Class[] initArgTypes = {long.class, long.class};
-        final long expectedIndex = 4L;
-        final long expectedValue = 777L;
+    public void testLoopingSpeeds() throws NoSuchMethodException {
         final int length = 10000000;
 
         final ConstructorAndArgsLocator<MockStructure> constructorAndArgsLocator =
@@ -79,7 +74,7 @@ public class StructuredArrayPerfTest {
         array = StructuredArray.newInstance(constructorAndArgsLocator, length);
         encapsulatedArray = new EncapsulatedArray(length);
 
-        while (true) {
+        for (int i = 0; i < 5; i++) {
             long startTime1 = System.nanoTime();
             long sum1 = loopSumTest();
             long endTime1 = System.nanoTime();
@@ -98,7 +93,10 @@ public class StructuredArrayPerfTest {
     public static void main(String[] args) {
         try {
             StructuredArrayPerfTest test = new StructuredArrayPerfTest();
-            test.shouldConstructArrayOfGivenLengthAndInitValues();
+            // Useful for keeping program alive and active when doing drill-down browsing in an interactive profiler:
+            while (true) {
+                test.testLoopingSpeeds();
+            }
         } catch (Exception ex) {
         }
     }
