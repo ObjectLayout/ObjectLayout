@@ -37,12 +37,9 @@ public class ArrayConstructorAndArgsLocator<T> extends ConstructorAndArgsLocator
     ConstructorAndArgs<T> nonThreadSafeCachedConstructorAndArgs = null;
     Object[] nonThreadSafeCachedArgs = null;
     long[] nonThreadSafeCachedContainingIndexes = null;
-    final AtomicReference<ConstructorAndArgs<T>> cachedConstructorAndArgs =
-            new AtomicReference<ConstructorAndArgs<T>>();
-    final AtomicReference<Object[]> cachedArgs =
-            new AtomicReference<Object[]>();
-    final AtomicReference<long[]> cachedContainingIndexes =
-            new AtomicReference<long[]>();
+    final AtomicReference<ConstructorAndArgs<T>> cachedConstructorAndArgs = new AtomicReference<ConstructorAndArgs<T>>();
+    final AtomicReference<Object[]> cachedArgs = new AtomicReference<Object[]>();
+    final AtomicReference<long[]> cachedContainingIndexes = new AtomicReference<long[]>();
 
 
     /**
@@ -55,7 +52,7 @@ public class ArrayConstructorAndArgsLocator<T> extends ConstructorAndArgsLocator
      */
     public ArrayConstructorAndArgsLocator(final Constructor<T> constructor,
                                           final Object[] args,
-                                          int containingIndexesIndexInArgs) throws NoSuchMethodException {
+                                          final int containingIndexesIndexInArgs) throws NoSuchMethodException {
         this(constructor, args, containingIndexesIndexInArgs, true);
     }
 
@@ -70,8 +67,8 @@ public class ArrayConstructorAndArgsLocator<T> extends ConstructorAndArgsLocator
      */
     public ArrayConstructorAndArgsLocator(final Constructor<T> constructor,
                                           final Object[] args,
-                                          int containingIndexesIndexInArgs,
-                                          boolean keepInternalCachingThreadSafe) throws NoSuchMethodException {
+                                          final int containingIndexesIndexInArgs,
+                                          final boolean keepInternalCachingThreadSafe) throws NoSuchMethodException {
         super(constructor.getDeclaringClass());
         this.constructor = constructor;
         this.originalArgs = args;
@@ -115,9 +112,7 @@ public class ArrayConstructorAndArgsLocator<T> extends ConstructorAndArgsLocator
         if ((containingIndexes == null) || (containingIndexes.length != indexes.length))  {
             containingIndexes = new long[indexes.length];
         }
-        for (int i = 0; i < indexes.length; i++) {
-            containingIndexes[i] = indexes[i];
-        }
+        System.arraycopy(indexes, 0, containingIndexes, 0, indexes.length);
 
         if (args == null) {
             args = Arrays.copyOf(originalArgs, originalArgs.length);

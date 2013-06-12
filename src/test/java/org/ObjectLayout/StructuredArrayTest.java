@@ -33,7 +33,7 @@ public class StructuredArrayTest {
                 StructuredArray.newInstance(MockStructure.class, 7L, 8L, 9L);
 
         for (int i = 0; i < lengths.length; i++) {
-            assertThat(valueOf(array.getLengths()[i]), is(valueOf(lengths[i])));
+            assertThat(valueOf(array.getLengths()[i]), is(lengths[i]));
         }
         assertTrue(array.getElementClass() == MockStructure.class);
     }
@@ -46,12 +46,10 @@ public class StructuredArrayTest {
                 StructuredArray.newInstance(MockStructure.class, lengths);
 
         for (int i = 0; i < lengths.length; i++) {
-            assertThat(valueOf(array.getLengths()[i]), is(valueOf(lengths[i])));
+            assertThat(valueOf(array.getLengths()[i]), is(lengths[i]));
         }
         assertTrue(array.getElementClass() == MockStructure.class);
     }
-
-
 
     @Test
     public void shouldConstructArrayOfGivenLengthsPrimitiveLongArray() throws NoSuchMethodException {
@@ -233,7 +231,7 @@ public class StructuredArrayTest {
         final StructuredArray<MockStructure> array =
                 StructuredArray.newInstance(MockStructure.class, lengths);
 
-        MockStructure mockStructure = array.get(lengths);
+        array.get(lengths);
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -243,7 +241,7 @@ public class StructuredArrayTest {
                 StructuredArray.newInstance(MockStructure.class, lengths);
 
         // A 2D get in a 3D array is expected to throw an NPE:
-        MockStructure mockStructure = array.get(2, 2);
+        array.get(2, 2);
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -254,7 +252,7 @@ public class StructuredArrayTest {
 
         StructuredArray<MockStructure> subArray1 = array.getSubArray(2);
         StructuredArray<MockStructure> subArray2 = subArray1.getSubArray(2);
-        StructuredArray<MockStructure> subArray3 = subArray2.getSubArray(2);
+        subArray2.getSubArray(2);
     }
 
 
@@ -267,10 +265,10 @@ public class StructuredArrayTest {
         // Step by step gets of the correct type (array vs. element) per dimension:
         StructuredArray<MockStructure> subArray1 = array.getSubArray(2);
         StructuredArray<MockStructure> subArray2 = subArray1.getSubArray(2);
-        MockStructure mockStructure1 = subArray2.get(2);
+        subArray2.get(2);
 
         // The end result of the above is equivalent to this:
-        MockStructure mockStructure2 = array.get(2, 2, 2);
+        array.get(2, 2, 2);
     }
 
     @Test
@@ -279,7 +277,7 @@ public class StructuredArrayTest {
         final StructuredArray<MockStructure> array =
                 StructuredArray.newInstance(MockStructure.class, length);
 
-        initValues(new long[] { length }, array);
+        initValues(new long[]{length}, array);
 
         StructuredArray.shallowCopy(array, 4, array, 3, 2, false);
 
@@ -294,7 +292,7 @@ public class StructuredArrayTest {
         final StructuredArray<MockStructure> array =
                 StructuredArray.newInstance(MockStructure.class, length);
 
-        initValues(new long[] { length }, array);
+        initValues(new long[]{length}, array);
 
         StructuredArray.shallowCopy(array, 5, array, 6, 2, false);
 
@@ -500,6 +498,5 @@ public class StructuredArrayTest {
             // as SingleDimensionalCopyConstructorAndArgsLocator does, but no need to put in the effort in a test...
             return new ConstructorAndArgs<MockStructure>(MockStructure.class.getConstructor(argsTypes), args);
         }
-
     }
 }

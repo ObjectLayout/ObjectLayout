@@ -18,7 +18,6 @@
 package org.ObjectLayout;
 
 import java.lang.reflect.Constructor;
-import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Supports a fixed (cached) constructor and set of arguments for either default construction or construction

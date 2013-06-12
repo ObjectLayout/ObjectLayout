@@ -34,10 +34,8 @@ public class MultiDimensionalCopyConstructorAndArgsLocator<T> extends Constructo
     final boolean keepInternalCachingThreadSafe;
     ConstructorAndArgs<T> nonThreadSafeCachedConstructorAndArgs = null;
     long[] nonThreadSafeCachedTargetIndexes = null;
-    final AtomicReference<ConstructorAndArgs<T>> cachedConstructorAndArgs =
-            new AtomicReference<ConstructorAndArgs<T>>();
-    final AtomicReference<long[]> cachedTargetIndexes =
-            new AtomicReference<long[]>();
+    final AtomicReference<ConstructorAndArgs<T>> cachedConstructorAndArgs = new AtomicReference<ConstructorAndArgs<T>>();
+    final AtomicReference<long[]> cachedTargetIndexes = new AtomicReference<long[]>();
 
     /**
      * Used to apply a copy constructor to a target array's elements, copying corresponding elements from a
@@ -80,7 +78,7 @@ public class MultiDimensionalCopyConstructorAndArgsLocator<T> extends Constructo
     public MultiDimensionalCopyConstructorAndArgsLocator(final Class<T> elementClass,
                                                          final MultiDimensionalStructuredArray<T> source,
                                                          final long[] sourceOffsets,
-                                                         boolean keepInternalCachingThreadSafe) throws NoSuchMethodException {
+                                                         final boolean keepInternalCachingThreadSafe) throws NoSuchMethodException {
         super(elementClass);
         copyConstructor = elementClass.getConstructor(elementClass);
         this.source = source;
@@ -104,7 +102,7 @@ public class MultiDimensionalCopyConstructorAndArgsLocator<T> extends Constructo
      * @throws NoSuchMethodException if expected constructor is not found in element class
      */
     @SuppressWarnings("unchecked")
-    public ConstructorAndArgs<T> getForIndexes(long[] indexes) throws NoSuchMethodException {
+    public ConstructorAndArgs<T> getForIndexes(final long[] indexes) throws NoSuchMethodException {
         ConstructorAndArgs<T> constructorAndArgs;
         long[] targetIndexes;
 

@@ -74,7 +74,7 @@ public final class SingleDimensionalStructuredArray<T> implements Iterable<T> {
      * @throws NoSuchMethodException if the element class does not have a public default constructor
      */
     public static <T> SingleDimensionalStructuredArray<T> newInstance(final Class<T> elementClass,
-                                                     final long length) throws NoSuchMethodException {
+                                                                      final long length) throws NoSuchMethodException {
         final ConstructorAndArgsLocator<T> constructorAndArgsLocator = new FixedConstructorAndArgsLocator<T>(elementClass);
 
         return new SingleDimensionalStructuredArray<T>(constructorAndArgsLocator, length, null);
@@ -91,7 +91,7 @@ public final class SingleDimensionalStructuredArray<T> implements Iterable<T> {
      * @throws NoSuchMethodException if the element class does not not support a supplied constructor
      */
     public static <T> SingleDimensionalStructuredArray<T> newInstance(final ConstructorAndArgsLocator<T> constructorAndArgsLocator,
-                                                     final long length) throws NoSuchMethodException {
+                                                                      final long length) throws NoSuchMethodException {
         return new SingleDimensionalStructuredArray<T>(constructorAndArgsLocator, length, null);
     }
 
@@ -110,9 +110,9 @@ public final class SingleDimensionalStructuredArray<T> implements Iterable<T> {
 
      */
     public static <T> SingleDimensionalStructuredArray<T> newInstance(final Class<T> elementClass,
-                                                     final long length,
-                                                     final Class[] initArgTypes,
-                                                     final Object... initArgs) throws NoSuchMethodException {
+                                                                      final long length,
+                                                                      final Class[] initArgTypes,
+                                                                      final Object... initArgs) throws NoSuchMethodException {
         final ConstructorAndArgsLocator<T> constructorAndArgsLocator =
                 new FixedConstructorAndArgsLocator<T>(elementClass, initArgTypes, initArgs);
 
@@ -127,7 +127,8 @@ public final class SingleDimensionalStructuredArray<T> implements Iterable<T> {
      * @param source The array to duplicate.
      * @throws NoSuchMethodException if the element class does not have a public copy constructor.
      */
-    public static <T> SingleDimensionalStructuredArray<T> copyInstance(final SingleDimensionalStructuredArray<T> source) throws NoSuchMethodException {
+    public static <T> SingleDimensionalStructuredArray<T> copyInstance(final SingleDimensionalStructuredArray<T> source)
+        throws NoSuchMethodException {
         return copyInstance(source, 0, source.getLength());
     }
 
@@ -142,8 +143,8 @@ public final class SingleDimensionalStructuredArray<T> implements Iterable<T> {
      * @throws NoSuchMethodException if the element class does not have a public copy constructor.
      */
     public static <T> SingleDimensionalStructuredArray<T> copyInstance(final SingleDimensionalStructuredArray<T> source,
-                                                      final long sourceOffset,
-                                                      final long count) throws NoSuchMethodException {
+                                                                       final long sourceOffset,
+                                                                       final long count) throws NoSuchMethodException {
         if (source.getLength() < sourceOffset + count) {
             throw new ArrayIndexOutOfBoundsException(
                     "source " + source + " length of " + source.getLength() +
@@ -240,9 +241,7 @@ public final class SingleDimensionalStructuredArray<T> implements Iterable<T> {
 
             if (containingIndexes != null) {
                 indexes = new long[containingIndexes.length + 1];
-                for (int i = 0; i < containingIndexes.length; i++) {
-                    indexes[i] = containingIndexes[i];
-                }
+                System.arraycopy(containingIndexes, 0, indexes, 0, containingIndexes.length);
             } else {
                 indexes = new long[1];
             }
