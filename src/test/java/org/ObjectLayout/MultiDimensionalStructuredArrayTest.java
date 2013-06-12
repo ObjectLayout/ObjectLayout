@@ -21,7 +21,6 @@ import org.junit.Test;
 
 import static java.lang.Long.valueOf;
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
@@ -34,7 +33,7 @@ public class MultiDimensionalStructuredArrayTest {
                 MultiDimensionalStructuredArray.newInstance(MockStructure.class, 7L, 8L, 9L);
 
         for (int i = 0; i < lengths.length; i++) {
-            assertThat(valueOf(array.getLengths()[i]), is(valueOf(lengths[i])));
+            assertThat(valueOf(array.getLengths()[i]), is(lengths[i]));
         }
         assertTrue(array.getElementClass() == MockStructure.class);
     }
@@ -47,7 +46,7 @@ public class MultiDimensionalStructuredArrayTest {
                 MultiDimensionalStructuredArray.newInstance(MockStructure.class, lengths);
 
         for (int i = 0; i < lengths.length; i++) {
-            assertThat(valueOf(array.getLengths()[i]), is(valueOf(lengths[i])));
+            assertThat(valueOf(array.getLengths()[i]), is(lengths[i]));
         }
         assertTrue(array.getElementClass() == MockStructure.class);
     }
@@ -234,7 +233,7 @@ public class MultiDimensionalStructuredArrayTest {
         final MultiDimensionalStructuredArray<MockStructure> array =
                 MultiDimensionalStructuredArray.newInstance(MockStructure.class, lengths);
 
-        MockStructure mockStructure = array.getL(lengths);
+        array.getL(lengths);
     }
 
     @Test(expected = ClassCastException.class)
@@ -243,7 +242,7 @@ public class MultiDimensionalStructuredArrayTest {
         final MultiDimensionalStructuredArray<MockStructure> array =
                 MultiDimensionalStructuredArray.newInstance(MockStructure.class, lengths);
 
-        MockStructure mockStructure = array.get(2, 2);
+        array.get(2, 2);
     }
 
     @Test(expected = ClassCastException.class)
@@ -253,7 +252,7 @@ public class MultiDimensionalStructuredArrayTest {
                 MultiDimensionalStructuredArray.newInstance(MockStructure.class, lengths);
 
         // The following will actually be a MultiDimensionalStructuredArray:
-        SingleDimensionalStructuredArray<MockStructure> subArray = array.getOfStructuredArray(2);
+        array.getOfStructuredArray(2);
     }
 
     @Test(expected = ClassCastException.class)
@@ -265,7 +264,7 @@ public class MultiDimensionalStructuredArrayTest {
         // The following will really be a MultiDimensionalStructuredArray:
         MultiDimensionalStructuredArray<MockStructure> subArray1 = array.getOfMultiDimensionalStructuredArray(2);
         // But the following will actually be a SingleDimensionalStructuredArray:
-        MultiDimensionalStructuredArray<MockStructure> subArray2 = subArray1.getOfMultiDimensionalStructuredArray(2);
+        subArray1.getOfMultiDimensionalStructuredArray(2);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////

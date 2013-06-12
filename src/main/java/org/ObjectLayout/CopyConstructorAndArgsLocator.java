@@ -34,10 +34,8 @@ public class CopyConstructorAndArgsLocator<T> extends ConstructorAndArgsLocator<
     final boolean keepInternalCachingThreadSafe;
     ConstructorAndArgs<T> nonThreadSafeCachedConstructorAndArgs = null;
     long[] nonThreadSafeCachedTargetIndexes = null;
-    final AtomicReference<ConstructorAndArgs<T>> cachedConstructorAndArgs =
-            new AtomicReference<ConstructorAndArgs<T>>();
-    final AtomicReference<long[]> cachedTargetIndexes =
-            new AtomicReference<long[]>();
+    final AtomicReference<ConstructorAndArgs<T>> cachedConstructorAndArgs = new AtomicReference<ConstructorAndArgs<T>>();
+    final AtomicReference<long[]> cachedTargetIndexes = new AtomicReference<long[]>();
 
     /**
      * Used to apply a copy constructor to a target array's elements, copying corresponding elements from a
@@ -80,7 +78,7 @@ public class CopyConstructorAndArgsLocator<T> extends ConstructorAndArgsLocator<
     public CopyConstructorAndArgsLocator(final Class<T> elementClass,
                                          final StructuredArray<T> source,
                                          final long[] sourceOffsets,
-                                         boolean keepInternalCachingThreadSafe) throws NoSuchMethodException {
+                                         final boolean keepInternalCachingThreadSafe) throws NoSuchMethodException {
         super(elementClass);
         copyConstructor = elementClass.getConstructor(elementClass);
         this.source = source;

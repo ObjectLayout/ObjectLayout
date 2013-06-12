@@ -33,8 +33,7 @@ public class SingleDimensionalCopyConstructorAndArgsLocator<T> extends Construct
     final long sourceOffset;
     final boolean keepInternalCachingThreadSafe;
     ConstructorAndArgs<T> nonThreadSafeCachedConstructorAndArgs = null;
-    final AtomicReference<ConstructorAndArgs<T>> cachedConstructorAndArgs =
-            new AtomicReference<ConstructorAndArgs<T>>();
+    final AtomicReference<ConstructorAndArgs<T>> cachedConstructorAndArgs = new AtomicReference<ConstructorAndArgs<T>>();
 
     /**
      * Used to apply a copy constructor to a target array's elements, copying corresponding elements from a
@@ -77,7 +76,7 @@ public class SingleDimensionalCopyConstructorAndArgsLocator<T> extends Construct
     public SingleDimensionalCopyConstructorAndArgsLocator(final Class<T> elementClass,
                                                           final SingleDimensionalStructuredArray<T> source,
                                                           final long sourceOffset,
-                                                          boolean keepInternalCachingThreadSafe) throws NoSuchMethodException {
+                                                          final boolean keepInternalCachingThreadSafe) throws NoSuchMethodException {
         super(elementClass);
 
         copyConstructor = elementClass.getConstructor(elementClass);
