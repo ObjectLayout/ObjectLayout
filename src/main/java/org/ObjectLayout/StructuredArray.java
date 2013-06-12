@@ -89,7 +89,6 @@ public final class StructuredArray<T> implements Iterable<T> {
         final ConstructorAndArgsLocator<T> constructorAndArgsLocator = new FixedConstructorAndArgsLocator<T>(elementClass);
         final long[] lengths = {length};
         return new StructuredArray<T>(lengths.length, constructorAndArgsLocator, lengths, null);
-
     }
 
     /**
@@ -105,7 +104,8 @@ public final class StructuredArray<T> implements Iterable<T> {
     public static <T> StructuredArray<T> newInstance(final ConstructorAndArgsLocator<T> constructorAndArgsLocator,
                                                      final long length) throws NoSuchMethodException {
         final long[] lengths = {length};
-        return new StructuredArray<T>(lengths.length, constructorAndArgsLocator, lengths, null);    }
+        return new StructuredArray<T>(lengths.length, constructorAndArgsLocator, lengths, null);
+    }
 
     /**
      * Create an array of <code>length</code> elements, each containing an element object of
