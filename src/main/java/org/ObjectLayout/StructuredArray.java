@@ -369,7 +369,7 @@ public final class StructuredArray<T> implements Iterable<T> {
             longAddressableElements = (T[][])new Object[numFullPartitions + 1][];
             // full long-addressable-only partitions:
             for (int i = 0; i < numFullPartitions; i++) {
-                longAddressableElements[i] = (T[])new StructuredArray[MAX_EXTRA_PARTITION_SIZE];
+                longAddressableElements[i] = (T[])new Object[MAX_EXTRA_PARTITION_SIZE];
             }
             // Last partition with leftover long-addressable-only size:
             longAddressableElements[numFullPartitions] = (T[])new Object[lastPartitionSize];
