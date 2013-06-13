@@ -72,11 +72,11 @@ public class StructuredArrayPerfTest {
         final long expectedValue = 777L;
         final int length = 10000000;
 
-        final ConstructorAndArgsLocator<MockStructure> constructorAndArgsLocator =
-                new DefaultMockConstructorAndArgsLocator();
+        final CtorAndArgsProvider<MockStructure> ctorAndArgsProvider =
+                new DefaultMockCtorAndArgsProvider();
 
 
-        array = StructuredArray.newInstance(constructorAndArgsLocator, length);
+        array = StructuredArray.newInstance(ctorAndArgsProvider, length);
         encapsulatedArray = new EncapsulatedArray(length);
 
         while (true) {
@@ -263,23 +263,24 @@ public class StructuredArrayPerfTest {
         private final int value = 888;
     }
 
-    private static class DefaultMockConstructorAndArgsLocator extends ConstructorAndArgsLocator<MockStructure> {
+    private static class DefaultMockCtorAndArgsProvider extends CtorAndArgsProvider<MockStructure>
+    {
 
         private final Class[] argsTypes = {Long.TYPE, Long.TYPE};
 
-        public DefaultMockConstructorAndArgsLocator() throws NoSuchMethodException {
+        public DefaultMockCtorAndArgsProvider() throws NoSuchMethodException {
             super(MockStructure.class);
         }
 
-        public ConstructorAndArgs<MockStructure> getForIndices(long indices[]) throws NoSuchMethodException {
+        public CtorAndArgs<MockStructure> getForIndices(long indices[]) throws NoSuchMethodException {
             long indexSum = 0;
             for (long index : indices) {
                 indexSum += index;
             }
             Object[] args = {indexSum, indexSum * 2};
-            // We could do this much more efficiently with atomic caching of a single allocated ConstructorAndArgs,
-            // as SingleDimensionalCopyConstructorAndArgsLocator does, but no need to put in the effort in a test...
-            return new ConstructorAndArgs<MockStructure>(MockStructure.class.getConstructor(argsTypes), args);
+            // We could do this much more efficiently with atomic caching of a single allocated CtorAndArgs,
+            // as SingleDimensionalCopyCtorAndArgsProvider does, but no need to put in the effort in a test...
+            return new CtorAndArgs<MockStructure>(MockStructure.class.getConstructor(argsTypes), args);
         }
 
     }

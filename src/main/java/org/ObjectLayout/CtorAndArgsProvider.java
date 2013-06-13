@@ -21,13 +21,13 @@ package org.ObjectLayout;
  * Supports a general element construction API for {@link StructuredArray} by providing specific constructor
  * and arguments factory to used for constructing individual array elements during array creation.
  * <p>
- * Subclasses can be created that would provide a fixed constructor (as in {@link FixedConstructorAndArgsLocator}),
+ * Subclasses can be created that would provide a fixed constructor (as in {@link SingletonCtorAndArgsProvider}),
  * or to provide arguments and constructor values that would take the array index of the constructed element into account.
- * An example of this latter pattern can be found in the implementation of a {@link SingleDimensionalCopyConstructorAndArgsLocator}.
+ * An example of this latter pattern can be found in the implementation of a {@link SingleDimensionalCopyCtorAndArgsProvider}.
  *
  * @param <T> type of the element occupying each array slot.
  */
-public abstract class ConstructorAndArgsLocator<T> {
+public abstract class CtorAndArgsProvider<T> {
 
     private final Class<T> elementClass;
 
@@ -38,7 +38,7 @@ public abstract class ConstructorAndArgsLocator<T> {
      * @throws NoSuchMethodException if a constructor matching defaultArgTypes
      * @throws IllegalArgumentException if argTypes and args conflict
      */
-    public ConstructorAndArgsLocator(final Class<T> elementClass) throws NoSuchMethodException {
+    public CtorAndArgsProvider(final Class<T> elementClass) throws NoSuchMethodException {
         if (null == elementClass) {
             throw new IllegalArgumentException("elementClass cannot be null");
         }
@@ -46,29 +46,29 @@ public abstract class ConstructorAndArgsLocator<T> {
     }
 
     /**
-     * Get a {@link ConstructorAndArgs} instance to be used in constructing a given element index in
+     * Get a {@link CtorAndArgs} instance to be used in constructing a given element index in
      * a {@link StructuredArray}
      *
      * @param indices The indices of the element to be constructed in the target array
-     * @return {@link ConstructorAndArgs} instance to used in element construction
+     * @return {@link CtorAndArgs} instance to used in element construction
      * @throws NoSuchMethodException if expected constructor is not found in element class
      */
-    public ConstructorAndArgs<T> getForIndices(final long[] indices) throws NoSuchMethodException {
+    public CtorAndArgs<T> getForIndices(final long[] indices) throws NoSuchMethodException {
         throw new IllegalArgumentException("No support for getForIndices()");
     }
 
     /**
-     * Recycle a {@link ConstructorAndArgs} instance (place it back in the internal cache if desired).
-     * This is [very] useful for avoiding a re-allocation of a new {@link ConstructorAndArgs} and an
+     * Recycle a {@link CtorAndArgs} instance (place it back in the internal cache if desired).
+     * This is [very] useful for avoiding a re-allocation of a new {@link CtorAndArgs} and an
      * associated args array for {@link #getForIndices(long[])} invocation in cases where
-     * the returned {@link ConstructorAndArgs} is not constant.
+     * the returned {@link CtorAndArgs} is not constant.
      * <p>
      * Recycling is optional, and is not guaranteed to occur. It will only be done if it is helpful.
-     * Overriding this method is optional for subclasses. See example in {@link SingleDimensionalCopyConstructorAndArgsLocator}
+     * Overriding this method is optional for subclasses. See example in {@link SingleDimensionalCopyCtorAndArgsProvider}
      *
-     * @param constructorAndArgs the {@link ConstructorAndArgs} instance to recycle
+     * @param ctorAndArgs the {@link CtorAndArgs} instance to recycle
      */
-    public void recycle(final ConstructorAndArgs constructorAndArgs) {
+    public void recycle(final CtorAndArgs ctorAndArgs) {
     }
 
     /**

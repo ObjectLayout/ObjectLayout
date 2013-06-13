@@ -26,36 +26,36 @@ import java.lang.reflect.Constructor;
  *
  * @param <T> type of the element occupying each array slot.
  */
-public class ConstructorAndArgs<T> {
+public class CtorAndArgs<T> {
 
     private Constructor<T> constructor;
-    private Object[] constructorArgs;
+    private Object[] args;
 
     /**
-     * Create a {@link ConstructorAndArgs} instance. The presumption is that types in constructorArguments
+     * Create a {@link CtorAndArgs} instance. The presumption is that types in args
      * match those expected by constructor. Obviously exceptions may be generated at construction time if
      * this is not the case.
      *
-     * @param constructor Constructor to be indicated in this {@link ConstructorAndArgs}
-     * @param constructorArguments constructor arguments to be indicated in this {@link ConstructorAndArgs}
+     * @param constructor Constructor to be indicated in this {@link CtorAndArgs}
+     * @param args constructor arguments to be indicated in this {@link CtorAndArgs}
      */
-    public ConstructorAndArgs(final Constructor<T> constructor, final Object[] constructorArguments) {
+    public CtorAndArgs(final Constructor<T> constructor, final Object[] args) {
         setConstructor(constructor);
-        setConstructorArgs(constructorArguments);
+        setArgs(args);
     }
 
     /**
-     * @return the Constructor indicated in this ConstructorAndArgs
+     * @return the Constructor indicated in this CtorAndArgs
      */
     public final Constructor<T> getConstructor() {
         return constructor;
     }
 
     /**
-     * Set the constructor to be indicated in this {@link ConstructorAndArgs}. Enables recycling of
-     * {@link ConstructorAndArgs} objects to avoid re-allocation. E.g. in copy construction loops.
+     * Set the constructor to be indicated in this {@link CtorAndArgs}. Enables recycling of
+     * {@link CtorAndArgs} objects to avoid re-allocation. E.g. in copy construction loops.
      *
-     * @param constructor Constructor to be indicated in this ConstructorAndArgs
+     * @param constructor Constructor to be indicated in this CtorAndArgs
      */
     public final void setConstructor(final Constructor<T> constructor) {
         if (null == constructor) {
@@ -65,22 +65,22 @@ public class ConstructorAndArgs<T> {
     }
 
     /**
-     * @return the constructor arguments indicated in this ConstructorAndArgs
+     * @return the constructor arguments indicated in this CtorAndArgs
      */
-    public final Object[] getConstructorArgs() {
-        return constructorArgs;
+    public final Object[] getArgs() {
+        return args;
     }
 
     /**
-     * Set the constructor arguments to be indicated in this ConstructorAndArgs. Enables recycling of
-     * {@link ConstructorAndArgs} objects to avoid re-allocation. E.g. in copy construction loops.
+     * Set the constructor arguments to be indicated in this CtorAndArgs. Enables recycling of
+     * {@link CtorAndArgs} objects to avoid re-allocation. E.g. in copy construction loops.
      *
-     * @param constructorArgs constructor arguments to be indicated in this {@link ConstructorAndArgs}
+     * @param args constructor arguments to be indicated in this {@link CtorAndArgs}
      */
-    public final void setConstructorArgs(final Object[] constructorArgs) {
-        if (null == constructorArgs) {
-            throw new NullPointerException("constructorArgs cannot be null");
+    public final void setArgs(final Object[] args) {
+        if (null == args) {
+            throw new NullPointerException("args cannot be null");
         }
-        this.constructorArgs = constructorArgs;
+        this.args = args;
     }
 }

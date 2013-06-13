@@ -37,7 +37,7 @@ import static java.lang.reflect.Modifier.isStatic;
  * <p>
  *     While simple creation of default-constructed elements and fixed constructor parameters are available through
  *     the newInstance factory methods, supporting arbitrary member types requires a wider range of construction
- *     options. The ConstructorAndArgsLocator API provides for array creation with arbitrary, user-supplied
+ *     options. The CtorAndArgsProvider API provides for array creation with arbitrary, user-supplied
  *     constructors and arguments, either of which can take the element index into account.
  * <p>
  *     SingleDimensionalStructuredArray is designed with semantics specifically restricted to be consistent with layouts of an
@@ -75,24 +75,24 @@ public final class SingleDimensionalStructuredArray<T> implements Iterable<T> {
      */
     public static <T> SingleDimensionalStructuredArray<T> newInstance(final Class<T> elementClass,
                                                                       final long length) throws NoSuchMethodException {
-        final ConstructorAndArgsLocator<T> constructorAndArgsLocator = new FixedConstructorAndArgsLocator<T>(elementClass);
+        final CtorAndArgsProvider<T> ctorAndArgsProvider = new SingletonCtorAndArgsProvider<T>(elementClass);
 
-        return new SingleDimensionalStructuredArray<T>(constructorAndArgsLocator, length, null);
+        return new SingleDimensionalStructuredArray<T>(ctorAndArgsProvider, length, null);
     }
 
     /**
      * Create an array of <code>length</code> elements, each containing an element object of
      * type <code>elementClass</code>. Use constructor and arguments supplied (on a potentially
-     * per element index basis) by the specified <code>constructorAndArgsLocator</code> to construct and initialize
+     * per element index basis) by the specified <code>ctorAndArgsProvider</code> to construct and initialize
      * each element.
      *
      * @param length of the array to create.
-     * @param constructorAndArgsLocator produces element constructors [potentially] on a per element basis.
+     * @param ctorAndArgsProvider produces element constructors [potentially] on a per element basis.
      * @throws NoSuchMethodException if the element class does not not support a supplied constructor
      */
-    public static <T> SingleDimensionalStructuredArray<T> newInstance(final ConstructorAndArgsLocator<T> constructorAndArgsLocator,
+    public static <T> SingleDimensionalStructuredArray<T> newInstance(final CtorAndArgsProvider<T> ctorAndArgsProvider,
                                                                       final long length) throws NoSuchMethodException {
-        return new SingleDimensionalStructuredArray<T>(constructorAndArgsLocator, length, null);
+        return new SingleDimensionalStructuredArray<T>(ctorAndArgsProvider, length, null);
     }
 
     /**
@@ -113,10 +113,10 @@ public final class SingleDimensionalStructuredArray<T> implements Iterable<T> {
                                                                       final long length,
                                                                       final Class[] initArgTypes,
                                                                       final Object... initArgs) throws NoSuchMethodException {
-        final ConstructorAndArgsLocator<T> constructorAndArgsLocator =
-                new FixedConstructorAndArgsLocator<T>(elementClass, initArgTypes, initArgs);
+        final CtorAndArgsProvider<T> ctorAndArgsProvider =
+                new SingletonCtorAndArgsProvider<T>(elementClass, initArgTypes, initArgs);
 
-        return new SingleDimensionalStructuredArray<T>(constructorAndArgsLocator, length, null);
+        return new SingleDimensionalStructuredArray<T>(ctorAndArgsProvider, length, null);
     }
 
     /**
@@ -151,18 +151,18 @@ public final class SingleDimensionalStructuredArray<T> implements Iterable<T> {
                     " is smaller than sourceOffset (" + sourceOffset + ") + count (" + count + ")" );
         }
 
-        final ConstructorAndArgsLocator<T> constructorAndArgsLocator =
-                 new SingleDimensionalCopyConstructorAndArgsLocator<T>(source.getElementClass(), source, sourceOffset, false);
+        final CtorAndArgsProvider<T> ctorAndArgsProvider =
+                 new SingleDimensionalCopyCtorAndArgsProvider<T>(source.getElementClass(), source, sourceOffset, false);
 
-        return new SingleDimensionalStructuredArray<T>(constructorAndArgsLocator, count, null);
+        return new SingleDimensionalStructuredArray<T>(ctorAndArgsProvider, count, null);
     }
 
     @SuppressWarnings("unchecked")
-    public SingleDimensionalStructuredArray(final ConstructorAndArgsLocator<T> constructorAndArgsLocator,
+    public SingleDimensionalStructuredArray(final CtorAndArgsProvider<T> ctorAndArgsProvider,
                                             final long length,
                                             final long[] containingIndexes) throws NoSuchMethodException {
 
-        this.elementClass = constructorAndArgsLocator.getElementClass();
+        this.elementClass = ctorAndArgsProvider.getElementClass();
 
         final Field[] fields = removeStaticFields(elementClass.getDeclaredFields());
         for (final Field field : fields) {
@@ -193,7 +193,7 @@ public final class SingleDimensionalStructuredArray<T> implements Iterable<T> {
         // Last partition with leftover long-addressable-only size:
         longAddressableElements[numFullPartitions] = (T[])new Object[lastPartitionSize];
 
-        populateElements(constructorAndArgsLocator, containingIndexes);
+        populateElements(ctorAndArgsProvider, containingIndexes);
     }
 
     /**
@@ -234,7 +234,7 @@ public final class SingleDimensionalStructuredArray<T> implements Iterable<T> {
         return intAddressableElements[index];
     }
 
-    private void populateElements(final ConstructorAndArgsLocator<T> constructorAndArgsLocator,
+    private void populateElements(final CtorAndArgsProvider<T> ctorAndArgsProvider,
                                   long[] containingIndexes) throws NoSuchMethodException {
         try {
             final long[] indexes;
@@ -252,19 +252,19 @@ public final class SingleDimensionalStructuredArray<T> implements Iterable<T> {
 
             for (int i = 0; i < intAddressableElements.length; i++, index++) {
                 indexes[thisIndex] = index;
-                final ConstructorAndArgs<T> constructorAndArgs = constructorAndArgsLocator.getForIndices(indexes);
-                final Constructor<T> constructor = constructorAndArgs.getConstructor();
-                intAddressableElements[i] = constructor.newInstance(constructorAndArgs.getConstructorArgs());
-                constructorAndArgsLocator.recycle(constructorAndArgs);
+                final CtorAndArgs<T> ctorAndArgs = ctorAndArgsProvider.getForIndices(indexes);
+                final Constructor<T> constructor = ctorAndArgs.getConstructor();
+                intAddressableElements[i] = constructor.newInstance(ctorAndArgs.getArgs());
+                ctorAndArgsProvider.recycle(ctorAndArgs);
             }
 
             for (final T[] partition : longAddressableElements) {
                 indexes[thisIndex] = index;
                 for (int i = 0, size = partition.length; i < size; i++, index++) {
-                    final ConstructorAndArgs<T> constructorAndArgs = constructorAndArgsLocator.getForIndices(indexes);
-                    final Constructor<T> constructor = constructorAndArgs.getConstructor();
-                    partition[i] = constructor.newInstance(constructorAndArgs.getConstructorArgs());
-                    constructorAndArgsLocator.recycle(constructorAndArgs);
+                    final CtorAndArgs<T> ctorAndArgs = ctorAndArgsProvider.getForIndices(indexes);
+                    final Constructor<T> constructor = ctorAndArgs.getConstructor();
+                    partition[i] = constructor.newInstance(ctorAndArgs.getArgs());
+                    ctorAndArgsProvider.recycle(ctorAndArgs);
                 }
             }
         } catch (final NoSuchMethodException ex) {

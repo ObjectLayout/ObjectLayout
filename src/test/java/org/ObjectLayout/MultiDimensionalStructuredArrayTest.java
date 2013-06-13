@@ -81,10 +81,10 @@ public class MultiDimensionalStructuredArrayTest {
     @Test
     public void shouldConstructArrayElementsViaElementConstructorGenerator() throws NoSuchMethodException {
         final long[] lengths = {7, 8, 9};
-        final ConstructorAndArgsLocator<MockStructure> constructorAndArgsLocator =
-                new DefaultMockConstructorAndArgsLocator();
+        final CtorAndArgsProvider<MockStructure> ctorAndArgsProvider =
+                new DefaultMockCtorAndArgsProvider();
         final MultiDimensionalStructuredArray<MockStructure> array =
-                MultiDimensionalStructuredArray.newInstance(constructorAndArgsLocator, lengths);
+                MultiDimensionalStructuredArray.newInstance(ctorAndArgsProvider, lengths);
 
         assertCorrectVariableInitialisation(lengths, array);
     }
@@ -178,10 +178,10 @@ public class MultiDimensionalStructuredArrayTest {
     @Test
     public void shouldConstructCopyOfArray() throws NoSuchMethodException {
         final long[] lengths = {15, 7, 5};
-        final ConstructorAndArgsLocator<MockStructure> constructorAndArgsLocator =
-                new DefaultMockConstructorAndArgsLocator();
+        final CtorAndArgsProvider<MockStructure> ctorAndArgsProvider =
+                new DefaultMockCtorAndArgsProvider();
         final MultiDimensionalStructuredArray<MockStructure> sourceArray =
-                MultiDimensionalStructuredArray.newInstance(constructorAndArgsLocator, lengths);
+                MultiDimensionalStructuredArray.newInstance(ctorAndArgsProvider, lengths);
 
         assertThat(valueOf(sourceArray.getLength()), is(valueOf(lengths[0])));
         assertThat(valueOf(sourceArray.getTotalElementCount()), is(valueOf(lengths[0] * lengths[1] * lengths[2])));
@@ -197,10 +197,10 @@ public class MultiDimensionalStructuredArrayTest {
     @Test
     public void shouldConstructCopyOfArrayRange() throws NoSuchMethodException {
         final long[] lengths = {15, 7, 5};
-        final ConstructorAndArgsLocator<MockStructure> constructorAndArgsLocator =
-                new DefaultMockConstructorAndArgsLocator();
+        final CtorAndArgsProvider<MockStructure> ctorAndArgsProvider =
+                new DefaultMockCtorAndArgsProvider();
         final MultiDimensionalStructuredArray<MockStructure> sourceArray =
-                MultiDimensionalStructuredArray.newInstance(constructorAndArgsLocator, lengths);
+                MultiDimensionalStructuredArray.newInstance(ctorAndArgsProvider, lengths);
 
         assertThat(valueOf(sourceArray.getLength()), is(valueOf(lengths[0])));
         assertThat(valueOf(sourceArray.getTotalElementCount()), is(valueOf(lengths[0] * lengths[1] * lengths[2])));
@@ -427,23 +427,24 @@ public class MultiDimensionalStructuredArrayTest {
         private final int value = 888;
     }
 
-    private static class DefaultMockConstructorAndArgsLocator extends ConstructorAndArgsLocator<MockStructure> {
+    private static class DefaultMockCtorAndArgsProvider extends CtorAndArgsProvider<MockStructure>
+    {
 
         private final Class[] argsTypes = {Long.TYPE, Long.TYPE};
 
-        public DefaultMockConstructorAndArgsLocator() throws NoSuchMethodException {
+        public DefaultMockCtorAndArgsProvider() throws NoSuchMethodException {
             super(MockStructure.class);
         }
 
-        public ConstructorAndArgs<MockStructure> getForIndices(long indices[]) throws NoSuchMethodException {
+        public CtorAndArgs<MockStructure> getForIndices(long indices[]) throws NoSuchMethodException {
             long indexSum = 0;
             for (long index : indices) {
                 indexSum += index;
             }
             Object[] args = {indexSum, indexSum * 2};
-            // We could do this much more efficiently with atomic caching of a single allocated ConstructorAndArgs,
-            // as SingleDimensionalCopyConstructorAndArgsLocator does, but no need to put in the effort in a test...
-            return new ConstructorAndArgs<MockStructure>(MockStructure.class.getConstructor(argsTypes), args);
+            // We could do this much more efficiently with atomic caching of a single allocated CtorAndArgs,
+            // as SingleDimensionalCopyCtorAndArgsProvider does, but no need to put in the effort in a test...
+            return new CtorAndArgs<MockStructure>(MockStructure.class.getConstructor(argsTypes), args);
         }
 
     }

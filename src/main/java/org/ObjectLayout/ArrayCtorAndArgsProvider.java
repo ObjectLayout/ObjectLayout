@@ -27,19 +27,19 @@ import java.util.concurrent.atomic.AtomicReference;
  *
  * @param <T> type of the element occupying each array slot
  */
-public class ArrayConstructorAndArgsLocator<T> extends ConstructorAndArgsLocator<T> {
+public class ArrayCtorAndArgsProvider<T> extends CtorAndArgsProvider<T> {
 
-    final Constructor<T> constructor;
-    final Object[] originalArgs;
-    final int containingIndexesIndexInArgs;
+    private final Constructor<T> constructor;
+    private final Object[] originalArgs;
+    private final int containingIndexesIndexInArgs;
 
-    final boolean keepInternalCachingThreadSafe;
-    ConstructorAndArgs<T> nonThreadSafeCachedConstructorAndArgs = null;
-    Object[] nonThreadSafeCachedArgs = null;
-    long[] nonThreadSafeCachedContainingIndexes = null;
-    final AtomicReference<ConstructorAndArgs<T>> cachedConstructorAndArgs = new AtomicReference<ConstructorAndArgs<T>>();
-    final AtomicReference<Object[]> cachedArgs = new AtomicReference<Object[]>();
-    final AtomicReference<long[]> cachedContainingIndexes = new AtomicReference<long[]>();
+    private final boolean keepInternalCachingThreadSafe;
+    private CtorAndArgs<T> nonThreadSafeCachedCtorAndArgs = null;
+    private Object[] nonThreadSafeCachedArgs = null;
+    private long[] nonThreadSafeCachedContainingIndexes = null;
+    private final AtomicReference<CtorAndArgs<T>> cachedConstructorAndArgs = new AtomicReference<CtorAndArgs<T>>();
+    private final AtomicReference<Object[]> cachedArgs = new AtomicReference<Object[]>();
+    private final AtomicReference<long[]> cachedContainingIndexes = new AtomicReference<long[]>();
 
 
     /**
@@ -50,9 +50,9 @@ public class ArrayConstructorAndArgsLocator<T> extends ConstructorAndArgsLocator
      * @throws NoSuchMethodException if a constructor matching argTypes
      * @throws IllegalArgumentException if argTypes and args conflict
      */
-    public ArrayConstructorAndArgsLocator(final Constructor<T> constructor,
-                                          final Object[] args,
-                                          final int containingIndexesIndexInArgs) throws NoSuchMethodException {
+    public ArrayCtorAndArgsProvider(final Constructor<T> constructor,
+                                    final Object[] args,
+                                    final int containingIndexesIndexInArgs) throws NoSuchMethodException {
         this(constructor, args, containingIndexesIndexInArgs, true);
     }
 
@@ -65,10 +65,10 @@ public class ArrayConstructorAndArgsLocator<T> extends ConstructorAndArgsLocator
      * @throws NoSuchMethodException if a constructor matching argTypes
      * @throws IllegalArgumentException if argTypes and args conflict
      */
-    public ArrayConstructorAndArgsLocator(final Constructor<T> constructor,
-                                          final Object[] args,
-                                          final int containingIndexesIndexInArgs,
-                                          final boolean keepInternalCachingThreadSafe) throws NoSuchMethodException {
+    public ArrayCtorAndArgsProvider(final Constructor<T> constructor,
+                                    final Object[] args,
+                                    final int containingIndexesIndexInArgs,
+                                    final boolean keepInternalCachingThreadSafe) throws NoSuchMethodException {
         super(constructor.getDeclaringClass());
         this.constructor = constructor;
         this.originalArgs = args;
@@ -77,32 +77,32 @@ public class ArrayConstructorAndArgsLocator<T> extends ConstructorAndArgsLocator
     }
 
     /**
-     * Get a {@link org.ObjectLayout.ConstructorAndArgs} instance to be used in constructing a given element index in
+     * Get a {@link CtorAndArgs} instance to be used in constructing a given element index in
      * a {@link StructuredArray}.                           .
      *
      * @param index The index of the element to be constructed in the target array
-     * @return {@link org.ObjectLayout.ConstructorAndArgs} instance to used in element construction
+     * @return {@link CtorAndArgs} instance to used in element construction
      * @throws NoSuchMethodException if expected constructor is not found in element class
      */
     @SuppressWarnings("unchecked")
-    public ConstructorAndArgs<T> getForIndex(final long index) throws NoSuchMethodException {
+    public CtorAndArgs<T> getForIndex(final long index) throws NoSuchMethodException {
         throw new IllegalArgumentException("getForIndex not supported");
     }
 
 
-    public ConstructorAndArgs<T> getForIndices(final long[] indices) throws NoSuchMethodException {
-        ConstructorAndArgs<T> constructorAndArgs;
+    public CtorAndArgs<T> getForIndices(final long[] indices) throws NoSuchMethodException {
+        CtorAndArgs<T> ctorAndArgs;
         Object[] args;
         long[] containingIndexes;
 
-        // Try (but not too hard) to use a cached, previously allocated constructorAndArgs object:
+        // Try (but not too hard) to use a cached, previously allocated ctorAndArgs object:
         if (keepInternalCachingThreadSafe) {
-            constructorAndArgs = cachedConstructorAndArgs.getAndSet(null);
+            ctorAndArgs = cachedConstructorAndArgs.getAndSet(null);
             args = cachedArgs.getAndSet(null);
             containingIndexes = cachedContainingIndexes.getAndSet(null);
         } else {
-            constructorAndArgs = nonThreadSafeCachedConstructorAndArgs;
-            nonThreadSafeCachedConstructorAndArgs = null;
+            ctorAndArgs = nonThreadSafeCachedCtorAndArgs;
+            nonThreadSafeCachedCtorAndArgs = null;
             args = nonThreadSafeCachedArgs;
             nonThreadSafeCachedArgs = null;
             containingIndexes = nonThreadSafeCachedContainingIndexes;
@@ -119,43 +119,43 @@ public class ArrayConstructorAndArgsLocator<T> extends ConstructorAndArgsLocator
         }
         args[containingIndexesIndexInArgs] = containingIndexes;
 
-        if (constructorAndArgs == null) {
+        if (ctorAndArgs == null) {
             // We have nothing cached that's not being used. A bit of allocation in contended cases won't kill us:
-            constructorAndArgs = new ConstructorAndArgs<T>(constructor, args);
+            ctorAndArgs = new CtorAndArgs<T>(constructor, args);
         }
-        constructorAndArgs.setConstructorArgs(args);
+        ctorAndArgs.setArgs(args);
 
-        return constructorAndArgs;
+        return ctorAndArgs;
     }
 
 
     /**
-     * Recycle an {@link org.ObjectLayout.ConstructorAndArgs} instance (place it back in the internal cache if desired). This is [very]
-     * useful for avoiding a re-allocation of a new {@link org.ObjectLayout.ConstructorAndArgs} and an associated args array for
-     * {@link #getForIndex(long)} invocation in cases such as this (where the returned {@link org.ObjectLayout.ConstructorAndArgs}
+     * Recycle an {@link CtorAndArgs} instance (place it back in the internal cache if desired). This is [very]
+     * useful for avoiding a re-allocation of a new {@link CtorAndArgs} and an associated args array for
+     * {@link #getForIndex(long)} invocation in cases such as this (where the returned {@link CtorAndArgs}
      * is not constant across indices).
      * Recycling is optional, and is not guaranteed to occur.
      *
-     * @param constructorAndArgs the {@link org.ObjectLayout.ConstructorAndArgs} instance to recycle
+     * @param ctorAndArgs the {@link CtorAndArgs} instance to recycle
      */
     @SuppressWarnings("unchecked")
-    public void recycle(final ConstructorAndArgs constructorAndArgs) {
-        // Only recycle constructorAndArgs if constructorAndArgs is compatible with our state:
-        if ((constructorAndArgs == null) || (constructorAndArgs.getConstructor() != constructor)) {
+    public void recycle(final CtorAndArgs ctorAndArgs) {
+        // Only recycle ctorAndArgs if ctorAndArgs is compatible with our state:
+        if ((ctorAndArgs == null) || (ctorAndArgs.getConstructor() != constructor)) {
             return;
         }
-        Object[] args = constructorAndArgs.getConstructorArgs();
+        Object[] args = ctorAndArgs.getArgs();
         if ((args == null) || (args.length != originalArgs.length)) {
             return;
         }
         long[] containingIndexes = (long []) args[containingIndexesIndexInArgs];
 
         if (keepInternalCachingThreadSafe) {
-            cachedConstructorAndArgs.lazySet(constructorAndArgs);
+            cachedConstructorAndArgs.lazySet(ctorAndArgs);
             cachedArgs.lazySet(args);
             cachedContainingIndexes.lazySet(containingIndexes);
         } else {
-            nonThreadSafeCachedConstructorAndArgs = constructorAndArgs;
+            nonThreadSafeCachedCtorAndArgs = ctorAndArgs;
             nonThreadSafeCachedArgs = args;
             nonThreadSafeCachedContainingIndexes = containingIndexes;
         }

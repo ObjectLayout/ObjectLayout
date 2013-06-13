@@ -20,17 +20,17 @@ package org.ObjectLayout;
 import java.lang.reflect.Constructor;
 
 /**
- * Supports a fixed (cached) constructor and set of arguments for either default construction or construction
+ * Supports a single (cached) constructor and set of arguments for either default construction or construction
  * with a given fixed set of arguments (repeated for all indices)
  *
  * @param <T> type of the element occupying each array slot
  */
-public class FixedConstructorAndArgsLocator<T> extends ConstructorAndArgsLocator<T> {
+public class SingletonCtorAndArgsProvider<T> extends CtorAndArgsProvider<T> {
 
     private static final Class[] EMPTY_ARG_TYPES = new Class[0];
     private static final Object[] EMPTY_ARGS = new Object[0];
 
-    final ConstructorAndArgs<T> cachedConstructorAndArgs;
+    private final CtorAndArgs<T> ctorAndArgs;
 
     /**
      * Used to apply default constructor to all elements.
@@ -38,7 +38,7 @@ public class FixedConstructorAndArgsLocator<T> extends ConstructorAndArgsLocator
      * @param elementClass The element class
      * @throws NoSuchMethodException if no default constructor is found for elementClass
      */
-    public FixedConstructorAndArgsLocator(final Class<T> elementClass) throws NoSuchMethodException {
+    public SingletonCtorAndArgsProvider(final Class<T> elementClass) throws NoSuchMethodException {
         this(elementClass, EMPTY_ARG_TYPES, EMPTY_ARGS);
     }
 
@@ -51,9 +51,9 @@ public class FixedConstructorAndArgsLocator<T> extends ConstructorAndArgsLocator
      * @throws NoSuchMethodException if a constructor matching argTypes
      * @throws IllegalArgumentException if argTypes and args conflict
      */
-    public FixedConstructorAndArgsLocator(final Class<T> elementClass,
-                                          final Class[] argTypes,
-                                          final Object[] args) throws NoSuchMethodException {
+    public SingletonCtorAndArgsProvider(final Class<T> elementClass,
+                                        final Class[] argTypes,
+                                        final Object[] args) throws NoSuchMethodException {
         super(elementClass);
 
         if (argTypes.length != args.length) {
@@ -61,7 +61,7 @@ public class FixedConstructorAndArgsLocator<T> extends ConstructorAndArgsLocator
         }
 
         final Constructor<T> constructor = elementClass.getConstructor(argTypes);
-        cachedConstructorAndArgs = new ConstructorAndArgs<T>(constructor, args);
+        ctorAndArgs = new CtorAndArgs<T>(constructor, args);
     }
 
     /**
@@ -72,21 +72,21 @@ public class FixedConstructorAndArgsLocator<T> extends ConstructorAndArgsLocator
      * @throws NoSuchMethodException if a constructor matching argTypes
      * @throws IllegalArgumentException if argTypes and args conflict
      */
-    public FixedConstructorAndArgsLocator(final Constructor<T> constructor,
-                                          final Object[] args) throws NoSuchMethodException {
+    public SingletonCtorAndArgsProvider(final Constructor<T> constructor,
+                                        final Object[] args) throws NoSuchMethodException {
         super(constructor.getDeclaringClass());
-        cachedConstructorAndArgs = new ConstructorAndArgs<T>(constructor, args);
+        ctorAndArgs = new CtorAndArgs<T>(constructor, args);
     }
 
     /**
-     * Get a {@link ConstructorAndArgs} instance to be used in constructing a given element index in
+     * Get a {@link CtorAndArgs} instance to be used in constructing a given element index in
      * a {@link StructuredArray}.
      *
      * @param indices of the element to be constructed in the target array
-     * @return {@link ConstructorAndArgs} instance to used in element construction
+     * @return {@link CtorAndArgs} instance to used in element construction
      * @throws NoSuchMethodException if expected constructor is not found in element class
      */
-    public ConstructorAndArgs<T> getForIndices(final long[] indices) throws NoSuchMethodException {
-        return cachedConstructorAndArgs;
+    public CtorAndArgs<T> getForIndices(final long[] indices) throws NoSuchMethodException {
+        return ctorAndArgs;
     }
 }

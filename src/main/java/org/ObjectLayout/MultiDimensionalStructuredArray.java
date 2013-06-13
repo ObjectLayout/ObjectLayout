@@ -38,7 +38,7 @@ import static java.lang.reflect.Modifier.isStatic;
  * <p>
  *     While simple creation of default-constructed elements and fixed constructor parameters are available through
  *     the newInstance factory methods, supporting arbitrary member types requires a wider range of construction
- *     options. The ConstructorAndArgsLocator API provides for array creation with arbitrary, user-supplied
+ *     options. The CtorAndArgsProvider API provides for array creation with arbitrary, user-supplied
  *     constructors and arguments, either of which can take the element index into account.
  * <p>
  *     MultiDimensionalStructuredArray is designed with semantics specifically restricted to be consistent with layouts of an
@@ -79,8 +79,8 @@ public final class MultiDimensionalStructuredArray<T> implements Iterable<T> {
      */
     public static <T> MultiDimensionalStructuredArray<T> newInstance(final Class<T> elementClass,
                                                                      final Long... lengths) throws NoSuchMethodException {
-        final ConstructorAndArgsLocator<T> constructorAndArgsLocator = new FixedConstructorAndArgsLocator<T>(elementClass);
-        return new MultiDimensionalStructuredArray<T>(lengths.length, constructorAndArgsLocator,
+        final CtorAndArgsProvider<T> ctorAndArgsProvider = new SingletonCtorAndArgsProvider<T>(elementClass);
+        return new MultiDimensionalStructuredArray<T>(lengths.length, ctorAndArgsProvider,
                                                       LongArrayToPrimitiveLongArray(lengths), null);
     }
 
@@ -96,8 +96,8 @@ public final class MultiDimensionalStructuredArray<T> implements Iterable<T> {
      */
     public static <T> MultiDimensionalStructuredArray<T> newInstance(final Class<T> elementClass,
                                                                      final long[] lengths) throws NoSuchMethodException {
-        final ConstructorAndArgsLocator<T> constructorAndArgsLocator = new FixedConstructorAndArgsLocator<T>(elementClass);
-        return new MultiDimensionalStructuredArray<T>(lengths.length, constructorAndArgsLocator, lengths, null);
+        final CtorAndArgsProvider<T> ctorAndArgsProvider = new SingletonCtorAndArgsProvider<T>(elementClass);
+        return new MultiDimensionalStructuredArray<T>(lengths.length, ctorAndArgsProvider, lengths, null);
     }
 
     /**
@@ -119,25 +119,25 @@ public final class MultiDimensionalStructuredArray<T> implements Iterable<T> {
                                                                      final long[] lengths,
                                                                      final Class[] initArgTypes,
                                                                      final Object... initArgs) throws NoSuchMethodException {
-        final ConstructorAndArgsLocator<T> constructorAndArgsLocator =
-                new FixedConstructorAndArgsLocator<T>(elementClass, initArgTypes, initArgs);
-        return new MultiDimensionalStructuredArray<T>(lengths.length, constructorAndArgsLocator, lengths, null);
+        final CtorAndArgsProvider<T> ctorAndArgsProvider =
+                new SingletonCtorAndArgsProvider<T>(elementClass, initArgTypes, initArgs);
+        return new MultiDimensionalStructuredArray<T>(lengths.length, ctorAndArgsProvider, lengths, null);
     }
 
     /**
      * Create a multi dimensional array of elements. Each dimension of the array will be of a length designated
      * in the <code>lengths</code> arguments passed. Each element of the array will consist of
      * an object of type <code>elementClass</code>. Elements will be constructed using the constructor and arguments
-     * supplied (on a potentially per element index basis) by the specified <code>constructorAndArgsLocator</code>.
+     * supplied (on a potentially per element index basis) by the specified <code>ctorAndArgsProvider</code>.
      * to construct and initialize each element.
      *
-     * @param constructorAndArgsLocator produces element constructors [potentially] on a per element basis.
+     * @param ctorAndArgsProvider produces element constructors [potentially] on a per element basis.
      * @param lengths of the array dimensions to create.
      * @throws NoSuchMethodException if the element class does not not support a supplied constructor
      */
-    public static <T> MultiDimensionalStructuredArray<T> newInstance(final ConstructorAndArgsLocator<T> constructorAndArgsLocator,
+    public static <T> MultiDimensionalStructuredArray<T> newInstance(final CtorAndArgsProvider<T> ctorAndArgsProvider,
                                                                      final Long... lengths) throws NoSuchMethodException {
-        return new MultiDimensionalStructuredArray<T>(lengths.length, constructorAndArgsLocator,
+        return new MultiDimensionalStructuredArray<T>(lengths.length, ctorAndArgsProvider,
                                                       LongArrayToPrimitiveLongArray(lengths), null);
     }
 
@@ -145,17 +145,17 @@ public final class MultiDimensionalStructuredArray<T> implements Iterable<T> {
      * Create a multi dimensional array of elements. Each dimension of the array will be of a length designated
      * in the <code>lengths[]</code> passed. Each element of the array will consist of
      * an object of type <code>elementClass</code>. Elements will be constructed using the constructor and arguments
-     * supplied (on a potentially per element index basis) by the specified <code>constructorAndArgsLocator</code>.
+     * supplied (on a potentially per element index basis) by the specified <code>ctorAndArgsProvider</code>.
      * to construct and initialize each element.
      *
-     * @param constructorAndArgsLocator produces element constructors [potentially] on a per element basis.
+     * @param ctorAndArgsProvider produces element constructors [potentially] on a per element basis.
      * @param lengths of the array dimensions to create.
      * @throws NoSuchMethodException if the element class does not not support a supplied constructor
      */
-    public static <T> MultiDimensionalStructuredArray<T> newInstance(final ConstructorAndArgsLocator<T> constructorAndArgsLocator,
+    public static <T> MultiDimensionalStructuredArray<T> newInstance(final CtorAndArgsProvider<T> ctorAndArgsProvider,
                                                                      final long[] lengths)
             throws NoSuchMethodException {
-        return new MultiDimensionalStructuredArray<T>(lengths.length, constructorAndArgsLocator, lengths, null);
+        return new MultiDimensionalStructuredArray<T>(lengths.length, ctorAndArgsProvider, lengths, null);
     }
 
     /**
@@ -213,16 +213,16 @@ public final class MultiDimensionalStructuredArray<T> implements Iterable<T> {
             }
         }
 
-        final ConstructorAndArgsLocator<T> constructorAndArgsLocator =
-                 new MultiDimensionalCopyConstructorAndArgsLocator<T>(source.getElementClass(), source, sourceOffsets, false);
+        final CtorAndArgsProvider<T> ctorAndArgsProvider =
+                 new MultiDimensionalCopyCtorAndArgsProvider<T>(source.getElementClass(), source, sourceOffsets, false);
 
-        return new MultiDimensionalStructuredArray<T>(source.getNumOfDimensions(), constructorAndArgsLocator, counts, null);
+        return new MultiDimensionalStructuredArray<T>(source.getNumOfDimensions(), ctorAndArgsProvider, counts, null);
     }
 
 
     @SuppressWarnings("unchecked")
     private MultiDimensionalStructuredArray(final int numOfDimensions,
-                                            final ConstructorAndArgsLocator<T> constructorAndArgsLocator,
+                                            final CtorAndArgsProvider<T> ctorAndArgsProvider,
                                             final long[] lengths,
                                             final long[] containingIndexes) throws NoSuchMethodException {
         if (numOfDimensions < 2) {
@@ -242,7 +242,7 @@ public final class MultiDimensionalStructuredArray<T> implements Iterable<T> {
                     ") does not match numDimensions (" + numOfDimensions + ")");
         }
 
-        this.elementClass = constructorAndArgsLocator.getElementClass();
+        this.elementClass = ctorAndArgsProvider.getElementClass();
 
         // int-addressable elements:
         final int intLength = (int) Math.min(length, Integer.MAX_VALUE);
@@ -264,26 +264,26 @@ public final class MultiDimensionalStructuredArray<T> implements Iterable<T> {
         if (numOfDimensions > 2) {
             final long[] subArrayLengths = new long[lengths.length - 1];
             System.arraycopy(lengths, 1, subArrayLengths, 0, subArrayLengths.length);
-            final Class[] subArrayArgTypes = {Integer.TYPE, ConstructorAndArgsLocator.class,
+            final Class[] subArrayArgTypes = {Integer.TYPE, CtorAndArgsProvider.class,
                                               long[].class, long[].class};
-            final Object[] subArrayArgs = {numOfDimensions - 1, constructorAndArgsLocator,
+            final Object[] subArrayArgs = {numOfDimensions - 1, ctorAndArgsProvider,
                                            subArrayLengths, null /* containingIndexes arg goes here */};
             final Class targetClass = MultiDimensionalStructuredArray.class;
             final Constructor<MultiDimensionalStructuredArray<T>> constructor =
                     targetClass.getDeclaredConstructor(subArrayArgTypes);
-            final ConstructorAndArgsLocator<MultiDimensionalStructuredArray<T>> subArrayConstructorAndArgsLocator =
-                    new ArrayConstructorAndArgsLocator<MultiDimensionalStructuredArray<T>>(constructor, subArrayArgs, 3);
-            populateElements(subArrayConstructorAndArgsLocator, containingIndexes);
+            final CtorAndArgsProvider<MultiDimensionalStructuredArray<T>> subArrayCtorAndArgsProvider =
+                    new ArrayCtorAndArgsProvider<MultiDimensionalStructuredArray<T>>(constructor, subArrayArgs, 3);
+            populateElements(subArrayCtorAndArgsProvider, containingIndexes);
         } else {
             final long subArrayLength = lengths[1];
-            final Class[] subArrayArgTypes = {ConstructorAndArgsLocator.class, Long.TYPE, long[].class};
-            final Object[] subArrayArgs = {constructorAndArgsLocator, subArrayLength, null /* containingIndexes arg goes here */};
+            final Class[] subArrayArgTypes = {CtorAndArgsProvider.class, Long.TYPE, long[].class};
+            final Object[] subArrayArgs = {ctorAndArgsProvider, subArrayLength, null /* containingIndexes arg goes here */};
             final Class targetClass = SingleDimensionalStructuredArray.class;
             final Constructor<SingleDimensionalStructuredArray<T>> constructor =
                     targetClass.getDeclaredConstructor(subArrayArgTypes);
-            final ConstructorAndArgsLocator<SingleDimensionalStructuredArray<T>> subArrayConstructorAndArgsLocator =
-                    new ArrayConstructorAndArgsLocator<SingleDimensionalStructuredArray<T>>(constructor, subArrayArgs, 2);
-            populateElements(subArrayConstructorAndArgsLocator, containingIndexes);
+            final CtorAndArgsProvider<SingleDimensionalStructuredArray<T>> subArrayCtorAndArgsProvider =
+                    new ArrayCtorAndArgsProvider<SingleDimensionalStructuredArray<T>>(constructor, subArrayArgs, 2);
+            populateElements(subArrayCtorAndArgsProvider, containingIndexes);
         }
     }
 
@@ -552,7 +552,7 @@ public final class MultiDimensionalStructuredArray<T> implements Iterable<T> {
         return intAddressableElements[index];
     }
 
-    private <E> void populateElements(final ConstructorAndArgsLocator<E> constructorAndArgsLocator,
+    private <E> void populateElements(final CtorAndArgsProvider<E> ctorAndArgsProvider,
                                   long[] containingIndexes) throws NoSuchMethodException {
         try {
             final long[] indexes;
@@ -570,19 +570,19 @@ public final class MultiDimensionalStructuredArray<T> implements Iterable<T> {
 
             for (int i = 0; i < intAddressableElements.length; i++, index++) {
                 indexes[thisIndex] = index;
-                final ConstructorAndArgs<E> constructorAndArgs = constructorAndArgsLocator.getForIndices(indexes);
-                final Constructor<E> constructor = constructorAndArgs.getConstructor();
-                intAddressableElements[i] = constructor.newInstance(constructorAndArgs.getConstructorArgs());
-                constructorAndArgsLocator.recycle(constructorAndArgs);
+                final CtorAndArgs<E> ctorAndArgs = ctorAndArgsProvider.getForIndices(indexes);
+                final Constructor<E> constructor = ctorAndArgs.getConstructor();
+                intAddressableElements[i] = constructor.newInstance(ctorAndArgs.getArgs());
+                ctorAndArgsProvider.recycle(ctorAndArgs);
             }
 
             for (final Object[] partition : longAddressableElements) {
                 indexes[thisIndex] = index;
                 for (int i = 0, size = partition.length; i < size; i++, index++) {
-                    final ConstructorAndArgs<E> constructorAndArgs = constructorAndArgsLocator.getForIndices(indexes);
-                    final Constructor<E> constructor = constructorAndArgs.getConstructor();
-                    partition[i] = constructor.newInstance(constructorAndArgs.getConstructorArgs());
-                    constructorAndArgsLocator.recycle(constructorAndArgs);
+                    final CtorAndArgs<E> ctorAndArgs = ctorAndArgsProvider.getForIndices(indexes);
+                    final Constructor<E> constructor = ctorAndArgs.getConstructor();
+                    partition[i] = constructor.newInstance(ctorAndArgs.getArgs());
+                    ctorAndArgsProvider.recycle(ctorAndArgs);
                 }
             }
         } catch (final NoSuchMethodException ex) {

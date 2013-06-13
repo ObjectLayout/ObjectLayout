@@ -52,10 +52,10 @@ public class SingleDimensionalStructuredArrayTest {
     @Test
     public void shouldConstructArrayElementsViaElementConstructorGenerator() throws NoSuchMethodException {
         final long length = 7;
-        final ConstructorAndArgsLocator<MockStructure> constructorAndArgsLocator =
-                new DefaultMockConstructorAndArgsLocator();
+        final CtorAndArgsProvider<MockStructure> ctorAndArgsProvider =
+                new DefaultMockCtorAndArgsProvider();
         final SingleDimensionalStructuredArray<MockStructure> array =
-                SingleDimensionalStructuredArray.newInstance(constructorAndArgsLocator, length);
+                SingleDimensionalStructuredArray.newInstance(ctorAndArgsProvider, length);
 
         assertThat(valueOf(array.getLength()), is(valueOf(length)));
         assertTrue(array.getElementClass() == MockStructure.class);
@@ -134,10 +134,10 @@ public class SingleDimensionalStructuredArrayTest {
     @Test
     public void shouldConstructCopyOfArray() throws NoSuchMethodException {
         final long length = 7;
-        final ConstructorAndArgsLocator<MockStructure> constructorAndArgsLocator =
-                new DefaultMockConstructorAndArgsLocator();
+        final CtorAndArgsProvider<MockStructure> ctorAndArgsProvider =
+                new DefaultMockCtorAndArgsProvider();
         final SingleDimensionalStructuredArray<MockStructure> sourceArray =
-                SingleDimensionalStructuredArray.newInstance(constructorAndArgsLocator, length);
+                SingleDimensionalStructuredArray.newInstance(ctorAndArgsProvider, length);
 
         assertThat(valueOf(sourceArray.getLength()), is(valueOf(length)));
         assertTrue(sourceArray.getElementClass() == MockStructure.class);
@@ -156,10 +156,10 @@ public class SingleDimensionalStructuredArrayTest {
     @Test
     public void shouldConstructCopyOfArrayRange() throws NoSuchMethodException {
         final long length = 7;
-        final ConstructorAndArgsLocator<MockStructure> constructorAndArgsLocator =
-                new DefaultMockConstructorAndArgsLocator();
+        final CtorAndArgsProvider<MockStructure> ctorAndArgsProvider =
+                new DefaultMockCtorAndArgsProvider();
         final SingleDimensionalStructuredArray<MockStructure> sourceArray =
-                SingleDimensionalStructuredArray.newInstance(constructorAndArgsLocator, length);
+                SingleDimensionalStructuredArray.newInstance(ctorAndArgsProvider, length);
 
         assertThat(valueOf(sourceArray.getLength()), is(valueOf(length)));
         assertTrue(sourceArray.getElementClass() == MockStructure.class);
@@ -318,23 +318,24 @@ public class SingleDimensionalStructuredArrayTest {
         private final int value = 888;
     }
 
-    private static class DefaultMockConstructorAndArgsLocator extends ConstructorAndArgsLocator<MockStructure> {
+    private static class DefaultMockCtorAndArgsProvider extends CtorAndArgsProvider<MockStructure>
+    {
 
         private final Class[] argsTypes = {Long.TYPE, Long.TYPE};
 
-        public DefaultMockConstructorAndArgsLocator() throws NoSuchMethodException {
+        public DefaultMockCtorAndArgsProvider() throws NoSuchMethodException {
             super(MockStructure.class);
         }
 
-        public ConstructorAndArgs<MockStructure> getForIndex(long index)
+        public CtorAndArgs<MockStructure> getForIndex(long index)
             throws NoSuchMethodException {
             Object[] args = {index, index * 2};
-            // We could do this much more efficiently with atomic caching of a single allocated ConstructorAndArgs,
-            // as SingleDimensionalCopyConstructorAndArgsLocator does, but no need to put in the effort in a test...
-            return new ConstructorAndArgs<MockStructure>(MockStructure.class.getConstructor(argsTypes), args);
+            // We could do this much more efficiently with atomic caching of a single allocated CtorAndArgs,
+            // as SingleDimensionalCopyCtorAndArgsProvider does, but no need to put in the effort in a test...
+            return new CtorAndArgs<MockStructure>(MockStructure.class.getConstructor(argsTypes), args);
         }
 
-        public ConstructorAndArgs<MockStructure> getForIndices(final long[] indices) throws NoSuchMethodException {
+        public CtorAndArgs<MockStructure> getForIndices(final long[] indices) throws NoSuchMethodException {
             return getForIndex(indices[0]);
         }
     }
