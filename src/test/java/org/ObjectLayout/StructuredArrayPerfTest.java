@@ -277,7 +277,7 @@ public class StructuredArrayPerfTest {
             }
             Object[] args = {indexSum, indexSum * 2};
             // We could do this much more efficiently with atomic caching of a single allocated CtorAndArgs,
-            // as SingleDimensionalCopyCtorAndArgsProvider does, but no need to put in the effort in a test...
+            // as CopyCtorAndArgsProvider does, but no need to put in the effort in a test...
             return new CtorAndArgs<MockStructure>(MockStructure.class.getConstructor(argsTypes), args);
         }
 

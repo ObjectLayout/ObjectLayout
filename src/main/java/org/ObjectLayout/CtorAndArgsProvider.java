@@ -23,7 +23,7 @@ package org.ObjectLayout;
  * <p>
  * Subclasses can be created that would provide a fixed constructor (as in {@link SingletonCtorAndArgsProvider}),
  * or to provide arguments and constructor values that would take the array index of the constructed element into account.
- * An example of this latter pattern can be found in the implementation of a {@link SingleDimensionalCopyCtorAndArgsProvider}.
+ * An example of this latter pattern can be found in the implementation of a {@link CopyCtorAndArgsProvider}.
  *
  * @param <T> type of the element occupying each array slot.
  */
@@ -64,7 +64,7 @@ public abstract class CtorAndArgsProvider<T> {
      * the returned {@link CtorAndArgs} is not constant.
      * <p>
      * Recycling is optional, and is not guaranteed to occur. It will only be done if it is helpful.
-     * Overriding this method is optional for subclasses. See example in {@link SingleDimensionalCopyCtorAndArgsProvider}
+     * Overriding this method is optional for subclasses. See example in {@link CopyCtorAndArgsProvider}
      *
      * @param ctorAndArgs the {@link CtorAndArgs} instance to recycle
      */
