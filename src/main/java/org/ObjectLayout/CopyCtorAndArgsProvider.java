@@ -55,7 +55,7 @@ public class CopyCtorAndArgsProvider<T> extends CtorAndArgsProvider<T> {
      * source array, starting at a given offset
      *
      * @param elementClass The class of the elements to be constructed
-     * @param source The source MultiDimensionalStructuredArray to copy from
+     * @param source The source StructuredArray to copy from
      * @param sourceOffsets The beginning index in the source from which to start copying
      * @throws NoSuchMethodException if a copy constructor is not found in element class
      */
@@ -70,7 +70,7 @@ public class CopyCtorAndArgsProvider<T> extends CtorAndArgsProvider<T> {
      * source array, starting at a given offset
      *
      * @param elementClass The class of the elements to be constructed
-     * @param source The source MultiDimensionalStructuredArray to copy from
+     * @param source The source StructuredArray to copy from
      * @param sourceOffsets The beginning index in the source from which to start copying
      * @param keepInternalCachingThreadSafe Control whether or not internal caching is kept thread-safe
      * @throws NoSuchMethodException NoSuchMethodException if a copy constructor is not found in element class
