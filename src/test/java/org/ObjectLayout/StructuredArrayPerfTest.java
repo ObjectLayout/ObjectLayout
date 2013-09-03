@@ -19,6 +19,8 @@ package org.ObjectLayout;
 
 import org.junit.Test;
 
+import java.lang.reflect.Constructor;
+
 import static java.lang.Long.valueOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
@@ -26,6 +28,7 @@ import static org.junit.Assert.assertTrue;
 
 public class StructuredArrayPerfTest {
     StructuredArray<MockStructure> array;
+    GenericEncapsulatedArray<MockStructure> genericEncapsulatedArray;
     EncapsulatedArray encapsulatedArray;
 
     class EncapsulatedArray {
@@ -47,10 +50,45 @@ public class StructuredArrayPerfTest {
         }
     }
 
+    class GenericEncapsulatedArray<E> {
+        final E[] array;
+
+        GenericEncapsulatedArray(CtorAndArgsProvider ctorAndArgsProvider, int length)  throws NoSuchMethodException {
+            long indexes[] = new long[1];
+            array = (E[]) new Object[length];
+            try {
+                for (int i = 0; i < array.length; i++) {
+                    indexes[0] = i;
+                    final CtorAndArgs<E> ctorAndArgs = ctorAndArgsProvider.getForIndices(indexes);
+                    final Constructor<E> constructor = ctorAndArgs.getConstructor();
+                    array[i] = constructor.newInstance(ctorAndArgs.getArgs());
+                }
+            } catch (final Exception ex) {
+                throw new RuntimeException(ex);
+            }
+        }
+
+        E get(final int index) {
+            return array[index];
+        }
+
+        int getLength() {
+            return array.length;
+        }
+    }
+
     long loopSumTest() {
         long sum = 0;
         for (int i = 0 ; i < array.getLength(); i++) {
             sum += array.get(i).getTestValue();
+        }
+        return sum;
+    }
+
+    long loopGenericEncapsulatedArraySumTest() {
+        long sum = 0;
+        for (int i = 0 ; i < genericEncapsulatedArray.getLength(); i++) {
+            sum += genericEncapsulatedArray.get(i).getTestValue();
         }
         return sum;
     }
@@ -63,9 +101,30 @@ public class StructuredArrayPerfTest {
         return sum;
     }
 
+    public void testLoop(int length) {
+        long startTime1 = System.nanoTime();
+        long sum1 = loopSumTest();
+        long endTime1 = System.nanoTime();
+        double loopsPerSec1 = 1000 * (double) length / (endTime1 - startTime1);
+
+
+        long startTime2 = System.nanoTime();
+        long sum2 = loopGenericEncapsulatedArraySumTest();
+        long endTime2 = System.nanoTime();
+        double loopsPerSec2 = 1000 * (double) length / (endTime2 - startTime2);
+
+        long startTime3 = System.nanoTime();
+        long sum3 = loopEncapsulatedArraySumTest();
+        long endTime3 = System.nanoTime();
+        double loopsPerSec3 = 1000 * (double) length / (endTime3 - startTime3);
+
+        System.out.println("StructuredArray: (" + loopsPerSec1 + "M), GenericEncapsulatedArray: (" + loopsPerSec2 + "M), EncapsulatedArray: (" +
+                loopsPerSec3 + "M) cksum = " + (sum1 + sum2 + sum3));
+    }
+
     @Test
     public void testLoopingSpeeds() throws NoSuchMethodException {
-        final int length = 10000000;
+        final int length = 5000000;
 
         final CtorAndArgsProvider<MockStructure> ctorAndArgsProvider =
                 new DefaultMockCtorAndArgsProvider();
@@ -73,20 +132,15 @@ public class StructuredArrayPerfTest {
 
         array = StructuredArray.newInstance(ctorAndArgsProvider, length);
         encapsulatedArray = new EncapsulatedArray(length);
+        genericEncapsulatedArray = new GenericEncapsulatedArray<MockStructure>(ctorAndArgsProvider, length);
 
-        for (int i = 0; i < 5; i++) {
-            long startTime1 = System.nanoTime();
-            long sum1 = loopSumTest();
-            long endTime1 = System.nanoTime();
-            double loopsPerSec1 = 1000 * (double) length / (endTime1 - startTime1);
+        for (int i = 0; i < 10; i++) {
+            testLoop(length);
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException ex) {
 
-
-            long startTime2 = System.nanoTime();
-            long sum2 = loopEncapsulatedArraySumTest();
-            long endTime2 = System.nanoTime();
-            double loopsPerSec2 = 1000 * (double) length / (endTime2 - startTime2);
-
-            System.out.println("sum1 = " + sum1 + " (" + loopsPerSec1 + "M),  sum2 = " + sum2 + " (" + loopsPerSec2 + "M)");
+            }
         }
     }
 
