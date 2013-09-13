@@ -343,8 +343,9 @@ public class StructuredArrayTest {
 
             // Increment cursors from inner-most dimension out:
             for (int cursorDimension = cursors.length - 1; cursorDimension >= 0; cursorDimension--) {
-                if ((++cursors[cursorDimension]) < lengths[cursorDimension])
+                if ((++cursors[cursorDimension]) < lengths[cursorDimension]) {
                     break;
+                }
                 // This dimension wrapped. Reset to zero and continue to one dimension higher
                 cursors[cursorDimension] = 0;
             }
@@ -381,8 +382,9 @@ public class StructuredArrayTest {
 
             // Increment cursors from inner-most dimension out:
             for (int cursorDimension = cursors.length - 1; cursorDimension >= 0; cursorDimension--) {
-                if ((++cursors[cursorDimension]) < lengths[cursorDimension])
+                if ((++cursors[cursorDimension]) < lengths[cursorDimension]) {
                     break;
+                }
                 // This dimension wrapped. Reset to zero and continue to one dimension higher
                 cursors[cursorDimension] = 0;
             }
@@ -409,8 +411,10 @@ public class StructuredArrayTest {
 
             // Increment cursors from inner-most dimension out:
             for (int cursorDimension = cursors.length - 1; cursorDimension >= 0; cursorDimension--) {
-                if ((++cursors[cursorDimension]) < lengths[cursorDimension])
+                if ((++cursors[cursorDimension]) < lengths[cursorDimension]) {
                     break;
+                }
+
                 // This dimension wrapped. Reset to zero and continue to one dimension higher
                 cursors[cursorDimension] = 0;
             }
@@ -431,7 +435,7 @@ public class StructuredArrayTest {
             this.testValue = testValue;
         }
 
-        public MockStructure(MockStructure src) {
+        public MockStructure(final MockStructure src) {
             this.index = src.index;
             this.testValue = src.testValue;
         }
@@ -480,8 +484,7 @@ public class StructuredArrayTest {
         private final int value = 888;
     }
 
-    private static class DefaultMockCtorAndArgsProvider extends CtorAndArgsProvider<MockStructure>
-    {
+    private static class DefaultMockCtorAndArgsProvider extends CtorAndArgsProvider<MockStructure> {
 
         private final Class[] argsTypes = {Long.TYPE, Long.TYPE};
 

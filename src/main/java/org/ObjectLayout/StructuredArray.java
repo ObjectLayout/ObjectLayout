@@ -405,7 +405,7 @@ public final class StructuredArray<T> implements Iterable<T> {
      */
     public long getTotalElementCount() {
         long totalElementCount = 1;
-        for (long length : lengths) {
+        for (final long length : lengths) {
             totalElementCount *= length;
         }
 
@@ -449,11 +449,11 @@ public final class StructuredArray<T> implements Iterable<T> {
         if ((indices.length - indexOffset) != dimensionCount) {
             throw new IllegalArgumentException("number of relevant elements in indices must match array dimension count");
         }
-        if (dimensionCount > 1) {
-            StructuredArray<T> containedArray = getSubArray(indices[indexOffset]);
-            return containedArray.get(indices, indexOffset + 1);
-        } else {
+
+        if (dimensionCount == 1) {
             return get(indices[indexOffset]);
+        } else {
+            return getSubArray(indices[indexOffset]).get(indices, indexOffset + 1);
         }
     }
 
@@ -515,6 +515,7 @@ public final class StructuredArray<T> implements Iterable<T> {
         if (dimensionCount != 2) {
             throw new IllegalArgumentException("number of index parameters to get() must match array dimension count");
         }
+
         return getSubArray(index0).get(index1);
     }
 
@@ -530,6 +531,7 @@ public final class StructuredArray<T> implements Iterable<T> {
         if (dimensionCount != 3) {
             throw new IllegalArgumentException("number of index parameters to get() must match array dimension count");
         }
+
         return getSubArray(index0).getSubArray(index1).get(index2);
     }
 
@@ -546,6 +548,7 @@ public final class StructuredArray<T> implements Iterable<T> {
         if (dimensionCount != 4) {
             throw new IllegalArgumentException("number of index parameters to get() must match array dimension count");
         }
+
         return getSubArray(index0).getSubArray(index1).getSubArray(index2).get(index3);
     }
 
@@ -563,6 +566,7 @@ public final class StructuredArray<T> implements Iterable<T> {
         if (dimensionCount != 1) {
             throw new IllegalArgumentException("number of index parameters to get() must match array dimension count");
         }
+
         return intAddressableElements[index];
     }
 
@@ -577,6 +581,7 @@ public final class StructuredArray<T> implements Iterable<T> {
         if (dimensionCount != 2) {
             throw new IllegalArgumentException("number of index parameters to get() must match array dimension count");
         }
+
         return getSubArray(index0).get(index1);
     }
 
@@ -592,6 +597,7 @@ public final class StructuredArray<T> implements Iterable<T> {
         if (dimensionCount != 3) {
             throw new IllegalArgumentException("number of index parameters to get() must match array dimension count");
         }
+
         return getSubArray(index0).getSubArray(index1).get(index2);
     }
 
@@ -608,6 +614,7 @@ public final class StructuredArray<T> implements Iterable<T> {
         if (dimensionCount != 4) {
             throw new IllegalArgumentException("number of index parameters to get() must match array dimension count");
         }
+
         return getSubArray(index0).getSubArray(index1).getSubArray(index2).get(index3);
     }
 
@@ -648,6 +655,7 @@ public final class StructuredArray<T> implements Iterable<T> {
         if (dimensionCount < 2) {
             throw new IllegalArgumentException("cannot call getSubArray() on single dimensional array");
         }
+
         return intAddressableSubArrays[index];
     }
 
@@ -657,7 +665,6 @@ public final class StructuredArray<T> implements Iterable<T> {
                                       final long[] containingIndices) throws NoSuchMethodException {
         try {
             final long[] indexes;
-
             if (containingIndices != null) {
                 indexes = new long[containingIndices.length + 1];
                 System.arraycopy(containingIndices, 0, indexes, 0, containingIndices.length);
@@ -666,7 +673,6 @@ public final class StructuredArray<T> implements Iterable<T> {
             }
 
             final int thisIndex = indexes.length - 1;
-
             long index = 0;
 
             for (int i = 0; i < intAddressable.length; i++, index++) {
@@ -733,18 +739,20 @@ public final class StructuredArray<T> implements Iterable<T> {
                 throw new NoSuchElementException();
             }
 
-            final T t = get(cursors);
+            final T element = get(cursors);
 
             // Increment cursors from inner-most dimension out:
             for (int cursorDimension = cursors.length - 1; cursorDimension >= 0; cursorDimension--) {
-                if ((++cursors[cursorDimension]) < lengths[cursorDimension])
+                if ((++cursors[cursorDimension]) < lengths[cursorDimension]) {
                     break;
+                }
+
                 // This dimension wrapped. Reset to zero and continue to one dimension higher
                 cursors[cursorDimension] = 0;
             }
             elementCountToCursor++;
 
-            return t;
+            return element;
         }
 
         /**
@@ -827,6 +835,7 @@ public final class StructuredArray<T> implements Iterable<T> {
         for (int i = 0; i < lengths.length; i++) {
             longLengths[i] = lengths[i];
         }
+
         return longLengths;
     }
 
@@ -835,6 +844,7 @@ public final class StructuredArray<T> implements Iterable<T> {
         for (int i = 0; i < lengths.length; i++) {
             longLengths[i] = lengths[i];
         }
+
         return longLengths;
     }
 
@@ -883,8 +893,9 @@ public final class StructuredArray<T> implements Iterable<T> {
                                    final long count,
                                    final boolean allowFinalFieldOverwrite) {
         if (src.elementClass != dst.elementClass) {
-            throw new ArrayStoreException(String.format("Only objects of the same class can be copied: %s != %s",
-                    src.getClass(), dst.getClass()));
+            String msg = String.format("Only objects of the same class can be copied: %s != %s",
+                                       src.getClass(), dst.getClass());
+            throw new ArrayStoreException(msg);
         }
         if ((src.dimensionCount > 1) || (dst.dimensionCount > 1)) {
             throw new IllegalArgumentException("shallowCopy only supported for single dimension arrays");
