@@ -60,7 +60,8 @@ public final class StructuredArray<T> implements Iterable<T> {
     private final Class<T> elementClass;
 
     private final long[] lengths;
-    private final long length;      // A cached lengths[0]
+    private final long length;            // A cached lengths[0]
+    private final long totalElementCount; // A cached product of lengths[i]
 
     private final int dimensionCount;
 
@@ -296,6 +297,13 @@ public final class StructuredArray<T> implements Iterable<T> {
         this.lengths = lengths;
         this.length = lengths[0];
 
+        // Compute and cache total element count:
+        long totalCount = 1;
+        for (long length : lengths) {
+            totalCount *= length;
+        }
+        totalElementCount = totalCount;
+
         if (length < 0) {
             throw new IllegalArgumentException("length cannot be negative");
         }
@@ -404,11 +412,6 @@ public final class StructuredArray<T> implements Iterable<T> {
      * @return the total number of elements (in all dimensions combined) in the array.
      */
     public long getTotalElementCount() {
-        long totalElementCount = 1;
-        for (long length : lengths) {
-            totalElementCount *= length;
-        }
-
         return totalElementCount;
     }
 
@@ -716,7 +719,6 @@ public final class StructuredArray<T> implements Iterable<T> {
 
         private final long[] cursors = new long[dimensionCount];
         private long elementCountToCursor = 0;
-        private final long totalElementCount = getTotalElementCount();
 
         /**
          * {@inheritDoc}
