@@ -1,18 +1,6 @@
 /*
- * Copyright 2013 Gil Tene
- * Copyright 2012, 2013 Martin Thompson
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Written by Gil Tene and Martin Thompson, and released to the public domain,
+ * as explained at http://creativecommons.org/publicdomain/zero/1.0/
  */
 
 package org.ObjectLayout;
@@ -28,6 +16,7 @@ import static org.junit.Assert.assertTrue;
 
 public class StructuredArrayPerfTest {
     StructuredArray<MockStructure> array;
+    StructuredArrayOfMockStructure subclassedArray;
     GenericEncapsulatedArray<MockStructure> genericEncapsulatedArray;
     EncapsulatedArray encapsulatedArray;
 
@@ -77,10 +66,18 @@ public class StructuredArrayPerfTest {
         }
     }
 
-    long loopSumTest() {
+    long arrayLoopSumTest() {
         long sum = 0;
         for (int i = 0 ; i < array.getLength(); i++) {
             sum += array.get(i).getTestValue();
+        }
+        return sum;
+    }
+
+    long subclassedArrayLoopSumTest() {
+        long sum = 0;
+        for (int i = 0 ; i < array.getLength(); i++) {
+            sum += subclassedArray.get(i).getTestValue();
         }
         return sum;
     }
@@ -102,35 +99,44 @@ public class StructuredArrayPerfTest {
     }
 
     public void testLoop(int length) {
-        long startTime1 = System.nanoTime();
-        long sum1 = loopSumTest();
-        long endTime1 = System.nanoTime();
-        double loopsPerSec1 = 1000 * (double) length / (endTime1 - startTime1);
 
-
-        long startTime2 = System.nanoTime();
-        long sum2 = loopGenericEncapsulatedArraySumTest();
-        long endTime2 = System.nanoTime();
-        double loopsPerSec2 = 1000 * (double) length / (endTime2 - startTime2);
+        long startTime4 = System.nanoTime();
+        long sum4 = loopEncapsulatedArraySumTest();
+        long endTime4 = System.nanoTime();
+        double loopsPerSec4 = 1000 * (double) length / (endTime4 - startTime4);
 
         long startTime3 = System.nanoTime();
-        long sum3 = loopEncapsulatedArraySumTest();
+        long sum3 = loopGenericEncapsulatedArraySumTest();
         long endTime3 = System.nanoTime();
         double loopsPerSec3 = 1000 * (double) length / (endTime3 - startTime3);
 
-        System.out.println("StructuredArray: (" + loopsPerSec1 + "M), GenericEncapsulatedArray: (" + loopsPerSec2 + "M), EncapsulatedArray: (" +
-                loopsPerSec3 + "M) cksum = " + (sum1 + sum2 + sum3));
+        long startTime2 = System.nanoTime();
+        long sum2 = subclassedArrayLoopSumTest();
+        long endTime2 = System.nanoTime();
+        double loopsPerSec2 = 1000 * (double) length / (endTime2 - startTime2);
+
+        long startTime1 = System.nanoTime();
+        long sum1 = arrayLoopSumTest();
+        long endTime1 = System.nanoTime();
+        double loopsPerSec1 = 1000 * (double) length / (endTime1 - startTime1);
+
+        System.out.println("StructuredArray: (" + loopsPerSec1 +
+                "M), SubclassedSA: (" + loopsPerSec2 +
+                "M), GenericEncapsulatedArray: (" + loopsPerSec3 +
+                "M), EncapsulatedArray: (" + loopsPerSec4 +
+                "M) cksum = " + (sum1 + sum2 + sum3 + sum4));
     }
 
     @Test
     public void testLoopingSpeeds() throws NoSuchMethodException {
-        final int length = 5000000;
+        final int length = 1000000;
 
         final CtorAndArgsProvider<MockStructure> ctorAndArgsProvider =
                 new DefaultMockCtorAndArgsProvider();
 
 
         array = StructuredArray.newInstance(ctorAndArgsProvider, length);
+        subclassedArray = StructuredArrayOfMockStructure.newInstance(ctorAndArgsProvider, length);
         encapsulatedArray = new EncapsulatedArray(length);
         genericEncapsulatedArray = new GenericEncapsulatedArray<MockStructure>(ctorAndArgsProvider, length);
 
@@ -324,6 +330,7 @@ public class StructuredArrayPerfTest {
             super(MockStructure.class);
         }
 
+        @Override
         public CtorAndArgs<MockStructure> getForIndices(long indices[]) throws NoSuchMethodException {
             long indexSum = 0;
             for (long index : indices) {
@@ -333,6 +340,15 @@ public class StructuredArrayPerfTest {
             // We could do this much more efficiently with atomic caching of a single allocated CtorAndArgs,
             // as CopyCtorAndArgsProvider does, but no need to put in the effort in a test...
             return new CtorAndArgs<MockStructure>(MockStructure.class.getConstructor(argsTypes), args);
+        }
+
+    }
+
+    public static class StructuredArrayOfMockStructure extends StructuredArray<MockStructure> {
+        public static StructuredArrayOfMockStructure newInstance(
+                final CtorAndArgsProvider<MockStructure> ctorAndArgsProvider,final long length) {
+            return (StructuredArrayOfMockStructure)
+                    StructuredArray.newSubclassInstance(StructuredArrayOfMockStructure.class, ctorAndArgsProvider, length);
         }
 
     }
