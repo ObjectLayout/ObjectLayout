@@ -27,7 +27,7 @@ public class CtorAndArgs<T> {
      * @param constructor Constructor to be indicated in this {@link CtorAndArgs}
      * @param args constructor arguments to be indicated in this {@link CtorAndArgs}
      */
-    public CtorAndArgs(final Constructor<T> constructor, final Object[] args) {
+    public CtorAndArgs(final Constructor<T> constructor, final Object... args) {
         setConstructor(constructor);
         setArgs(args);
     }
@@ -65,7 +65,7 @@ public class CtorAndArgs<T> {
      *
      * @param args constructor arguments to be indicated in this {@link CtorAndArgs}
      */
-    public final void setArgs(final Object[] args) {
+    public final void setArgs(final Object... args) {
         if (null == args) {
             throw new NullPointerException("args cannot be null");
         }
