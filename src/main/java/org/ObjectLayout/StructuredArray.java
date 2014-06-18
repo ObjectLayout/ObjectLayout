@@ -984,14 +984,14 @@ public class StructuredArray<T> implements Iterable<T> {
     /**
      * {@inheritDoc}
      */
-    public StructureIterator iterator() {
-        return new StructureIterator();
+    public ElementIterator iterator() {
+        return new ElementIterator();
     }
 
     /**
      * Specialised {@link java.util.Iterator} with the ability to be {@link #reset()} enabling reuse.
      */
-    public class StructureIterator implements Iterator<T> {
+    public class ElementIterator implements Iterator<T> {
 
         private final long[] cursors = new long[dimensionCount];
         private long elementCountToCursor = 0;
