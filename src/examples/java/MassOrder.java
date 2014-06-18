@@ -14,7 +14,7 @@ public class MassOrder extends StructuredArray<SimpleOrder> {
     public static MassOrder newInstance(final long length,
                                         final long accountID, final long instructionID, final long orderType) {
         MassOrder massOrder;
-        synchronized (MassOrderWithFinalFields.class) {
+        synchronized (MassOrder.class) {
             massOrder = (MassOrder) StructuredArray.newSubclassInstance(MassOrder.class,
                     SimpleOrder.class, length, simpleOrderConstructorArgTypes, accountID);
         }
