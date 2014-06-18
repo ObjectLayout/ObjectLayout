@@ -193,4 +193,8 @@ public class StructuredArrayOfAtomicLongTest {
         }
     }
 
+    public long accessArrayElementValue(StructuredArrayOfAtomicLong array, long index) {
+        return array.get(index).get();
+    }
+
 }
