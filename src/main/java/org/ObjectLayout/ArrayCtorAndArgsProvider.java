@@ -77,8 +77,15 @@ public class ArrayCtorAndArgsProvider<T> extends CtorAndArgsProvider<T> {
         throw new IllegalArgumentException("getForIndex not supported");
     }
 
-
-    public CtorAndArgs<T> getForIndices(final long[] indices) throws NoSuchMethodException {
+    /**
+     * Get a {@link CtorAndArgs} instance to be used in constructing a given element index in
+     * a {@link StructuredArray}
+     *
+     * @param indices The indices of the element to be constructed in the target array (one per dimension).
+     * @return {@link CtorAndArgs} instance to used in element construction
+     * @throws NoSuchMethodException
+     */
+    public CtorAndArgs<T> getForIndices(final long... indices) throws NoSuchMethodException {
         CtorAndArgs<T> ctorAndArgs;
         Object[] args;
         long[] containingIndexes;

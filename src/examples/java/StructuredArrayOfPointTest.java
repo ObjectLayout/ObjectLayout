@@ -83,7 +83,7 @@ public class StructuredArrayOfPointTest {
 
         initValues(lengths, array);
 
-        StructuredArrayOfPoint.StructureIterator iter = array.iterator();
+        StructuredArrayOfPoint.ElementIterator iter = array.iterator();
 
         long sum = 0;
         long elementCount = 0;
@@ -121,7 +121,7 @@ public class StructuredArrayOfPointTest {
         initValues(lengths, array);
 
         int i = 0;
-        final StructuredArrayOfPoint.StructureIterator iter = array.iterator();
+        final StructuredArrayOfPoint.ElementIterator iter = array.iterator();
         while (iter.hasNext()) {
             final long[] cursors = iter.getCursors();
             final Point point = iter.next();
@@ -187,7 +187,7 @@ public class StructuredArrayOfPointTest {
         final StructuredArrayOfPoint newArray =
                 (StructuredArrayOfPoint) StructuredArray.copyInstance(sourceArray, offsets, counts);
 
-        final StructuredArrayOfPoint.StructureIterator iter = newArray.iterator();
+        final StructuredArrayOfPoint.ElementIterator iter = newArray.iterator();
 
         // We expect MockStructure elements to be initialized with index = indexSum, and testValue = indexSum * 2,
         // but with the sums based on index+1 for each cursor (due to the {1, 1, 1} offset above):
@@ -394,7 +394,7 @@ public class StructuredArrayOfPointTest {
             super(Point.class);
         }
 
-        public CtorAndArgs<Point> getForIndices(long indices[]) throws NoSuchMethodException {
+        public CtorAndArgs<Point> getForIndices(long... indices) throws NoSuchMethodException {
             long indexSum = 0;
             for (long index : indices) {
                 indexSum += index;

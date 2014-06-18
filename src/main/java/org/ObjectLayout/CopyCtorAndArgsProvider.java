@@ -82,15 +82,15 @@ public class CopyCtorAndArgsProvider<T> extends CtorAndArgsProvider<T> {
     }
 
     /**
-     * Get a {@link CtorAndArgs} instance to be used in constructing a given element index in
+     * Get a {@link CtorAndArgs} instance to be used in copy-constructing a given element index in
      * a {@link StructuredArray}.                           .
      *
-     * @param indices The indexes of the element to be constructed in the target array
+     * @param indices The indexes of the element to be constructed in the target array (one per dimension)
      * @return {@link CtorAndArgs} instance to used in element construction
      * @throws NoSuchMethodException if expected constructor is not found in element class
      */
     @SuppressWarnings("unchecked")
-    public CtorAndArgs<T> getForIndices(long[] indices) throws NoSuchMethodException {
+    public CtorAndArgs<T> getForIndices(long... indices) throws NoSuchMethodException {
         CtorAndArgs<T> ctorAndArgs;
         long[] targetIndexes;
 

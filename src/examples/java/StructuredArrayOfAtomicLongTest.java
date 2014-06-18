@@ -3,8 +3,6 @@
  * as explained at http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-import org.ObjectLayout.CtorAndArgs;
-import org.ObjectLayout.CtorAndArgsProvider;
 import org.ObjectLayout.StructuredArray;
 import org.junit.Test;
 
@@ -36,14 +34,11 @@ public class StructuredArrayOfAtomicLongTest {
 
         initSumValues(array);
 
-        StructuredArrayOfAtomicLong.StructureIterator iter = array.iterator();
-
         long sum = 0;
         long elementCount = 0;
         long indexSum = 0;
         long index = 0;
-        while (iter.hasNext()) {
-            final AtomicLong atomicLong = iter.next();
+        for (final AtomicLong atomicLong : array) {
             indexSum += index++;
             assertThat(valueOf(atomicLong.get()), is(valueOf(indexSum)));
             sum += indexSum;
@@ -72,7 +67,7 @@ public class StructuredArrayOfAtomicLongTest {
 
         long index = 0;
         long indexSum = 0;
-        final StructuredArrayOfAtomicLong.StructureIterator iter = array.iterator();
+        final StructuredArrayOfAtomicLong.ElementIterator iter = array.iterator();
         while (iter.hasNext()) {
             final AtomicLong atomicLong = iter.next();
             indexSum += index++;
