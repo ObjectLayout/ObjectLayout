@@ -134,7 +134,7 @@ public class CopyCtorAndArgsProvider<T> extends CtorAndArgsProvider<T> {
      * @param ctorAndArgs the {@link CtorAndArgs} instance to recycle
      */
     @SuppressWarnings("unchecked")
-    public void recycle(final CtorAndArgs ctorAndArgs) {
+    public void recycle(final CtorAndArgs<T> ctorAndArgs) {
         // Only recycle ctorAndArgs if ctorAndArgs is compatible with our state:
         if (ctorAndArgs.getConstructor() != copyConstructor ||
             ctorAndArgs.getArgs().length != 1) {

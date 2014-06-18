@@ -56,7 +56,7 @@ public abstract class CtorAndArgsProvider<T> {
      *
      * @param ctorAndArgs the {@link CtorAndArgs} instance to recycle
      */
-    public void recycle(final CtorAndArgs ctorAndArgs) {
+    public void recycle(final CtorAndArgs<T> ctorAndArgs) {
     }
 
     /**
