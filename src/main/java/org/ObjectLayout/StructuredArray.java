@@ -44,6 +44,8 @@ public class StructuredArray<T> implements Iterable<T> {
     private static final int MAX_EXTRA_PARTITION_SIZE_POW2_EXPONENT = 30;
     private static final int MAX_EXTRA_PARTITION_SIZE = 1 << MAX_EXTRA_PARTITION_SIZE_POW2_EXPONENT;
     private static final int MASK = MAX_EXTRA_PARTITION_SIZE - 1;
+    private static final Object[] EMPTY_ARGS = new Object[0];
+
 
     private final Field[] fields;
     private final boolean hasFinalFields;
@@ -114,9 +116,9 @@ public class StructuredArray<T> implements Iterable<T> {
      * @param elementClass of each element in the array
      */
 
-    public static <T> StructuredArray<T> newSubclassInstance(CtorAndArgs<? extends StructuredArray<T>> arrayCtorAndArgs,
-                                                     final Class<T> elementClass,
-                                                     final long length) {
+    public static <T> StructuredArray<T> newSubclassInstance(final CtorAndArgs<? extends StructuredArray<T>> arrayCtorAndArgs,
+                                                             final Class<T> elementClass,
+                                                             final long length) {
         try {
             final CtorAndArgsProvider<T> ctorAndArgsProvider = new SingletonCtorAndArgsProvider<T>(elementClass);
             final long[] lengths = {length};
@@ -177,7 +179,7 @@ public class StructuredArray<T> implements Iterable<T> {
      * @param length of the array to create.
      * @param ctorAndArgsProvider produces element constructors [potentially] on a per element basis.
      */
-    public static <T> StructuredArray<T> newSubclassInstance(CtorAndArgs<? extends StructuredArray<T>> arrayCtorAndArgs,
+    public static <T> StructuredArray<T> newSubclassInstance(final CtorAndArgs<? extends StructuredArray<T>> arrayCtorAndArgs,
                                                              final CtorAndArgsProvider<T> ctorAndArgsProvider,
                                                              final long length) {
         try {
@@ -253,7 +255,7 @@ public class StructuredArray<T> implements Iterable<T> {
      * @param elementConstructorArgTypes for selecting the constructor to call for initialising each structure object.
      * @param elementConstructorArgs to be passed to a constructor for initialising each structure object.
      */
-    public static <T> StructuredArray<T> newSubclassInstance(CtorAndArgs<? extends StructuredArray<T>> arrayCtorAndArgs,
+    public static <T> StructuredArray<T> newSubclassInstance(final CtorAndArgs<? extends StructuredArray<T>> arrayCtorAndArgs,
                                                              final Class<T> elementClass,
                                                              final long length,
                                                              final Class[] elementConstructorArgTypes,
@@ -318,7 +320,7 @@ public class StructuredArray<T> implements Iterable<T> {
      * @param elementClass of each element in the array
      * @param lengths of the array dimensions to create.
      */
-    public static <T> StructuredArray<T> newSubclassInstance(CtorAndArgs<? extends StructuredArray<T>> arrayCtorAndArgs,
+    public static <T> StructuredArray<T> newSubclassInstance(final CtorAndArgs<? extends StructuredArray<T>> arrayCtorAndArgs,
                                                              final Class<T> elementClass,
                                                              final long... lengths) {
         try {
@@ -401,7 +403,7 @@ public class StructuredArray<T> implements Iterable<T> {
      * @throws IllegalArgumentException if elementConstructorArgTypes and constructor arguments do not match in length
 
      */
-    public static <T> StructuredArray<T> newSubclassInstance(CtorAndArgs<? extends StructuredArray<T>> arrayCtorAndArgs,
+    public static <T> StructuredArray<T> newSubclassInstance(final CtorAndArgs<? extends StructuredArray<T>> arrayCtorAndArgs,
                                                              final Class<T> elementClass,
                                                              final long[] lengths,
                                                              final Class[] elementConstructorArgTypes,
@@ -465,7 +467,7 @@ public class StructuredArray<T> implements Iterable<T> {
      * @param ctorAndArgsProvider produces element constructors [potentially] on a per element basis.
      * @param lengths of the array dimensions to create.
      */
-    public static <T> StructuredArray<T> newSubclassInstance(CtorAndArgs<? extends StructuredArray<T>> arrayCtorAndArgs,
+    public static <T> StructuredArray<T> newSubclassInstance(final CtorAndArgs<? extends StructuredArray<T>> arrayCtorAndArgs,
                                                              final CtorAndArgsProvider<T> ctorAndArgsProvider,
                                                              final long... lengths) {
         try {
@@ -523,8 +525,6 @@ public class StructuredArray<T> implements Iterable<T> {
                         EMPTY_ARGS);
         return instantiate(arrayCtorAndArgs, source.getDimensionCount(), ctorAndArgsProvider, counts);
     }
-
-    private static final Object[] EMPTY_ARGS = new Object[0];
 
     @SuppressWarnings("unchecked")
     private static <T> StructuredArray<T> instantiate(final int dimensionCount,
@@ -1200,9 +1200,10 @@ public class StructuredArray<T> implements Iterable<T> {
             this.active = active;
         }
 
-        public void setArrayConstructorArgs(CtorAndArgs arrayCtorAndArgs, int dimensionCount,
-                                            CtorAndArgsProvider ctorAndArgsProvider,
-                                            long[] lengths, long[] containingIndices) {
+        public void setArrayConstructorArgs(final CtorAndArgs arrayCtorAndArgs, int dimensionCount,
+                                            final CtorAndArgsProvider ctorAndArgsProvider,
+                                            final long[] lengths,
+                                            final long[] containingIndices) {
             this.arrayCtorAndArgs = arrayCtorAndArgs;
             this.dimensionCount = dimensionCount;
             this.ctorAndArgsProvider = ctorAndArgsProvider;
@@ -1265,6 +1266,5 @@ public class StructuredArray<T> implements Iterable<T> {
         if ((constructorMagic == null) || !constructorMagic.isActive()) {
             throw new IllegalArgumentException("StructuredArray<> must not be directly instantiated with a constructor. Use newInstance(...) instead.");
         }
-//        constructorMagic.setActive(false);
     }
 }
