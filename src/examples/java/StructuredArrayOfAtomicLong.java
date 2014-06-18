@@ -16,4 +16,8 @@ public class StructuredArrayOfAtomicLong extends StructuredArray<AtomicLong> {
         return (StructuredArrayOfAtomicLong)
                 StructuredArray.newSubclassInstance(StructuredArrayOfAtomicLong.class, AtomicLong.class, length);
     }
+
+    public AtomicLong get(long index) {
+        return super.get(index);
+    }
 }
