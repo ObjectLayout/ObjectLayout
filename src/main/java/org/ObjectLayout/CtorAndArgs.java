@@ -50,9 +50,9 @@ public class CtorAndArgs<T> {
         }
         Constructor<T> ctor = instanceClass.getDeclaredConstructor(constructorArgTypes);
         if (!ctor.isAccessible()) {
-        	ctor.setAccessible(true);
+            ctor.setAccessible(true);
         }
-		setConstructor(ctor);
+        setConstructor(ctor);
         setArgs(args);
     }
 

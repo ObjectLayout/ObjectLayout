@@ -107,19 +107,19 @@ public class MassOrder extends
     public static final class Builder extends
             CtorAndArgsProvider<SimpleOrder> {
 
-		private static CtorAndArgs<MassOrder> massOrderCtorAndArgs() {
-			try {
-				final Class[] argTypes = { Builder.class };
-				return new CtorAndArgs<MassOrder>(MassOrder.class, argTypes, (Object) null);
-			} catch (Exception e) {
-				throw new RuntimeException(e);
-			}
-		}
+        private static CtorAndArgs<MassOrder> massOrderCtorAndArgs() {
+            try {
+                final Class[] argTypes = { Builder.class };
+                return new CtorAndArgs<MassOrder>(MassOrder.class, argTypes, (Object) null);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
 
         private static CtorAndArgs<SimpleOrder> simpleOrderCtorAndArgs() {
             try {
-            	final Class[] argTypes = { Builder.class, SimpleOrder.Side.class, long.class, long.class };
-            	return new CtorAndArgs<SimpleOrder>(SimpleOrder.class, argTypes, null, null, 0L, 0L);
+                final Class[] argTypes = { Builder.class, SimpleOrder.Side.class, long.class, long.class };
+                return new CtorAndArgs<SimpleOrder>(SimpleOrder.class, argTypes, null, null, 0L, 0L);
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
