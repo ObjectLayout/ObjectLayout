@@ -4,6 +4,7 @@
  */
 
 import java.lang.reflect.Constructor;
+import java.util.Iterator;
 
 import org.ObjectLayout.CtorAndArgs;
 import org.ObjectLayout.CtorAndArgsProvider;
@@ -14,14 +15,16 @@ public class MassOrder extends
 
     private final long accountId;
     private final String instructionId;
-    private final OrderType orderType;
-    private long instrumentId;
+    private final SimpleOrder.OrderType orderType;
+    private final long instrumentId;
+    private final int askOrderIndex;
 
     MassOrder(final Builder builder) {
         this.accountId = builder.accountId;
         this.instructionId = builder.instructionId;
         this.orderType = builder.orderType;
         this.instrumentId = builder.instrumentId;
+        this.askOrderIndex = builder.bidIndex;
     }
 
     public long getAccountId() {
@@ -32,7 +35,7 @@ public class MassOrder extends
         return instructionId;
     }
 
-    public OrderType getOrderType() {
+    public SimpleOrder.OrderType getOrderType() {
         return orderType;
     }
 
@@ -40,8 +43,52 @@ public class MassOrder extends
         return instrumentId;
     }
 
-    public static enum OrderType {
-        MARKET, LIMIT
+    public int getBidOrderIndex() {
+        return 0;
+    }
+
+    public int getBidOrderCount() {
+        return askOrderIndex;
+    }
+
+    private final Iterable<SimpleOrder> bidIterable = new Iterable<SimpleOrder>() {
+        @Override
+        public Iterator<SimpleOrder> iterator() {
+            return new StructuredIterator<SimpleOrder>(
+                    MassOrder.this, getBidOrderIndex(), getBidOrderCount());
+        }
+    };
+
+    public Iterable<SimpleOrder> getBids() {
+        return bidIterable;
+    }
+
+    public int getAskOrderCount() {
+        return (int) (getLength() - askOrderIndex);
+    }
+
+    public int getAskOrderIndex() {
+        return askOrderIndex;
+    }
+
+    private final Iterable<SimpleOrder> askIterable = new Iterable<SimpleOrder>() {
+        @Override
+        public Iterator<SimpleOrder> iterator() {
+            return new StructuredIterator<SimpleOrder>(
+                    MassOrder.this, getAskOrderIndex(), getAskOrderCount());
+        }
+    };
+
+    public Iterable<SimpleOrder> getAsks() {
+        return askIterable;
+    }
+
+    @Override
+    public String toString() {
+        return "MassOrderWithBuilder [accountId=" + this.accountId
+                + ", instructionId=" + this.instructionId + ", orderType="
+                + this.orderType + ", instrumentId=" + this.instrumentId
+                + ", askOrderIndex=" + this.askOrderIndex + "]";
     }
 
     private static final ThreadLocal<Builder> BUILDER = new ThreadLocal<MassOrder.Builder>() {
@@ -55,20 +102,19 @@ public class MassOrder extends
     };
 
     public static Builder builder() {
-        return BUILDER.get();
+        return BUILDER.get().reset();
     }
 
-    public static class Builder extends
+    public static final class Builder extends
             CtorAndArgsProvider<SimpleOrder> {
 
         private static CtorAndArgs<MassOrder> massOrderCtorAndArgs() {
             try {
-                final Class[] massOrderConstructorArgTypes = { Builder.class };
-                final Constructor<MassOrder> massOrderConstructor;
-                massOrderConstructor = MassOrder.class
-                        .getConstructor(massOrderConstructorArgTypes);
+                final Constructor<MassOrder> massOrderConstructor =
+                        MassOrder.class.getDeclaredConstructor(Builder.class);
+                massOrderConstructor.setAccessible(true);
                 return new CtorAndArgs<MassOrder>(
-                        massOrderConstructor, (Object[]) null);
+                        massOrderConstructor, new Object[] { null });
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
@@ -77,7 +123,7 @@ public class MassOrder extends
         private static CtorAndArgs<SimpleOrder> simpleOrderCtorAndArgs() {
             try {
                 final Constructor<SimpleOrder> simpleOrderConstructor = SimpleOrder.class
-                        .getConstructor(Builder.class, long.class, long.class);
+                        .getConstructor(Builder.class, SimpleOrder.Side.class, long.class, long.class);
                 return new CtorAndArgs<SimpleOrder>(
                         simpleOrderConstructor, null, 0L, 0L);
             } catch (Exception e) {
@@ -90,7 +136,7 @@ public class MassOrder extends
         long accountId;
         long instrumentId;
         String instructionId;
-        OrderType orderType;
+        SimpleOrder.OrderType orderType;
 
         private int bidIndex;
         private long[] bidPrices = new long[MAX_ORDERS_PER_SIDE];
@@ -106,6 +152,18 @@ public class MassOrder extends
         public Builder() throws NoSuchMethodException {
             super(SimpleOrder.class);
             massOrderCtorAndArgs.setArgs(this);
+            reset();
+        }
+
+        public Builder reset() {
+            accountId = 0;
+            instrumentId = 0;
+            instructionId = null;
+            orderType = null;
+            bidIndex = 0;
+            askIndex = 0;
+
+            return this;
         }
 
         public Builder accountId(long accountId) {
@@ -123,7 +181,7 @@ public class MassOrder extends
             return this;
         }
 
-        public Builder orderType(OrderType orderType) {
+        public Builder orderType(SimpleOrder.OrderType orderType) {
             this.orderType = orderType;
             return this;
         }
@@ -157,10 +215,10 @@ public class MassOrder extends
 
             int i = (int) index;
             if (i < bidIndex) {
-                ctorAndArgs.setArgs(this, bidPrices[i], bidQuantities[i]);
+                ctorAndArgs.setArgs(this, SimpleOrder.Side.BID, bidPrices[i], bidQuantities[i]);
             } else {
                 i = i - bidIndex;
-                ctorAndArgs.setArgs(this, askPrices[i], askQuantities[i]);
+                ctorAndArgs.setArgs(this, SimpleOrder.Side.BID, askPrices[i], askQuantities[i]);
             }
 
             return ctorAndArgs;
