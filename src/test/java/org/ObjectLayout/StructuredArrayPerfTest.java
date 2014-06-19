@@ -48,7 +48,7 @@ public class StructuredArrayPerfTest {
             try {
                 for (int i = 0; i < array.length; i++) {
                     indexes[0] = i;
-                    final CtorAndArgs<E> ctorAndArgs = ctorAndArgsProvider.getForIndices(indexes);
+                    final CtorAndArgs<E> ctorAndArgs = ctorAndArgsProvider.getForIndex(indexes);
                     final Constructor<E> constructor = ctorAndArgs.getConstructor();
                     array[i] = constructor.newInstance(ctorAndArgs.getArgs());
                 }
@@ -331,7 +331,7 @@ public class StructuredArrayPerfTest {
         }
 
         @Override
-        public CtorAndArgs<MockStructure> getForIndices(long... indices) throws NoSuchMethodException {
+        public CtorAndArgs<MockStructure> getForIndex(long... indices) throws NoSuchMethodException {
             long indexSum = 0;
             for (long index : indices) {
                 indexSum += index;

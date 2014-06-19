@@ -19,15 +19,15 @@ public class ArrayCtorAndArgsProvider<T> extends CtorAndArgsProvider<T> {
 
     private final Constructor<T> constructor;
     private final Object[] originalArgs;
-    private final int containingIndexesIndexInArgs;
+    private final int containingIndexOffsetInArgs;
 
     private final boolean keepInternalCachingThreadSafe;
     private CtorAndArgs<T> nonThreadSafeCachedCtorAndArgs = null;
     private Object[] nonThreadSafeCachedArgs = null;
-    private long[] nonThreadSafeCachedContainingIndexes = null;
+    private long[] nonThreadSafeCachedContainingIndex = null;
     private final AtomicReference<CtorAndArgs<T>> cachedConstructorAndArgs = new AtomicReference<CtorAndArgs<T>>();
     private final AtomicReference<Object[]> cachedArgs = new AtomicReference<Object[]>();
-    private final AtomicReference<long[]> cachedContainingIndexes = new AtomicReference<long[]>();
+    private final AtomicReference<long[]> cachedContainingIndex = new AtomicReference<long[]>();
 
 
     /**
@@ -40,8 +40,8 @@ public class ArrayCtorAndArgsProvider<T> extends CtorAndArgsProvider<T> {
      */
     public ArrayCtorAndArgsProvider(final Constructor<T> constructor,
                                     final Object[] args,
-                                    final int containingIndexesIndexInArgs) throws NoSuchMethodException {
-        this(constructor, args, containingIndexesIndexInArgs, true);
+                                    final int containingIndexOffsetInArgs) throws NoSuchMethodException {
+        this(constructor, args, containingIndexOffsetInArgs, true);
     }
 
     /**
@@ -55,64 +55,52 @@ public class ArrayCtorAndArgsProvider<T> extends CtorAndArgsProvider<T> {
      */
     public ArrayCtorAndArgsProvider(final Constructor<T> constructor,
                                     final Object[] args,
-                                    final int containingIndexesIndexInArgs,
+                                    final int containingIndexOffsetInArgs,
                                     final boolean keepInternalCachingThreadSafe) throws NoSuchMethodException {
         super(constructor.getDeclaringClass());
         this.constructor = constructor;
         this.originalArgs = args;
-        this.containingIndexesIndexInArgs = containingIndexesIndexInArgs;
+        this.containingIndexOffsetInArgs = containingIndexOffsetInArgs;
         this.keepInternalCachingThreadSafe = keepInternalCachingThreadSafe;
-    }
-
-    /**
-     * Get a {@link CtorAndArgs} instance to be used in constructing a given element index in
-     * a {@link StructuredArray}.                           .
-     *
-     * @param index The index of the element to be constructed in the target array
-     * @return {@link CtorAndArgs} instance to used in element construction
-     * @throws NoSuchMethodException if expected constructor is not found in element class
-     */
-    @SuppressWarnings("unchecked")
-    public CtorAndArgs<T> getForIndex(final long index) throws NoSuchMethodException {
-        throw new IllegalArgumentException("getForIndex not supported");
     }
 
     /**
      * Get a {@link CtorAndArgs} instance to be used in constructing a given element index in
      * a {@link StructuredArray}
      *
-     * @param indices The indices of the element to be constructed in the target array (one per dimension).
+     * @param index The indices of the element to be constructed in the target array (one value per dimension).
      * @return {@link CtorAndArgs} instance to used in element construction
      * @throws NoSuchMethodException
      */
-    public CtorAndArgs<T> getForIndices(final long... indices) throws NoSuchMethodException {
+    @Override
+    public CtorAndArgs<T> getForIndex(final long... index) throws NoSuchMethodException {
         CtorAndArgs<T> ctorAndArgs;
         Object[] args;
-        long[] containingIndexes;
+        long[] containingIndex;
 
         // Try (but not too hard) to use a cached, previously allocated ctorAndArgs object:
         if (keepInternalCachingThreadSafe) {
             ctorAndArgs = cachedConstructorAndArgs.getAndSet(null);
             args = cachedArgs.getAndSet(null);
-            containingIndexes = cachedContainingIndexes.getAndSet(null);
+            containingIndex = cachedContainingIndex.getAndSet(null);
         } else {
             ctorAndArgs = nonThreadSafeCachedCtorAndArgs;
             nonThreadSafeCachedCtorAndArgs = null;
             args = nonThreadSafeCachedArgs;
             nonThreadSafeCachedArgs = null;
-            containingIndexes = nonThreadSafeCachedContainingIndexes;
-            nonThreadSafeCachedContainingIndexes = null;
+            containingIndex = nonThreadSafeCachedContainingIndex;
+            nonThreadSafeCachedContainingIndex = null;
         }
 
-        if ((containingIndexes == null) || (containingIndexes.length != indices.length))  {
-            containingIndexes = new long[indices.length];
+        if ((containingIndex == null) || (containingIndex.length != index.length))  {
+            containingIndex = new long[index.length];
         }
-        System.arraycopy(indices, 0, containingIndexes, 0, indices.length);
+        System.arraycopy(index, 0, containingIndex, 0, index.length);
 
         if (args == null) {
             args = Arrays.copyOf(originalArgs, originalArgs.length);
         }
-        args[containingIndexesIndexInArgs] = containingIndexes;
+        args[containingIndexOffsetInArgs] = containingIndex;
 
         if (ctorAndArgs == null) {
             // We have nothing cached that's not being used. A bit of allocation in contended cases won't kill us:
@@ -127,7 +115,7 @@ public class ArrayCtorAndArgsProvider<T> extends CtorAndArgsProvider<T> {
     /**
      * Recycle an {@link CtorAndArgs} instance (place it back in the internal cache if desired). This is [very]
      * useful for avoiding a re-allocation of a new {@link CtorAndArgs} and an associated args array for
-     * {@link #getForIndex(long)} invocation in cases such as this (where the returned {@link CtorAndArgs}
+     * {@link #getForIndex(long...)} invocation in cases such as this (where the returned {@link CtorAndArgs}
      * is not constant across indices).
      * Recycling is optional, and is not guaranteed to occur.
      *
@@ -143,16 +131,16 @@ public class ArrayCtorAndArgsProvider<T> extends CtorAndArgsProvider<T> {
         if ((args == null) || (args.length != originalArgs.length)) {
             return;
         }
-        long[] containingIndexes = (long []) args[containingIndexesIndexInArgs];
+        long[] containingIndexes = (long []) args[containingIndexOffsetInArgs];
 
         if (keepInternalCachingThreadSafe) {
             cachedConstructorAndArgs.lazySet(ctorAndArgs);
             cachedArgs.lazySet(args);
-            cachedContainingIndexes.lazySet(containingIndexes);
+            cachedContainingIndex.lazySet(containingIndexes);
         } else {
             nonThreadSafeCachedCtorAndArgs = ctorAndArgs;
             nonThreadSafeCachedArgs = args;
-            nonThreadSafeCachedContainingIndexes = containingIndexes;
+            nonThreadSafeCachedContainingIndex = containingIndexes;
         }
     }
 }

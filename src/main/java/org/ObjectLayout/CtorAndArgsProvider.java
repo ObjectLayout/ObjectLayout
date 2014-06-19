@@ -37,18 +37,18 @@ public abstract class CtorAndArgsProvider<T> {
      * Get a {@link CtorAndArgs} instance to be used in constructing a given element index in
      * a {@link StructuredArray}
      *
-     * @param indices The indices of the element to be constructed in the target array (one per dimension).
+     * @param index The index of the element to be constructed in the target array (one value per dimension).
      * @return {@link CtorAndArgs} instance to used in element construction
      * @throws NoSuchMethodException if expected constructor is not found in element class
      */
-    public CtorAndArgs<T> getForIndices(final long... indices) throws NoSuchMethodException {
-        throw new IllegalArgumentException("No support for getForIndices()");
+    public CtorAndArgs<T> getForIndex(final long... index) throws NoSuchMethodException {
+        throw new IllegalArgumentException("No support for getForIndex()");
     }
 
     /**
      * Recycle a {@link CtorAndArgs} instance (place it back in the internal cache if desired).
      * This is [very] useful for avoiding a re-allocation of a new {@link CtorAndArgs} and an
-     * associated args array for {@link #getForIndices(long[])} invocation in cases where
+     * associated args array for {@link #getForIndex(long[])} invocation in cases where
      * the returned {@link CtorAndArgs} is not constant.
      * <p>
      * Recycling is optional, and is not guaranteed to occur. It will only be done if it is helpful.

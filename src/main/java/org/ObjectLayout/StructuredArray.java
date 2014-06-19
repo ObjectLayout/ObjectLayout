@@ -565,7 +565,7 @@ public class StructuredArray<T> implements Iterable<T> {
         final int dimensionCount = constructorMagic.getDimensionCount();
         final CtorAndArgsProvider ctorAndArgsProvider = constructorMagic.getCtorAndArgsProvider();
         final long[] lengths = constructorMagic.getLengths();
-        final long[] containingIndices = constructorMagic.getContainingIndices();
+        final long[] containingIndex = constructorMagic.getContainingIndex();
 
         if (dimensionCount < 1) {
             throw new IllegalArgumentException("dimensionCount must be at least 1");
@@ -629,12 +629,12 @@ public class StructuredArray<T> implements Iterable<T> {
                 System.arraycopy(lengths, 1, subArrayLengths, 0, subArrayLengths.length);
 
                 final Object[] subArrayArgs = {arrayCtorAndArgs, dimensionCount - 1, ctorAndArgsProvider,
-                        subArrayLengths, null /* containingIndices arg goes here */};
+                        subArrayLengths, null /* containingIndex arg goes here */};
                 final CtorAndArgsProvider<StructuredArray<T>> subArrayCtorAndArgsProvider =
                         new ArrayCtorAndArgsProvider(arrayCtorAndArgs.getConstructor(), subArrayArgs, 4);
 
                 populateElements(subArrayCtorAndArgsProvider, intAddressableSubArrays,
-                        longAddressableSubArrays, containingIndices, true /* elements are StructuredArrays */);
+                        longAddressableSubArrays, containingIndex, true /* elements are StructuredArrays */);
             } else {
                 // We have elements, no sub arrays:
                 intAddressableSubArrays = null;
@@ -659,7 +659,7 @@ public class StructuredArray<T> implements Iterable<T> {
 
                 // This is a single dimension array. Populate it:
                 populateElements(ctorAndArgsProvider, intAddressableElements,
-                        longAddressableElements, containingIndices, false /* elements are leafs */);
+                        longAddressableElements, containingIndex, false /* elements are leafs */);
             }
         } catch (NoSuchMethodException ex) {
             throw new RuntimeException(ex);
@@ -924,7 +924,7 @@ public class StructuredArray<T> implements Iterable<T> {
                                   final boolean memberIsStructuredArray) {
         try {
             E member;
-            final CtorAndArgs<E> ctorAndArgs = ctorAndArgsProvider.getForIndices(indexes);
+            final CtorAndArgs<E> ctorAndArgs = ctorAndArgsProvider.getForIndex(indexes);
             final Constructor<E> constructor = ctorAndArgs.getConstructor();
             if (memberIsStructuredArray) {
                 getConstructorMagic().setArrayConstructorArgs(ctorAndArgs.getArgs());
@@ -944,30 +944,30 @@ public class StructuredArray<T> implements Iterable<T> {
     }
 
     private <E> void populateElements(final CtorAndArgsProvider<E> ctorAndArgsProvider,
-                                      final E[] intAddressable,
-                                      final E[][] longAddressable,
-                                      final long[] containingIndices,
+                                      final E[] intAddressableMembers,
+                                      final E[][] longAddressableMembers,
+                                      final long[] containingIndex,
                                       final boolean elementsAreStructuredArrays) {
-        final long[] indexes;
-        if (containingIndices != null) {
-            indexes = new long[containingIndices.length + 1];
-            System.arraycopy(containingIndices, 0, indexes, 0, containingIndices.length);
+        final long[] index;
+        if (containingIndex != null) {
+            index = new long[containingIndex.length + 1];
+            System.arraycopy(containingIndex, 0, index, 0, containingIndex.length);
         } else {
-            indexes = new long[1];
+            index = new long[1];
         }
 
-        final int thisIndex = indexes.length - 1;
-        long index = 0;
+        final int thisIndex = index.length - 1;
+        long index0 = 0;
 
-        for (int i = 0; i < intAddressable.length; i++, index++) {
-            indexes[thisIndex] = index;
-            intAddressable[i] = constructMember(ctorAndArgsProvider, indexes, elementsAreStructuredArrays);
+        for (int i = 0; i < intAddressableMembers.length; i++, index0++) {
+            index[thisIndex] = index0;
+            intAddressableMembers[i] = constructMember(ctorAndArgsProvider, index, elementsAreStructuredArrays);
         }
 
-        for (final E[] partition : longAddressable) {
-            for (int i = 0, size = partition.length; i < size; i++, index++) {
-                indexes[thisIndex] = index;
-                partition[i] = constructMember(ctorAndArgsProvider, indexes, elementsAreStructuredArrays);
+        for (final E[] partition : longAddressableMembers) {
+            for (int i = 0, size = partition.length; i < size; i++, index0++) {
+                index[thisIndex] = index0;
+                partition[i] = constructMember(ctorAndArgsProvider, index, elementsAreStructuredArrays);
             }
         }
     }
@@ -1203,12 +1203,12 @@ public class StructuredArray<T> implements Iterable<T> {
         public void setArrayConstructorArgs(final CtorAndArgs arrayCtorAndArgs, int dimensionCount,
                                             final CtorAndArgsProvider ctorAndArgsProvider,
                                             final long[] lengths,
-                                            final long[] containingIndices) {
+                                            final long[] containingIndex) {
             this.arrayCtorAndArgs = arrayCtorAndArgs;
             this.dimensionCount = dimensionCount;
             this.ctorAndArgsProvider = ctorAndArgsProvider;
             this.lengths = lengths;
-            this.containingIndices = containingIndices;
+            this.containingIndex = containingIndex;
         }
 
         public void setArrayConstructorArgs(Object... args) {
@@ -1216,7 +1216,7 @@ public class StructuredArray<T> implements Iterable<T> {
             this.dimensionCount = (Integer) args[1];
             this.ctorAndArgsProvider = (CtorAndArgsProvider) args[2];
             this.lengths = (long[]) args[3];
-            this.containingIndices = (long[]) args[4];
+            this.containingIndex = (long[]) args[4];
         }
 
         public CtorAndArgs getArrayCtorAndArgs() {
@@ -1235,8 +1235,8 @@ public class StructuredArray<T> implements Iterable<T> {
             return lengths;
         }
 
-        public long[] getContainingIndices() {
-            return containingIndices;
+        public long[] getContainingIndex() {
+            return containingIndex;
         }
 
         private boolean active = false;
@@ -1245,7 +1245,7 @@ public class StructuredArray<T> implements Iterable<T> {
         private int dimensionCount = 1;
         private CtorAndArgsProvider ctorAndArgsProvider = null;
         private long[] lengths = null;
-        private long[] containingIndices = null;
+        private long[] containingIndex = null;
     }
 
     private static final ThreadLocal<ConstructorMagic> threadLocalConstructorMagic = new ThreadLocal<ConstructorMagic>();

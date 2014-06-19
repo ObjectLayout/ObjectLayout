@@ -21,9 +21,9 @@ public class CopyCtorAndArgsProvider<T> extends CtorAndArgsProvider<T> {
     private final long[] sourceOffsets;
     private final boolean keepInternalCachingThreadSafe;
     private CtorAndArgs<T> nonThreadSafeCachedCtorAndArgs = null;
-    private long[] nonThreadSafeCachedTargetIndexes = null;
+    private long[] nonThreadSafeCachedTargetIndex = null;
     private final AtomicReference<CtorAndArgs<T>> cachedConstructorAndArgs = new AtomicReference<CtorAndArgs<T>>();
-    private final AtomicReference<long[]> cachedTargetIndexes = new AtomicReference<long[]>();
+    private final AtomicReference<long[]> cachedTargetIndex = new AtomicReference<long[]>();
 
     /**
      * Used to apply a copy constructor to a target array's elements, copying corresponding elements from a
@@ -85,40 +85,41 @@ public class CopyCtorAndArgsProvider<T> extends CtorAndArgsProvider<T> {
      * Get a {@link CtorAndArgs} instance to be used in copy-constructing a given element index in
      * a {@link StructuredArray}.                           .
      *
-     * @param indices The indexes of the element to be constructed in the target array (one per dimension)
+     * @param index The index of the element to be constructed in the target array (one value per dimension)
      * @return {@link CtorAndArgs} instance to used in element construction
      * @throws NoSuchMethodException if expected constructor is not found in element class
      */
+    @Override
     @SuppressWarnings("unchecked")
-    public CtorAndArgs<T> getForIndices(long... indices) throws NoSuchMethodException {
+    public CtorAndArgs<T> getForIndex(long... index) throws NoSuchMethodException {
         CtorAndArgs<T> ctorAndArgs;
-        long[] targetIndexes;
+        long[] targetIndex;
 
         // Try (but not too hard) to use a cached, previously allocated ctorAndArgs object:
         if (keepInternalCachingThreadSafe) {
             ctorAndArgs = cachedConstructorAndArgs.getAndSet(null);
-            targetIndexes = cachedTargetIndexes.getAndSet(null);
+            targetIndex = cachedTargetIndex.getAndSet(null);
         } else {
             ctorAndArgs = nonThreadSafeCachedCtorAndArgs;
             nonThreadSafeCachedCtorAndArgs = null;
-            targetIndexes = nonThreadSafeCachedTargetIndexes;
-            nonThreadSafeCachedTargetIndexes = null;
+            targetIndex = nonThreadSafeCachedTargetIndex;
+            nonThreadSafeCachedTargetIndex = null;
         }
 
         if (ctorAndArgs == null) {
             // We have nothing cached that's not being used. A bit of allocation in contended cases won't kill us:
             ctorAndArgs = new CtorAndArgs<T>(copyConstructor, new Object[1]);
         }
-        if (targetIndexes == null) {
-            targetIndexes = new long[sourceOffsets.length];
+        if (targetIndex == null) {
+            targetIndex = new long[sourceOffsets.length];
         }
 
-        for (int i = 0; i < indices.length; i++) {
-            targetIndexes[i] = indices[i] + sourceOffsets[i];
+        for (int i = 0; i < index.length; i++) {
+            targetIndex[i] = index[i] + sourceOffsets[i];
         }
 
         // Set the source object for the copy constructor:
-        ctorAndArgs.getArgs()[0] = source.get(targetIndexes);
+        ctorAndArgs.getArgs()[0] = source.get(targetIndex);
 
         return ctorAndArgs;
     }
@@ -127,12 +128,13 @@ public class CopyCtorAndArgsProvider<T> extends CtorAndArgsProvider<T> {
     /**
      * Recycle an {@link CtorAndArgs} instance (place it back in the internal cache if
      * desired). This is [very] useful for avoiding a re-allocation of a new {@link CtorAndArgs}
-     * and an associated args array for {@link #getForIndices(long[])} invocation in cases such as this (where the
+     * and an associated args array for {@link #getForIndex(long[])} invocation in cases such as this (where the
      * returned {@link CtorAndArgs} is not constant across indices).
      * Recycling is optional, and is not guaranteed to occur.
      *
      * @param ctorAndArgs the {@link CtorAndArgs} instance to recycle
      */
+    @Override
     @SuppressWarnings("unchecked")
     public void recycle(final CtorAndArgs<T> ctorAndArgs) {
         // Only recycle ctorAndArgs if ctorAndArgs is compatible with our state:

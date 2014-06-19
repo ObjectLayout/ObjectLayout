@@ -201,7 +201,7 @@ public class MassOrder extends
         }
 
         @Override
-        public CtorAndArgs<SimpleOrder> getForIndices(
+        public CtorAndArgs<SimpleOrder> getForIndex(
                 long... indices) throws NoSuchMethodException {
 
             CtorAndArgs<SimpleOrder> ctorAndArgs =

@@ -394,7 +394,7 @@ public class StructuredArrayOfPointTest {
             super(Point.class);
         }
 
-        public CtorAndArgs<Point> getForIndices(long... indices) throws NoSuchMethodException {
+        public CtorAndArgs<Point> getForIndex(long... indices) throws NoSuchMethodException {
             long indexSum = 0;
             for (long index : indices) {
                 indexSum += index;

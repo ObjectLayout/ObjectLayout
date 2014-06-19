@@ -467,7 +467,7 @@ public class StructuredArrayTest {
             super(MockStructure.class);
         }
 
-        public CtorAndArgs<MockStructure> getForIndices(long... indices) throws NoSuchMethodException {
+        public CtorAndArgs<MockStructure> getForIndex(long... indices) throws NoSuchMethodException {
             long indexSum = 0;
             for (long index : indices) {
                 indexSum += index;
