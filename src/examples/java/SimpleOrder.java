@@ -3,18 +3,18 @@
  * as explained at http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-public class SimpleOrderWithBuilder {
+public class SimpleOrder {
     private final long instrumentId;
     private final long accountId;
-    private final MassOrderWithBuilder.OrderType orderType;
+    private final MassOrder.OrderType orderType;
     private final long price;
     private final long quantity;
 
     private long cancelledQuantity = 0;
     private long filledQuantity = 0;
 
-    public SimpleOrderWithBuilder(MassOrderWithBuilder.Builder builder,
-            long price, long quantity) {
+    public SimpleOrder(MassOrder.Builder builder,
+                       long price, long quantity) {
         this.instrumentId = builder.instrumentId;
         this.accountId = builder.accountId;
         this.orderType = builder.orderType;
@@ -46,7 +46,7 @@ public class SimpleOrderWithBuilder {
         return this.accountId;
     }
 
-    public MassOrderWithBuilder.OrderType getOrderType() {
+    public MassOrder.OrderType getOrderType() {
         return this.orderType;
     }
 
