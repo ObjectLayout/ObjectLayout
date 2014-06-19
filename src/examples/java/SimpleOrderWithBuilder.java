@@ -4,17 +4,28 @@
  */
 
 public class SimpleOrderWithBuilder {
+
+    public static enum OrderType {
+        MARKET, LIMIT
+    }
+
+    public static enum Side {
+        BID, ASK
+    }
+
     private final long instrumentId;
     private final long accountId;
-    private final MassOrderWithBuilder.OrderType orderType;
+    private final SimpleOrderWithBuilder.OrderType orderType;
     private final long price;
     private final long quantity;
+    private final Side side;
 
     private long cancelledQuantity = 0;
     private long filledQuantity = 0;
 
     public SimpleOrderWithBuilder(MassOrderWithBuilder.Builder builder,
-            long price, long quantity) {
+            Side side, long price, long quantity) {
+        this.side = side;
         this.instrumentId = builder.instrumentId;
         this.accountId = builder.accountId;
         this.orderType = builder.orderType;
@@ -46,7 +57,7 @@ public class SimpleOrderWithBuilder {
         return this.accountId;
     }
 
-    public MassOrderWithBuilder.OrderType getOrderType() {
+    public SimpleOrderWithBuilder.OrderType getOrderType() {
         return this.orderType;
     }
 
@@ -56,5 +67,15 @@ public class SimpleOrderWithBuilder {
 
     public long getQuantity() {
         return this.quantity;
+    }
+
+    @Override
+    public String toString() {
+        return "SimpleOrderWithBuilder [instrumentId=" + this.instrumentId
+                + ", accountId=" + this.accountId + ", orderType="
+                + this.orderType + ", side=" + this.side + ", price="
+                + this.price + ", quantity=" + this.quantity
+                + ", cancelledQuantity=" + this.cancelledQuantity
+                + ", filledQuantity=" + this.filledQuantity + "]";
     }
 }
