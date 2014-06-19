@@ -5,11 +5,11 @@
 
 public class MassOrderExample {
     public static void main(String[] args) {
-        MassOrderWithBuilder massOrder = MassOrderWithBuilder.builder().
+        MassOrder massOrder = MassOrder.builder().
                 accountId(1).
                 instructionId("ABC").
                 instrumentId(2).
-                orderType(SimpleOrderWithBuilder.OrderType.LIMIT).
+                orderType(SimpleOrder.OrderType.LIMIT).
                 addBid(10, 10).
                 addBid(11, 10).
                 addBid(12, 10).
@@ -21,11 +21,11 @@ public class MassOrderExample {
 
         System.out.println(massOrder);
 
-        for (SimpleOrderWithBuilder order : massOrder.getBids()) {
+        for (SimpleOrder order : massOrder.getBids()) {
             System.out.println(order);
         }
 
-        for (SimpleOrderWithBuilder order : massOrder.getAsks()) {
+        for (SimpleOrder order : massOrder.getAsks()) {
             System.out.println(order);
         }
     }

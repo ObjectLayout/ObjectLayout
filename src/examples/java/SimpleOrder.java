@@ -3,7 +3,7 @@
  * as explained at http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-public class SimpleOrderWithBuilder {
+public class SimpleOrder {
 
     public static enum OrderType {
         MARKET, LIMIT
@@ -15,7 +15,7 @@ public class SimpleOrderWithBuilder {
 
     private final long instrumentId;
     private final long accountId;
-    private final SimpleOrderWithBuilder.OrderType orderType;
+    private final SimpleOrder.OrderType orderType;
     private final long price;
     private final long quantity;
     private final Side side;
@@ -23,7 +23,7 @@ public class SimpleOrderWithBuilder {
     private long cancelledQuantity = 0;
     private long filledQuantity = 0;
 
-    public SimpleOrderWithBuilder(MassOrderWithBuilder.Builder builder,
+    public SimpleOrder(MassOrder.Builder builder,
             Side side, long price, long quantity) {
         this.side = side;
         this.instrumentId = builder.instrumentId;
@@ -57,7 +57,7 @@ public class SimpleOrderWithBuilder {
         return this.accountId;
     }
 
-    public SimpleOrderWithBuilder.OrderType getOrderType() {
+    public SimpleOrder.OrderType getOrderType() {
         return this.orderType;
     }
 

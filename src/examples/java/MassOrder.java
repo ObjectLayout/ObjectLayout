@@ -10,16 +10,16 @@ import org.ObjectLayout.CtorAndArgs;
 import org.ObjectLayout.CtorAndArgsProvider;
 import org.ObjectLayout.StructuredArray;
 
-public class MassOrderWithBuilder extends
-        StructuredArray<SimpleOrderWithBuilder> {
+public class MassOrder extends
+        StructuredArray<SimpleOrder> {
 
     private final long accountId;
     private final String instructionId;
-    private final SimpleOrderWithBuilder.OrderType orderType;
+    private final SimpleOrder.OrderType orderType;
     private final long instrumentId;
     private final int askOrderIndex;
 
-    MassOrderWithBuilder(final Builder builder) {
+    MassOrder(final Builder builder) {
         this.accountId = builder.accountId;
         this.instructionId = builder.instructionId;
         this.orderType = builder.orderType;
@@ -35,7 +35,7 @@ public class MassOrderWithBuilder extends
         return instructionId;
     }
 
-    public SimpleOrderWithBuilder.OrderType getOrderType() {
+    public SimpleOrder.OrderType getOrderType() {
         return orderType;
     }
 
@@ -51,15 +51,15 @@ public class MassOrderWithBuilder extends
         return askOrderIndex;
     }
 
-    private final Iterable<SimpleOrderWithBuilder> bidIterable = new Iterable<SimpleOrderWithBuilder>() {
+    private final Iterable<SimpleOrder> bidIterable = new Iterable<SimpleOrder>() {
         @Override
-        public Iterator<SimpleOrderWithBuilder> iterator() {
-            return new StructuredIterator<SimpleOrderWithBuilder>(
-                    MassOrderWithBuilder.this, getBidOrderIndex(), getBidOrderCount());
+        public Iterator<SimpleOrder> iterator() {
+            return new StructuredIterator<SimpleOrder>(
+                    MassOrder.this, getBidOrderIndex(), getBidOrderCount());
         }
     };
 
-    public Iterable<SimpleOrderWithBuilder> getBids() {
+    public Iterable<SimpleOrder> getBids() {
         return bidIterable;
     }
 
@@ -71,15 +71,15 @@ public class MassOrderWithBuilder extends
         return askOrderIndex;
     }
 
-    private final Iterable<SimpleOrderWithBuilder> askIterable = new Iterable<SimpleOrderWithBuilder>() {
+    private final Iterable<SimpleOrder> askIterable = new Iterable<SimpleOrder>() {
         @Override
-        public Iterator<SimpleOrderWithBuilder> iterator() {
-            return new StructuredIterator<SimpleOrderWithBuilder>(
-                    MassOrderWithBuilder.this, getAskOrderIndex(), getAskOrderCount());
+        public Iterator<SimpleOrder> iterator() {
+            return new StructuredIterator<SimpleOrder>(
+                    MassOrder.this, getAskOrderIndex(), getAskOrderCount());
         }
     };
 
-    public Iterable<SimpleOrderWithBuilder> getAsks() {
+    public Iterable<SimpleOrder> getAsks() {
         return askIterable;
     }
 
@@ -91,7 +91,7 @@ public class MassOrderWithBuilder extends
                 + ", askOrderIndex=" + this.askOrderIndex + "]";
     }
 
-    private static final ThreadLocal<Builder> BUILDER = new ThreadLocal<MassOrderWithBuilder.Builder>() {
+    private static final ThreadLocal<Builder> BUILDER = new ThreadLocal<MassOrder.Builder>() {
         protected Builder initialValue() {
             try {
                 return new Builder();
@@ -106,14 +106,14 @@ public class MassOrderWithBuilder extends
     }
 
     public static class Builder extends
-            CtorAndArgsProvider<SimpleOrderWithBuilder> {
+            CtorAndArgsProvider<SimpleOrder> {
 
-        private static CtorAndArgs<MassOrderWithBuilder> massOrderCtorAndArgs() {
+        private static CtorAndArgs<MassOrder> massOrderCtorAndArgs() {
             try {
-                final Constructor<MassOrderWithBuilder> massOrderConstructor =
-                        MassOrderWithBuilder.class.getDeclaredConstructor(Builder.class);
+                final Constructor<MassOrder> massOrderConstructor =
+                        MassOrder.class.getDeclaredConstructor(Builder.class);
                 massOrderConstructor.setAccessible(true);
-                return new CtorAndArgs<MassOrderWithBuilder>(
+                return new CtorAndArgs<MassOrder>(
                         massOrderConstructor, new Object[] { null });
             } catch (Exception e) {
                 throw new RuntimeException(e);
@@ -121,11 +121,11 @@ public class MassOrderWithBuilder extends
         }
 
 
-        private static CtorAndArgs<SimpleOrderWithBuilder> simpleOrderArgs() {
+        private static CtorAndArgs<SimpleOrder> simpleOrderArgs() {
             try {
-                final Constructor<SimpleOrderWithBuilder> simpleOrderConstructor = SimpleOrderWithBuilder.class
-                        .getConstructor(Builder.class, SimpleOrderWithBuilder.Side.class, long.class, long.class);
-                return new CtorAndArgs<SimpleOrderWithBuilder>(
+                final Constructor<SimpleOrder> simpleOrderConstructor = SimpleOrder.class
+                        .getConstructor(Builder.class, SimpleOrder.Side.class, long.class, long.class);
+                return new CtorAndArgs<SimpleOrder>(
                         simpleOrderConstructor, null, 0L, 0L);
             } catch (Exception e) {
                 throw new RuntimeException(e);
@@ -137,7 +137,7 @@ public class MassOrderWithBuilder extends
         long accountId;
         long instrumentId;
         String instructionId;
-        SimpleOrderWithBuilder.OrderType orderType;
+        SimpleOrder.OrderType orderType;
 
         private int bidIndex;
         private long[] bidPrices = new long[MAX_ORDERS_PER_SIDE];
@@ -147,11 +147,11 @@ public class MassOrderWithBuilder extends
         private long[] askPrices = new long[MAX_ORDERS_PER_SIDE];
         private long[] askQuantities = new long[MAX_ORDERS_PER_SIDE];
 
-        private final CtorAndArgs<MassOrderWithBuilder> massOrderArgs = massOrderCtorAndArgs();
-        private CtorAndArgs<SimpleOrderWithBuilder> simpleOrderArgs;
+        private final CtorAndArgs<MassOrder> massOrderArgs = massOrderCtorAndArgs();
+        private CtorAndArgs<SimpleOrder> simpleOrderArgs;
 
         public Builder() throws NoSuchMethodException {
-            super(SimpleOrderWithBuilder.class);
+            super(SimpleOrder.class);
             massOrderArgs.setArgs(this);
         }
 
@@ -170,7 +170,7 @@ public class MassOrderWithBuilder extends
             return this;
         }
 
-        public Builder orderType(SimpleOrderWithBuilder.OrderType orderType) {
+        public Builder orderType(SimpleOrder.OrderType orderType) {
             this.orderType = orderType;
             return this;
         }
@@ -190,10 +190,10 @@ public class MassOrderWithBuilder extends
         }
 
         @Override
-        public CtorAndArgs<SimpleOrderWithBuilder> getForIndices(
+        public CtorAndArgs<SimpleOrder> getForIndices(
                 long... indices) throws NoSuchMethodException {
 
-            CtorAndArgs<SimpleOrderWithBuilder> args = 
+            CtorAndArgs<SimpleOrder> args = 
                     simpleOrderArgs != null ? simpleOrderArgs : simpleOrderArgs();
 
             long index = indices[0];
@@ -204,26 +204,26 @@ public class MassOrderWithBuilder extends
 
             int i = (int) index;
             if (i < bidIndex) {
-                args.setArgs(this, SimpleOrderWithBuilder.Side.BID, bidPrices[i], bidQuantities[i]);
+                args.setArgs(this, SimpleOrder.Side.BID, bidPrices[i], bidQuantities[i]);
             } else {
                 i = i - bidIndex;
-                args.setArgs(this, SimpleOrderWithBuilder.Side.ASK, askPrices[i], askQuantities[i]);
+                args.setArgs(this, SimpleOrder.Side.ASK, askPrices[i], askQuantities[i]);
             }
 
             return args;
         }
 
         @Override
-        public void recycle(CtorAndArgs<SimpleOrderWithBuilder> ctorAndArgs) {
+        public void recycle(CtorAndArgs<SimpleOrder> ctorAndArgs) {
             this.simpleOrderArgs = ctorAndArgs;
         }
 
-        public MassOrderWithBuilder newInstance() {
+        public MassOrder newInstance() {
 
             // TODO: Order validation and sorting by price.
 
             long length = bidIndex + askIndex;
-            return (MassOrderWithBuilder) StructuredArray.newSubclassInstance(
+            return (MassOrder) StructuredArray.newSubclassInstance(
                     massOrderArgs, this, length);
         }
     }
