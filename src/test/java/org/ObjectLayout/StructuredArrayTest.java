@@ -80,7 +80,7 @@ public class StructuredArrayTest {
 
         initValues(lengths, array);
 
-        StructuredArray<MockStructure>.StructureIterator iter = array.iterator();
+        StructuredArray<MockStructure>.ElementIterator iter = array.iterator();
 
         long sum = 0;
         long elementCount = 0;
@@ -118,7 +118,7 @@ public class StructuredArrayTest {
         initValues(lengths, array);
 
         int i = 0;
-        final StructuredArray<MockStructure>.StructureIterator iter = array.iterator();
+        final StructuredArray<MockStructure>.ElementIterator iter = array.iterator();
         while (iter.hasNext()) {
             final long[] cursors = iter.getCursors();
             final MockStructure mockStructure = iter.next();
@@ -184,7 +184,7 @@ public class StructuredArrayTest {
         final StructuredArray<MockStructure> newArray =
                 StructuredArray.copyInstance(sourceArray, offsets, counts);
 
-        final StructuredArray<MockStructure>.StructureIterator iter = newArray.iterator();
+        final StructuredArray<MockStructure>.ElementIterator iter = newArray.iterator();
 
         // We expect MockStructure elements to be initialized with index = indexSum, and testValue = indexSum * 2,
         // but with the sums based on index+1 for each cursor (due to the {1, 1, 1} offset above):
@@ -467,7 +467,7 @@ public class StructuredArrayTest {
             super(MockStructure.class);
         }
 
-        public CtorAndArgs<MockStructure> getForIndices(long indices[]) throws NoSuchMethodException {
+        public CtorAndArgs<MockStructure> getForIndices(long... indices) throws NoSuchMethodException {
             long indexSum = 0;
             for (long index : indices) {
                 indexSum += index;
