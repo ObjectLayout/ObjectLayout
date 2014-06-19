@@ -108,17 +108,17 @@ public class MassOrder extends
     public static final class Builder extends
             CtorAndArgsProvider<SimpleOrder> {
 
-        private static CtorAndArgs<MassOrder> massOrderCtorAndArgs() {
-            try {
-                final Constructor<MassOrder> massOrderConstructor =
-                        MassOrder.class.getDeclaredConstructor(Builder.class);
-                massOrderConstructor.setAccessible(true);
-                return new CtorAndArgs<MassOrder>(
-                        massOrderConstructor, new Object[] { null });
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-        }
+		private static CtorAndArgs<MassOrder> massOrderCtorAndArgs() {
+			try {
+				final Constructor<MassOrder> massOrderConstructor = MassOrder.class
+						.getDeclaredConstructor(Builder.class);
+				massOrderConstructor.setAccessible(true);
+				return new CtorAndArgs<MassOrder>(massOrderConstructor,
+						(Object) null);
+			} catch (Exception e) {
+				throw new RuntimeException(e);
+			}
+		}
 
         private static CtorAndArgs<SimpleOrder> simpleOrderCtorAndArgs() {
             try {
