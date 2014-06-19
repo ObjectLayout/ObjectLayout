@@ -48,7 +48,11 @@ public class CtorAndArgs<T> {
         if (constructorArgTypes.length != args.length) {
             throw new IllegalArgumentException("argument types and values must be the same length");
         }
-        setConstructor(instanceClass.getConstructor(constructorArgTypes));
+        Constructor<T> ctor = instanceClass.getDeclaredConstructor(constructorArgTypes);
+        if (!ctor.isAccessible()) {
+        	ctor.setAccessible(true);
+        }
+		setConstructor(ctor);
         setArgs(args);
     }
 

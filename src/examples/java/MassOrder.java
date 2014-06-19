@@ -3,7 +3,6 @@
  * as explained at http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-import java.lang.reflect.Constructor;
 import java.util.Iterator;
 
 import org.ObjectLayout.CtorAndArgs;
@@ -110,11 +109,8 @@ public class MassOrder extends
 
 		private static CtorAndArgs<MassOrder> massOrderCtorAndArgs() {
 			try {
-				final Constructor<MassOrder> massOrderConstructor = MassOrder.class
-						.getDeclaredConstructor(Builder.class);
-				massOrderConstructor.setAccessible(true);
-				return new CtorAndArgs<MassOrder>(massOrderConstructor,
-						(Object) null);
+				final Class[] argTypes = { Builder.class };
+				return new CtorAndArgs<MassOrder>(MassOrder.class, argTypes, (Object) null);
 			} catch (Exception e) {
 				throw new RuntimeException(e);
 			}
@@ -122,10 +118,8 @@ public class MassOrder extends
 
         private static CtorAndArgs<SimpleOrder> simpleOrderCtorAndArgs() {
             try {
-                final Constructor<SimpleOrder> simpleOrderConstructor = SimpleOrder.class
-                        .getConstructor(Builder.class, SimpleOrder.Side.class, long.class, long.class);
-                return new CtorAndArgs<SimpleOrder>(
-                        simpleOrderConstructor, null, 0L, 0L);
+            	final Class[] argTypes = { Builder.class, SimpleOrder.Side.class, long.class, long.class };
+            	return new CtorAndArgs<SimpleOrder>(SimpleOrder.class, argTypes, null, null, 0L, 0L);
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
