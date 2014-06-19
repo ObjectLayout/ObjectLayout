@@ -102,10 +102,10 @@ public class MassOrder extends
     };
 
     public static Builder builder() {
-        return BUILDER.get();
+        return BUILDER.get().reset();
     }
 
-    public static class Builder extends
+    public static final class Builder extends
             CtorAndArgsProvider<SimpleOrder> {
 
         private static CtorAndArgs<MassOrder> massOrderCtorAndArgs() {
@@ -153,6 +153,18 @@ public class MassOrder extends
         public Builder() throws NoSuchMethodException {
             super(SimpleOrder.class);
             massOrderArgs.setArgs(this);
+            reset();
+        }
+        
+        public Builder reset() {
+            accountId = 0;
+            instrumentId = 0;
+            instructionId = null;
+            orderType = null;
+            bidIndex = 0;
+            askIndex = 0;
+            
+            return this;
         }
 
         public Builder accountId(long accountId) {
