@@ -34,22 +34,16 @@ public class SingletonCtorAndArgsProvider<T> extends CtorAndArgsProvider<T> {
      * Used to apply a fixed constructor with a given set of arguments to all elements.
      *
      * @param elementClass The element class
-     * @param argTypes The argument types for the element constructor
+     * @param constructorArgTypes The argument types for the element constructor
      * @param args The arguments to be passed to the constructor for all elements
-     * @throws NoSuchMethodException if a constructor matching argTypes
-     * @throws IllegalArgumentException if argTypes and args conflict
+     * @throws NoSuchMethodException if a constructor matching constructorArgTypes
+     * @throws IllegalArgumentException if constructorArgTypes and args conflict
      */
     public SingletonCtorAndArgsProvider(final Class<T> elementClass,
-                                        final Class[] argTypes,
+                                        final Class[] constructorArgTypes,
                                         final Object... args) throws NoSuchMethodException {
         super(elementClass);
-
-        if (argTypes.length != args.length) {
-            throw new IllegalArgumentException("argument types and values must be the same length");
-        }
-
-        final Constructor<T> constructor = elementClass.getConstructor(argTypes);
-        ctorAndArgs = new CtorAndArgs<T>(constructor, args);
+        ctorAndArgs = new CtorAndArgs<T>(elementClass, constructorArgTypes, args);
     }
 
     /**
