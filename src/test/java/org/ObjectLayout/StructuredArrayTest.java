@@ -36,6 +36,24 @@ public class StructuredArrayTest {
             assertThat(valueOf(array.getLengths()[i]), is(valueOf(lengths[i])));
         }
         assertTrue(array.getElementClass() == MockStructure.class);
+
+        final long[] lengths2 = {7L, 8L};
+        final StructuredArray<MockStructure> array2 =
+                StructuredArray.newInstance(MockStructure.class, lengths2);
+
+        for (int i = 0; i < lengths2.length; i++) {
+            assertThat(valueOf(array2.getLengths()[i]), is(valueOf(lengths2[i])));
+        }
+        assertTrue(array2.getElementClass() == MockStructure.class);
+
+        final long[] lengths3 = {8L};
+        final StructuredArray<MockStructure> array3 =
+                StructuredArray.newInstance(MockStructure.class, lengths3);
+
+        for (int i = 0; i < lengths3.length; i++) {
+            assertThat(valueOf(array3.getLengths()[i]), is(valueOf(lengths3[i])));
+        }
+        assertTrue(array3.getElementClass() == MockStructure.class);
     }
 
     @Test
@@ -58,6 +76,12 @@ public class StructuredArrayTest {
                 new DefaultMockCtorAndArgsProvider();
         final StructuredArray<MockStructure> array =
                 StructuredArray.newInstance(ctorAndArgsProvider, lengths);
+
+        assertCorrectVariableInitialisation(lengths, array);
+
+        final long[] lengths2 = {8};
+        final StructuredArray<MockStructure> array2 =
+                StructuredArray.newInstance(ctorAndArgsProvider, lengths2);
 
         assertCorrectVariableInitialisation(lengths, array);
     }
@@ -467,10 +491,20 @@ public class StructuredArrayTest {
             super(MockStructure.class);
         }
 
-        public CtorAndArgs<MockStructure> getForIndex(long... indices) throws NoSuchMethodException {
+        // Single dimension form is not strictly necessary (will call multi-dimension form if it wasn't here)
+        // but this way we get to demonstrate that path too.
+        public CtorAndArgs<MockStructure> getForIndex(long index) throws NoSuchMethodException {
+            Object[] args = {index, index * 2};
+            // We could do this much more efficiently with atomic caching of a single allocated CtorAndArgs,
+            // as CopyCtorAndArgsProvider does, but no need to put in the effort in a test...
+            return new CtorAndArgs<MockStructure>(MockStructure.class.getConstructor(argsTypes), args);
+        }
+
+        // Multi-dimension form needed if we expect to have multi-dimensional arrays:
+        public CtorAndArgs<MockStructure> getForIndex(long... index) throws NoSuchMethodException {
             long indexSum = 0;
-            for (long index : indices) {
-                indexSum += index;
+            for (long index0 : index) {
+                indexSum += index0;
             }
             Object[] args = {indexSum, indexSum * 2};
             // We could do this much more efficiently with atomic caching of a single allocated CtorAndArgs,
