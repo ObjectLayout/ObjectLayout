@@ -43,12 +43,10 @@ public class StructuredArrayPerfTest {
         final E[] array;
 
         GenericEncapsulatedArray(CtorAndArgsProvider ctorAndArgsProvider, int length)  throws NoSuchMethodException {
-            long indexes[] = new long[1];
             array = (E[]) new Object[length];
             try {
                 for (int i = 0; i < array.length; i++) {
-                    indexes[0] = i;
-                    final CtorAndArgs<E> ctorAndArgs = ctorAndArgsProvider.getForIndex(indexes);
+                    final CtorAndArgs<E> ctorAndArgs = ctorAndArgsProvider.getForIndex(i);
                     final Constructor<E> constructor = ctorAndArgs.getConstructor();
                     array[i] = constructor.newInstance(ctorAndArgs.getArgs());
                 }
