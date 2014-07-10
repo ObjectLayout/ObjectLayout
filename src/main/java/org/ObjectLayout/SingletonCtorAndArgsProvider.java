@@ -74,6 +74,19 @@ public class SingletonCtorAndArgsProvider<T> extends CtorAndArgsProvider<T> {
      * Get a {@link CtorAndArgs} instance to be used in constructing a given element index in
      * a {@link StructuredArray}.
      *
+     * @param index of the element to be constructed in the target array
+     * @return {@link CtorAndArgs} instance to used in element construction
+     * @throws NoSuchMethodException if expected constructor is not found in element class
+     */
+    @Override
+    public CtorAndArgs<T> getForIndex(final long index) throws NoSuchMethodException {
+        return ctorAndArgs;
+    }
+
+    /**
+     * Get a {@link CtorAndArgs} instance to be used in constructing a given element index in
+     * a {@link StructuredArray}.
+     *
      * @param index of the element to be constructed in the target array (one per dimension)
      * @return {@link CtorAndArgs} instance to used in element construction
      * @throws NoSuchMethodException if expected constructor is not found in element class

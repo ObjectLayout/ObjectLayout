@@ -196,12 +196,10 @@ public class MassOrder extends
 
         @Override
         public CtorAndArgs<SimpleOrder> getForIndex(
-                long... indices) throws NoSuchMethodException {
+                long index) throws NoSuchMethodException {
 
             CtorAndArgs<SimpleOrder> ctorAndArgs =
                     simpleOrderCtorAndArgs != null ? simpleOrderCtorAndArgs : simpleOrderCtorAndArgs();
-
-            long index = indices[0];
 
             if (index > bidIndex + askIndex) {
                 throw new IllegalArgumentException();

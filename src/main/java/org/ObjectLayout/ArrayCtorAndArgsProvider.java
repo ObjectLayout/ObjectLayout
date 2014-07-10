@@ -68,6 +68,53 @@ public class ArrayCtorAndArgsProvider<T> extends CtorAndArgsProvider<T> {
      * Get a {@link CtorAndArgs} instance to be used in constructing a given element index in
      * a {@link StructuredArray}
      *
+     * @param index The indices of the element to be constructed in the target array
+     * @return {@link CtorAndArgs} instance to used in element construction
+     * @throws NoSuchMethodException
+     */
+    @Override
+    public CtorAndArgs<T> getForIndex(final long index) throws NoSuchMethodException {
+        CtorAndArgs<T> ctorAndArgs;
+        Object[] args;
+        long[] containingIndex;
+
+        // Try (but not too hard) to use a cached, previously allocated ctorAndArgs object:
+        if (keepInternalCachingThreadSafe) {
+            ctorAndArgs = cachedConstructorAndArgs.getAndSet(null);
+            args = cachedArgs.getAndSet(null);
+            containingIndex = cachedContainingIndex.getAndSet(null);
+        } else {
+            ctorAndArgs = nonThreadSafeCachedCtorAndArgs;
+            nonThreadSafeCachedCtorAndArgs = null;
+            args = nonThreadSafeCachedArgs;
+            nonThreadSafeCachedArgs = null;
+            containingIndex = nonThreadSafeCachedContainingIndex;
+            nonThreadSafeCachedContainingIndex = null;
+        }
+
+        if ((containingIndex == null) || (containingIndex.length != 1))  {
+            containingIndex = new long[1];
+        }
+        containingIndex[0] = index;
+
+        if (args == null) {
+            args = Arrays.copyOf(originalArgs, originalArgs.length);
+        }
+        args[containingIndexOffsetInArgs] = containingIndex;
+
+        if (ctorAndArgs == null) {
+            // We have nothing cached that's not being used. A bit of allocation in contended cases won't kill us:
+            ctorAndArgs = new CtorAndArgs<T>(constructor, args);
+        }
+        ctorAndArgs.setArgs(args);
+
+        return ctorAndArgs;
+    }
+
+    /**
+     * Get a {@link CtorAndArgs} instance to be used in constructing a given element index in
+     * a {@link StructuredArray}
+     *
      * @param index The indices of the element to be constructed in the target array (one value per dimension).
      * @return {@link CtorAndArgs} instance to used in element construction
      * @throws NoSuchMethodException
@@ -131,16 +178,16 @@ public class ArrayCtorAndArgsProvider<T> extends CtorAndArgsProvider<T> {
         if ((args == null) || (args.length != originalArgs.length)) {
             return;
         }
-        long[] containingIndexes = (long []) args[containingIndexOffsetInArgs];
+        long[] containingIndex = (long []) args[containingIndexOffsetInArgs];
 
         if (keepInternalCachingThreadSafe) {
             cachedConstructorAndArgs.lazySet(ctorAndArgs);
             cachedArgs.lazySet(args);
-            cachedContainingIndex.lazySet(containingIndexes);
+            cachedContainingIndex.lazySet(containingIndex);
         } else {
             nonThreadSafeCachedCtorAndArgs = ctorAndArgs;
             nonThreadSafeCachedArgs = args;
-            nonThreadSafeCachedContainingIndex = containingIndexes;
+            nonThreadSafeCachedContainingIndex = containingIndex;
         }
     }
 }

@@ -37,12 +37,27 @@ public abstract class CtorAndArgsProvider<T> {
      * Get a {@link CtorAndArgs} instance to be used in constructing a given element index in
      * a {@link StructuredArray}
      *
+     * @param index The index of the element to be constructed in the target array.
+     * @return {@link CtorAndArgs} instance to used in element construction
+     * @throws NoSuchMethodException if expected constructor is not found in element class
+     */
+    public CtorAndArgs<T> getForIndex(final long index) throws NoSuchMethodException {
+        return getForIndex(new long[] { index });
+    }
+
+    /**
+     * Get a {@link CtorAndArgs} instance to be used in constructing a given element index in
+     * a {@link StructuredArray}
+     *
      * @param index The index of the element to be constructed in the target array (one value per dimension).
      * @return {@link CtorAndArgs} instance to used in element construction
      * @throws NoSuchMethodException if expected constructor is not found in element class
      */
     public CtorAndArgs<T> getForIndex(final long... index) throws NoSuchMethodException {
-        throw new IllegalArgumentException("No support for getForIndex()");
+        if (index.length == 1) {
+            throw new IllegalArgumentException("No support for getForIndex()");
+        }
+        throw new IllegalArgumentException("No support for multi dimensional getForIndex()");
     }
 
     /**

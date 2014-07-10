@@ -49,7 +49,7 @@ public class CopyCtorAndArgsProvider<T> extends CtorAndArgsProvider<T> {
      */
     public CopyCtorAndArgsProvider(final Class<T> elementClass,
                                    final StructuredArray<T> source,
-                                   final long[] sourceOffsets) throws NoSuchMethodException {
+                                   final long... sourceOffsets) throws NoSuchMethodException {
         this(elementClass, source, sourceOffsets, true);
     }
 
@@ -85,6 +85,46 @@ public class CopyCtorAndArgsProvider<T> extends CtorAndArgsProvider<T> {
      * Get a {@link CtorAndArgs} instance to be used in copy-constructing a given element index in
      * a {@link StructuredArray}.                           .
      *
+     * @param index The index of the element to be constructed in the target array
+     * @return {@link CtorAndArgs} instance to used in element construction
+     * @throws NoSuchMethodException if expected constructor is not found in element class
+     */
+    @Override
+    @SuppressWarnings("unchecked")
+    public CtorAndArgs<T> getForIndex(long index) throws NoSuchMethodException {
+        CtorAndArgs<T> ctorAndArgs;
+
+        // Try (but not too hard) to use a cached, previously allocated ctorAndArgs object:
+        if (keepInternalCachingThreadSafe) {
+            ctorAndArgs = cachedConstructorAndArgs.getAndSet(null);
+        } else {
+            ctorAndArgs = nonThreadSafeCachedCtorAndArgs;
+            nonThreadSafeCachedCtorAndArgs = null;
+        }
+
+        if (ctorAndArgs == null) {
+            // We have nothing cached that's not being used. A bit of allocation in contended cases won't kill us:
+            ctorAndArgs = new CtorAndArgs<T>(copyConstructor, new Object[1]);
+        }
+
+        if (sourceOffsets.length != 1) {
+            throw new IllegalArgumentException(
+                    "number of dimensions in index (1) does not match number of dimensions in source offsets ("
+                            + sourceOffsets.length + ")");
+        }
+
+        long targetIndex = index + sourceOffsets[0];
+
+        // Set the source object for the copy constructor:
+        ctorAndArgs.getArgs()[0] = source.get(targetIndex);
+
+        return ctorAndArgs;
+    }
+
+    /**
+     * Get a {@link CtorAndArgs} instance to be used in copy-constructing a given element index in
+     * a {@link StructuredArray}.                           .
+     *
      * @param index The index of the element to be constructed in the target array (one value per dimension)
      * @return {@link CtorAndArgs} instance to used in element construction
      * @throws NoSuchMethodException if expected constructor is not found in element class
@@ -112,6 +152,11 @@ public class CopyCtorAndArgsProvider<T> extends CtorAndArgsProvider<T> {
         }
         if (targetIndex == null) {
             targetIndex = new long[sourceOffsets.length];
+        }
+
+        if (index.length != sourceOffsets.length) {
+            throw new IllegalArgumentException("number of dimensions in index (" + index.length +
+                    ") does not match number of dimensions in source offsets (" + sourceOffsets.length + ")");
         }
 
         for (int i = 0; i < index.length; i++) {
