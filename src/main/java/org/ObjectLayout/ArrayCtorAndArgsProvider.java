@@ -6,29 +6,23 @@
 package org.ObjectLayout;
 
 import java.lang.reflect.Constructor;
-import java.util.Arrays;
-import java.util.concurrent.atomic.AtomicReference;
 
 /**
- * Supports the construction of a new array's individual elements using a copy constructor to copy a source
- * array's corresponding elements.
+ * Supports the construction of a new StructuredArrays that are sub-arrays of other StructuredArrays. This is
+ * a package-internal provider, any given instance of this provider is only expected to be used in an
+ * externally serialized manner (i.e. recycling and use are done on a serialized manner and do not need to
+ * be internally synchronized)
  *
  * @param <T> type of the element occupying each array slot
  */
-public class ArrayCtorAndArgsProvider<T> extends CtorAndArgsProvider<T> {
+class ArrayCtorAndArgsProvider<T> extends CtorAndArgsProvider<T> {
 
     private final Constructor<T> constructor;
-    private final Object[] originalArgs;
-    private final int containingIndexOffsetInArgs;
+    private final ArrayConstructionArgs originalArgs;
 
-    private final boolean keepInternalCachingThreadSafe;
-    private CtorAndArgs<T> nonThreadSafeCachedCtorAndArgs = null;
-    private Object[] nonThreadSafeCachedArgs = null;
-    private long[] nonThreadSafeCachedContainingIndex = null;
-    private final AtomicReference<CtorAndArgs<T>> cachedConstructorAndArgs = new AtomicReference<CtorAndArgs<T>>();
-    private final AtomicReference<Object[]> cachedArgs = new AtomicReference<Object[]>();
-    private final AtomicReference<long[]> cachedContainingIndex = new AtomicReference<long[]>();
-
+    private CtorAndArgs<T> cachedCtorAndArgs = null;
+    private ArrayConstructionArgs cachedArrayConstructionArgs = null;
+    private long[] cachedContainingIndex = null;
 
     /**
      * Used to apply a fixed constructor with a given set of arguments to all elements.
@@ -38,34 +32,15 @@ public class ArrayCtorAndArgsProvider<T> extends CtorAndArgsProvider<T> {
      * @throws NoSuchMethodException if a constructor matching argTypes
      * @throws IllegalArgumentException if argTypes and args conflict
      */
-    public ArrayCtorAndArgsProvider(final Constructor<T> constructor,
-                                    final Object[] args,
-                                    final int containingIndexOffsetInArgs) throws NoSuchMethodException {
-        this(constructor, args, containingIndexOffsetInArgs, true);
-    }
-
-    /**
-     * Used to apply a fixed constructor with a given set of arguments to all elements.
-     *
-     * @param constructor The element constructor
-     * @param args The arguments to be passed to the constructor for all elements
-     * @param keepInternalCachingThreadSafe Control whether or not internal caching is kept thread-safe
-     * @throws NoSuchMethodException if a constructor matching argTypes
-     * @throws IllegalArgumentException if argTypes and args conflict
-     */
-    public ArrayCtorAndArgsProvider(final Constructor<T> constructor,
-                                    final Object[] args,
-                                    final int containingIndexOffsetInArgs,
-                                    final boolean keepInternalCachingThreadSafe) throws NoSuchMethodException {
+    ArrayCtorAndArgsProvider(final Constructor<T> constructor,
+                             final ArrayConstructionArgs args) throws NoSuchMethodException {
         super(constructor.getDeclaringClass());
         this.constructor = constructor;
         this.originalArgs = args;
-        this.containingIndexOffsetInArgs = containingIndexOffsetInArgs;
-        this.keepInternalCachingThreadSafe = keepInternalCachingThreadSafe;
     }
 
     /**
-     * Get a {@link CtorAndArgs} instance to be used in constructing a given element index in
+     * Get a {@link CtorAndArgs} instance to be used in constructing a given sub-array at a given element index in
      * a {@link StructuredArray}
      *
      * @param index The indices of the element to be constructed in the target array
@@ -75,44 +50,39 @@ public class ArrayCtorAndArgsProvider<T> extends CtorAndArgsProvider<T> {
     @Override
     public CtorAndArgs<T> getForIndex(final long index) throws NoSuchMethodException {
         CtorAndArgs<T> ctorAndArgs;
-        Object[] args;
+        ArrayConstructionArgs arrayConstructionArgs;
         long[] containingIndex;
 
         // Try (but not too hard) to use a cached, previously allocated ctorAndArgs object:
-        if (keepInternalCachingThreadSafe) {
-            ctorAndArgs = cachedConstructorAndArgs.getAndSet(null);
-            args = cachedArgs.getAndSet(null);
-            containingIndex = cachedContainingIndex.getAndSet(null);
-        } else {
-            ctorAndArgs = nonThreadSafeCachedCtorAndArgs;
-            nonThreadSafeCachedCtorAndArgs = null;
-            args = nonThreadSafeCachedArgs;
-            nonThreadSafeCachedArgs = null;
-            containingIndex = nonThreadSafeCachedContainingIndex;
-            nonThreadSafeCachedContainingIndex = null;
-        }
+        ctorAndArgs = cachedCtorAndArgs;
+        cachedCtorAndArgs = null;
+        arrayConstructionArgs = cachedArrayConstructionArgs;
+        cachedArrayConstructionArgs = null;
+        containingIndex = cachedContainingIndex;
+        cachedContainingIndex = null;
 
         if ((containingIndex == null) || (containingIndex.length != 1))  {
             containingIndex = new long[1];
         }
         containingIndex[0] = index;
 
-        if (args == null) {
-            args = Arrays.copyOf(originalArgs, originalArgs.length);
+        if (arrayConstructionArgs == null) {
+            arrayConstructionArgs = new ArrayConstructionArgs(originalArgs);
         }
-        args[containingIndexOffsetInArgs] = containingIndex;
+
+        arrayConstructionArgs.containingIndex = containingIndex;
 
         if (ctorAndArgs == null) {
             // We have nothing cached that's not being used. A bit of allocation in contended cases won't kill us:
-            ctorAndArgs = new CtorAndArgs<T>(constructor, args);
+            ctorAndArgs = new CtorAndArgs<T>(constructor, arrayConstructionArgs);
         }
-        ctorAndArgs.setArgs(args);
+        ctorAndArgs.setArgs(arrayConstructionArgs);
 
         return ctorAndArgs;
     }
 
     /**
-     * Get a {@link CtorAndArgs} instance to be used in constructing a given element index in
+     * Get a {@link CtorAndArgs} instance to be used in constructing a given sub-array at a given index in
      * a {@link StructuredArray}
      *
      * @param index The indices of the element to be constructed in the target array (one value per dimension).
@@ -122,38 +92,34 @@ public class ArrayCtorAndArgsProvider<T> extends CtorAndArgsProvider<T> {
     @Override
     public CtorAndArgs<T> getForIndex(final long... index) throws NoSuchMethodException {
         CtorAndArgs<T> ctorAndArgs;
-        Object[] args;
+        ArrayConstructionArgs arrayConstructionArgs;
         long[] containingIndex;
 
         // Try (but not too hard) to use a cached, previously allocated ctorAndArgs object:
-        if (keepInternalCachingThreadSafe) {
-            ctorAndArgs = cachedConstructorAndArgs.getAndSet(null);
-            args = cachedArgs.getAndSet(null);
-            containingIndex = cachedContainingIndex.getAndSet(null);
-        } else {
-            ctorAndArgs = nonThreadSafeCachedCtorAndArgs;
-            nonThreadSafeCachedCtorAndArgs = null;
-            args = nonThreadSafeCachedArgs;
-            nonThreadSafeCachedArgs = null;
-            containingIndex = nonThreadSafeCachedContainingIndex;
-            nonThreadSafeCachedContainingIndex = null;
-        }
+        ctorAndArgs = cachedCtorAndArgs;
+        cachedCtorAndArgs = null;
+        arrayConstructionArgs = cachedArrayConstructionArgs;
+        cachedArrayConstructionArgs = null;
+        containingIndex = cachedContainingIndex;
+        cachedContainingIndex = null;
+
 
         if ((containingIndex == null) || (containingIndex.length != index.length))  {
             containingIndex = new long[index.length];
         }
         System.arraycopy(index, 0, containingIndex, 0, index.length);
 
-        if (args == null) {
-            args = Arrays.copyOf(originalArgs, originalArgs.length);
+        if (arrayConstructionArgs == null) {
+            arrayConstructionArgs = new ArrayConstructionArgs(originalArgs);
         }
-        args[containingIndexOffsetInArgs] = containingIndex;
+
+        arrayConstructionArgs.containingIndex = containingIndex;
 
         if (ctorAndArgs == null) {
             // We have nothing cached that's not being used. A bit of allocation in contended cases won't kill us:
-            ctorAndArgs = new CtorAndArgs<T>(constructor, args);
+            ctorAndArgs = new CtorAndArgs<T>(constructor, arrayConstructionArgs);
         }
-        ctorAndArgs.setArgs(args);
+        ctorAndArgs.setArgs(arrayConstructionArgs);
 
         return ctorAndArgs;
     }
@@ -174,20 +140,20 @@ public class ArrayCtorAndArgsProvider<T> extends CtorAndArgsProvider<T> {
         if ((ctorAndArgs == null) || (ctorAndArgs.getConstructor() != constructor)) {
             return;
         }
+
         Object[] args = ctorAndArgs.getArgs();
-        if ((args == null) || (args.length != originalArgs.length)) {
+        if ((args == null) || (args.length == 0)) {
             return;
         }
-        long[] containingIndex = (long []) args[containingIndexOffsetInArgs];
-
-        if (keepInternalCachingThreadSafe) {
-            cachedConstructorAndArgs.lazySet(ctorAndArgs);
-            cachedArgs.lazySet(args);
-            cachedContainingIndex.lazySet(containingIndex);
-        } else {
-            nonThreadSafeCachedCtorAndArgs = ctorAndArgs;
-            nonThreadSafeCachedArgs = args;
-            nonThreadSafeCachedContainingIndex = containingIndex;
+        ArrayConstructionArgs arrayConstructionArgs = (ArrayConstructionArgs) args[0];
+        if (arrayConstructionArgs == null) {
+            return;
         }
+
+        long[] containingIndex = arrayConstructionArgs.containingIndex;
+
+        cachedCtorAndArgs = ctorAndArgs;
+        cachedArrayConstructionArgs = arrayConstructionArgs;
+        cachedContainingIndex = containingIndex;
     }
 }

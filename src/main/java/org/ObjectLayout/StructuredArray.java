@@ -32,40 +32,23 @@ import static java.lang.reflect.Modifier.isStatic;
  *     constructors and arguments, either of which can take the element index into account.
  * <p>
  *     StructuredArray is designed with semantics specifically restricted to be consistent with layouts of an
- *     array of structures in C-like languages. While fully functional on all JVM implementation (of Java SE 5
+ *     array of structures in C-like languages. While fully functional on all JVM implementation (of Java SE 6
  *     and above), the semantics are such that a JVM may transparently optimise the implementation to provide a
  *     compact contiguous layout that facilitates consistent stride based memory access and dead-reckoning
  *     (as opposed to de-referenced) access to elements
  *
  * @param <T> type of the element occupying each array slot.
  */
-public class StructuredArray<T> implements Iterable<T> {
+public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T> implements Iterable<T> {
 
-    static final int MAX_EXTRA_PARTITION_SIZE_POW2_EXPONENT = 30;
-    static final int MAX_EXTRA_PARTITION_SIZE = 1 << MAX_EXTRA_PARTITION_SIZE_POW2_EXPONENT;
-    static final int MASK = MAX_EXTRA_PARTITION_SIZE - 1;
+
     private static final Object[] EMPTY_ARGS = new Object[0];
 
-    private final Class<T> elementClass;
-
-    private final long length;            // A cached lengths[0]
-    private final long[] lengths;
     private final long totalElementCount; // A cached product of lengths[i]
 
-    private final int dimensionCount;
 
     private final Field[] fields;
     private final boolean hasFinalFields;
-
-    // Separated internal storage arrays by type for performance reasons, to avoid casting and checkcast at runtime.
-    // Wrong dimension count gets (of the wrong type for the dimension depth) will result in NPEs rather
-    // than class cast exceptions.
-
-    private final StructuredArray<T>[][] longAddressableSubArrays; // Used to store subArrays at indexes above Integer.MAX_VALUE
-    private final StructuredArray<T>[] intAddressableSubArrays;
-
-    private final T[][] longAddressableElements; // Used to store elements at indexes above Integer.MAX_VALUE
-    private final T[] intAddressableElements;
 
     // Single-dimensional newInstance forms:
 
@@ -122,7 +105,7 @@ public class StructuredArray<T> implements Iterable<T> {
         try {
             final CtorAndArgsProvider<T> ctorAndArgsProvider = new SingletonCtorAndArgsProvider<T>(elementClass);
             final long[] lengths = {length};
-            return instantiate(arrayCtorAndArgs, lengths.length, ctorAndArgsProvider, lengths);
+            return instantiate(arrayCtorAndArgs, ctorAndArgsProvider, lengths);
         } catch (NoSuchMethodException ex) {
             throw new RuntimeException(ex);
         }
@@ -162,7 +145,7 @@ public class StructuredArray<T> implements Iterable<T> {
                     new CtorAndArgs<StructuredArray<T>>(((Class<StructuredArray<T>>)arrayClass).getConstructor(),
                             EMPTY_ARGS);
             final long[] lengths = {length};
-            return instantiate(arrayCtorAndArgs, lengths.length, ctorAndArgsProvider, lengths);
+            return instantiate(arrayCtorAndArgs, ctorAndArgsProvider, lengths);
         } catch (NoSuchMethodException ex) {
             throw new RuntimeException(ex);
         }
@@ -182,12 +165,8 @@ public class StructuredArray<T> implements Iterable<T> {
     public static <T> StructuredArray<T> newSubclassInstance(final CtorAndArgs<? extends StructuredArray<T>> arrayCtorAndArgs,
                                                              final CtorAndArgsProvider<T> ctorAndArgsProvider,
                                                              final long length) {
-        try {
-            final long[] lengths = {length};
-            return instantiate(arrayCtorAndArgs, lengths.length, ctorAndArgsProvider, lengths);
-        } catch (NoSuchMethodException ex) {
-            throw new RuntimeException(ex);
-        }
+        final long[] lengths = {length};
+        return instantiate(arrayCtorAndArgs, ctorAndArgsProvider, lengths);
     }
 
     /**
@@ -264,7 +243,7 @@ public class StructuredArray<T> implements Iterable<T> {
             final CtorAndArgsProvider<T> ctorAndArgsProvider =
                     new SingletonCtorAndArgsProvider<T>(elementClass, elementConstructorArgTypes, elementConstructorArgs);
             final long[] lengths = {length};
-            return instantiate(arrayCtorAndArgs, lengths.length, ctorAndArgsProvider, lengths);
+            return instantiate(arrayCtorAndArgs, ctorAndArgsProvider, lengths);
         } catch (NoSuchMethodException ex) {
             throw new RuntimeException(ex);
         }
@@ -325,7 +304,7 @@ public class StructuredArray<T> implements Iterable<T> {
                                                              final long... lengths) {
         try {
             final CtorAndArgsProvider<T> ctorAndArgsProvider = new SingletonCtorAndArgsProvider<T>(elementClass);
-            return instantiate(arrayCtorAndArgs, lengths.length, ctorAndArgsProvider, lengths);
+            return instantiate(arrayCtorAndArgs, ctorAndArgsProvider, lengths);
         } catch (NoSuchMethodException ex) {
             throw new RuntimeException(ex);
         }
@@ -411,7 +390,7 @@ public class StructuredArray<T> implements Iterable<T> {
         try {
             final CtorAndArgsProvider<T> ctorAndArgsProvider =
                     new SingletonCtorAndArgsProvider<T>(elementClass, elementConstructorArgTypes, elementConstructorArgs);
-            return instantiate(arrayCtorAndArgs, lengths.length, ctorAndArgsProvider, lengths);
+            return instantiate(arrayCtorAndArgs, ctorAndArgsProvider, lengths);
         } catch (NoSuchMethodException ex) {
             throw new RuntimeException(ex);
         }
@@ -450,7 +429,7 @@ public class StructuredArray<T> implements Iterable<T> {
             CtorAndArgs<StructuredArray<T>> arrayCtorAndArgs =
                     new CtorAndArgs<StructuredArray<T>>(((Class<StructuredArray<T>>)arrayClass).getConstructor(),
                             EMPTY_ARGS);
-            return instantiate(arrayCtorAndArgs, lengths.length, ctorAndArgsProvider, lengths);
+            return instantiate(arrayCtorAndArgs, ctorAndArgsProvider, lengths);
         } catch (NoSuchMethodException ex) {
             throw new RuntimeException(ex);
         }
@@ -470,11 +449,7 @@ public class StructuredArray<T> implements Iterable<T> {
     public static <T> StructuredArray<T> newSubclassInstance(final CtorAndArgs<? extends StructuredArray<T>> arrayCtorAndArgs,
                                                              final CtorAndArgsProvider<T> ctorAndArgsProvider,
                                                              final long... lengths) {
-        try {
-            return instantiate(arrayCtorAndArgs, lengths.length, ctorAndArgsProvider, lengths);
-        } catch (NoSuchMethodException ex) {
-            throw new RuntimeException(ex);
-        }
+        return instantiate(arrayCtorAndArgs, ctorAndArgsProvider, lengths);
     }
 
     /**
@@ -519,11 +494,11 @@ public class StructuredArray<T> implements Iterable<T> {
         }
 
         final CtorAndArgsProvider<T> ctorAndArgsProvider =
-                 new CopyCtorAndArgsProvider<T>(source.getElementClass(), source, sourceOffsets, false);
+                new CopyCtorAndArgsProvider<T>(source.getElementClass(), source, sourceOffsets, false);
         CtorAndArgs<StructuredArray<T>> arrayCtorAndArgs =
                 new CtorAndArgs<StructuredArray<T>>(((Class<StructuredArray<T>>) source.getClass()).getConstructor(),
                         EMPTY_ARGS);
-        return instantiate(arrayCtorAndArgs, source.getDimensionCount(), ctorAndArgsProvider, counts);
+        return instantiate(arrayCtorAndArgs, ctorAndArgsProvider, counts);
     }
 
     @SuppressWarnings("unchecked")
@@ -533,127 +508,43 @@ public class StructuredArray<T> implements Iterable<T> {
         Class arrayClass = StructuredArray.class;
         CtorAndArgs<StructuredArray<T>> arrayCtorAndArgs =
                 new CtorAndArgs<StructuredArray<T>>(arrayClass.getConstructor(), EMPTY_ARGS);
-        return instantiate(arrayCtorAndArgs, dimensionCount, ctorAndArgsProvider, lengths);
+        return instantiate(arrayCtorAndArgs, ctorAndArgsProvider, lengths);
     }
 
     private static <T> StructuredArray<T> instantiate(CtorAndArgs<? extends StructuredArray<T>> arrayCtorAndArgs,
-                                                      final int dimensionCount,
                                                       final CtorAndArgsProvider<T> ctorAndArgsProvider,
-                                                      final long[] lengths) throws NoSuchMethodException {
-        ConstructorMagic constructorMagic = getConstructorMagic();
-        constructorMagic.setArrayConstructorArgs(arrayCtorAndArgs, dimensionCount, ctorAndArgsProvider, lengths, null);
-        constructorMagic.setActive(true);
-        try {
-            Constructor<? extends StructuredArray<T>> arrayConstructor = arrayCtorAndArgs.getConstructor();
-            return StructuredArrayIntrinsicSupport.instantiateStructuredArray(
-                    arrayConstructor.getDeclaringClass(),
-                    ctorAndArgsProvider.getElementClass(),
-                    lengths,
-                    arrayConstructor,
-                    arrayCtorAndArgs.getArgs()
-            );
-        } catch (InstantiationException ex) {
-            throw new RuntimeException(ex);
-        } catch (IllegalAccessException ex) {
-            throw new RuntimeException(ex);
-        } catch (InvocationTargetException ex) {
-            throw new RuntimeException(ex);
-        } finally {
-            constructorMagic.setActive(false);
-        }
+                                                      final long[] lengths) {
+        return StructuredArrayIntrinsifiableBase.instantiateStructuredArray(arrayCtorAndArgs,
+                ctorAndArgsProvider, lengths);
     }
 
-    @SuppressWarnings("unchecked")
     public StructuredArray() {
         checkConstructorMagic();
+        // Extract locally needed args from constructor magic:
         ConstructorMagic constructorMagic = getConstructorMagic();
-
         @SuppressWarnings("unchecked")
         final CtorAndArgs<? extends StructuredArray<T>> arrayCtorAndArgs = constructorMagic.getArrayCtorAndArgs();
         @SuppressWarnings("unchecked")
         final CtorAndArgsProvider<T> ctorAndArgsProvider = constructorMagic.getCtorAndArgsProvider();
-        final int dimensionCount = constructorMagic.getDimensionCount();
-        final long[] lengths = constructorMagic.getLengths();
         final long[] containingIndex = constructorMagic.getContainingIndex();
 
-        if (dimensionCount < 1) {
-            throw new IllegalArgumentException("dimensionCount must be at least 1");
-        }
-
-        this.dimensionCount = dimensionCount;
-        this.lengths = lengths;
-        this.length = lengths[0];
 
         // Compute and cache total element count:
         long totalCount = 1;
-        for (long length : lengths) {
+        for (long length : getLengths()) {
             totalCount *= length;
         }
         totalElementCount = totalCount;
 
-        if (length < 0) {
-            throw new IllegalArgumentException("length cannot be negative");
-        }
-
-        if (lengths.length != dimensionCount) {
-            throw new IllegalArgumentException("number of lengths provided (" + lengths.length +
-                    ") does not match numDimensions (" + dimensionCount + ")");
-        }
-
-        this.elementClass = ctorAndArgsProvider.getElementClass();
-
-        final Field[] fields = removeStaticFields(elementClass.getDeclaredFields());
+        final Field[] fields = removeStaticFields(getElementClass().getDeclaredFields());
         for (final Field field : fields) {
             field.setAccessible(true);
         }
         this.fields = fields;
         this.hasFinalFields = containsFinalQualifiedFields(fields);
 
-        if (!StructuredArrayIntrinsicSupport.StructuredArrayIsIntrinsicToJdk) {
-            // Allocate internal storage:
-
-            // Size int-addressable sub arrays:
-            final int intLength = (int) Math.min(length, Integer.MAX_VALUE);
-            // Size Subsequent partitions hold long-addressable-only sub arrays:
-            final long extraLength = length - intLength;
-            final int numFullPartitions = (int) (extraLength >>> MAX_EXTRA_PARTITION_SIZE_POW2_EXPONENT);
-            final int lastPartitionSize = (int) extraLength & MASK;
-
-            if (dimensionCount > 1) {
-                // We have sub arrays, not elements:
-                intAddressableElements = null;
-                longAddressableElements = null;
-
-                intAddressableSubArrays = new StructuredArray[intLength];
-                longAddressableSubArrays = new StructuredArray[numFullPartitions + 1][];
-                // full long-addressable-only partitions:
-                for (int i = 0; i < numFullPartitions; i++) {
-                    longAddressableSubArrays[i] = new StructuredArray[MAX_EXTRA_PARTITION_SIZE];
-                }
-                // Last partition with leftover long-addressable-only size:
-                longAddressableSubArrays[numFullPartitions] = new StructuredArray[lastPartitionSize];
-
-            } else {
-                // We have elements, not sub arrays:
-                intAddressableSubArrays = null;
-                longAddressableSubArrays = null;
-
-                intAddressableElements = (T[]) new Object[intLength];
-                longAddressableElements = (T[][]) new Object[numFullPartitions + 1][];
-                // full long-addressable-only partitions:
-                for (int i = 0; i < numFullPartitions; i++) {
-                    longAddressableElements[i] = (T[]) new Object[MAX_EXTRA_PARTITION_SIZE];
-                }
-                // Last partition with leftover long-addressable-only size:
-                longAddressableElements[numFullPartitions] = (T[]) new Object[lastPartitionSize];
-            }
-        } else {
-            // No internal storage:
-            intAddressableElements = null;
-            longAddressableElements = null;
-            intAddressableSubArrays = null;
-            longAddressableSubArrays = null;
-        }
+        long[] lengths = getLengths();
+        int dimensionCount = getDimensionCount();
 
         try {
             if (dimensionCount > 1) {
@@ -662,11 +553,11 @@ public class StructuredArray<T> implements Iterable<T> {
                 final long[] subArrayLengths = new long[lengths.length - 1];
                 System.arraycopy(lengths, 1, subArrayLengths, 0, subArrayLengths.length);
 
-                final Object[] subArrayArgs = {arrayCtorAndArgs, dimensionCount - 1, ctorAndArgsProvider,
-                        subArrayLengths, null /* containingIndex arg goes here */};
+                final ArrayConstructionArgs subArrayArgs =
+                        new ArrayConstructionArgs(arrayCtorAndArgs, ctorAndArgsProvider, subArrayLengths, null);
                 @SuppressWarnings("unchecked")
                 final ArrayCtorAndArgsProvider<StructuredArray<T>> subArrayCtorAndArgsProvider =
-                        new ArrayCtorAndArgsProvider(arrayCtorAndArgs.getConstructor(), subArrayArgs, 4);
+                        new ArrayCtorAndArgsProvider(arrayCtorAndArgs.getConstructor(), subArrayArgs);
 
                 populateSubArrays(subArrayCtorAndArgsProvider, containingIndex);
             } else {
@@ -684,7 +575,7 @@ public class StructuredArray<T> implements Iterable<T> {
      * @return the number of dimensions of the array.
      */
     public int getDimensionCount() {
-        return dimensionCount;
+        return super.getDimensionCount();
     }
 
     /**
@@ -693,7 +584,7 @@ public class StructuredArray<T> implements Iterable<T> {
      * @return the number of elements in each dimension in the array.
      */
     public long[] getLengths() {
-        return lengths;
+        return super.getLengths();
     }
 
     /**
@@ -711,7 +602,7 @@ public class StructuredArray<T> implements Iterable<T> {
      * @return the number of elements in the array.
      */
     public long getLength() {
-        return length;
+        return super.getLength();
     }
 
 
@@ -725,7 +616,7 @@ public class StructuredArray<T> implements Iterable<T> {
      * @throws IllegalArgumentException if number of indices does not match number of dimensions in the array
      */
     public T get(final long... indices) throws IllegalArgumentException {
-        return StructuredArrayIntrinsicSupport.get(this, indices, 0);
+        return super.get(indices, 0);
     }
 
     /**
@@ -736,7 +627,7 @@ public class StructuredArray<T> implements Iterable<T> {
      * @throws IllegalArgumentException if number of indices does not match number of dimensions in the array
      */
     public T get(final int... indices) throws IllegalArgumentException {
-        return StructuredArrayIntrinsicSupport.get(this, indices, 0);
+        return super.get(indices, 0);
     }
 
     // fast long index element get variants:
@@ -749,7 +640,7 @@ public class StructuredArray<T> implements Iterable<T> {
      * @throws IllegalArgumentException if array has more than one dimensions
      */
     public T get(final long index) throws IllegalArgumentException {
-        return StructuredArrayIntrinsicSupport.get(this, index);
+        return super.get(index);
     }
 
     /**
@@ -760,7 +651,7 @@ public class StructuredArray<T> implements Iterable<T> {
      * @throws NullPointerException if number of indexes does not match number of dimensions in the array
      */
     public T get(final long index0, final long index1) throws IllegalArgumentException {
-        return StructuredArrayIntrinsicSupport.get(this, index0, index1);
+        return super.get(index0, index1);
     }
 
     /**
@@ -772,7 +663,7 @@ public class StructuredArray<T> implements Iterable<T> {
      * @throws NullPointerException if number of indexes does not match number of dimensions in the array
      */
     public T get(final long index0, final long index1, final long index2) throws IllegalArgumentException {
-        return StructuredArrayIntrinsicSupport.get(this, index0, index1, index2);
+        return super.get(index0, index1, index2);
 
     }
 
@@ -786,7 +677,7 @@ public class StructuredArray<T> implements Iterable<T> {
      * @throws NullPointerException if array has more than one dimensions
      */
     public T get(final int index) throws IllegalArgumentException {
-        return StructuredArrayIntrinsicSupport.get(this, index);
+        return super.get(index);
     }
 
     /**
@@ -797,7 +688,7 @@ public class StructuredArray<T> implements Iterable<T> {
      * @throws NullPointerException if number of indexes does not match number of dimensions in the array
      */
     public T get(final int index0, final int index1) throws IllegalArgumentException {
-        return StructuredArrayIntrinsicSupport.get(this, index0, index1);
+        return super.get(index0, index1);
     }
 
     /**
@@ -809,7 +700,7 @@ public class StructuredArray<T> implements Iterable<T> {
      * @throws NullPointerException if number of indexes does not match number of dimensions in the array
      */
     public T get(final int index0, final int index1, final int index2) throws IllegalArgumentException {
-        return StructuredArrayIntrinsicSupport.get(this, index0, index1, index2);
+        return super.get(index0, index1, index2);
     }
 
     // Type specific public gets of first dimension subarray:
@@ -821,7 +712,7 @@ public class StructuredArray<T> implements Iterable<T> {
      * @throws IllegalArgumentException if array has less than two dimensions
      */
     public StructuredArray<T> getSubArray(final long index) throws IllegalArgumentException {
-        return StructuredArrayIntrinsicSupport.getSubArray(this, index);
+        return super.getSubArray(index);
     }
 
     /**
@@ -831,30 +722,15 @@ public class StructuredArray<T> implements Iterable<T> {
      * @throws IllegalArgumentException if array has less than two dimensions
      */
     public StructuredArray<T> getSubArray(final int index) throws IllegalArgumentException {
-        return StructuredArrayIntrinsicSupport.getSubArray(this, index);
+        return super.getSubArray(index);
     }
 
     private void populateElement(final long index0,
-                                     final Constructor<T> constructor,
-                                     Object... args) {
+                                 final Constructor<T> constructor,
+                                 Object... args) {
         try {
             // Instantiate:
-            T element = StructuredArrayIntrinsicSupport.constructElementAtIndex(this, index0, constructor, args);
-
-            if (!StructuredArrayIntrinsicSupport.StructuredArrayIsIntrinsicToJdk) {
-                // place in proper internal storage location:
-                if (index0 < Integer.MAX_VALUE) {
-                    intAddressableElements[(int) index0] = element;
-                    return;
-                }
-
-                // Calculate index into long-addressable-only partitions:
-                final long longIndex0 = (index0 - Integer.MAX_VALUE);
-                final int partitionIndex = (int) (longIndex0 >>> MAX_EXTRA_PARTITION_SIZE_POW2_EXPONENT);
-                final int partitionOffset = (int) longIndex0 & MASK;
-
-                longAddressableElements[partitionIndex][partitionOffset] = element;
-            }
+            constructElementAtIndex(index0, constructor, args);
         } catch (InstantiationException ex) {
             throw new RuntimeException(ex);
         } catch (IllegalAccessException ex) {
@@ -865,27 +741,11 @@ public class StructuredArray<T> implements Iterable<T> {
     }
 
     private void populateSubArray(final long index0,
-                                 final Constructor<StructuredArray<T>> constructor,
-                                 Object... args) {
+                                  final Constructor<StructuredArray<T>> constructor,
+                                  ArrayConstructionArgs args) {
         try {
             // Instantiate:
-            getConstructorMagic().setArrayConstructorArgs(args);
-            StructuredArray<T> subArray = StructuredArrayIntrinsicSupport.constructSubArrayAtIndex(this, index0, constructor);
-
-            if (!StructuredArrayIntrinsicSupport.StructuredArrayIsIntrinsicToJdk) {
-                // place in proper internal storage location:
-                if (index0 < Integer.MAX_VALUE) {
-                    intAddressableSubArrays[(int) index0] = subArray;
-                    return;
-                }
-
-                // Calculate index into long-addressable-only partitions:
-                final long longIndex0 = (index0 - Integer.MAX_VALUE);
-                final int partitionIndex = (int) (longIndex0 >>> MAX_EXTRA_PARTITION_SIZE_POW2_EXPONENT);
-                final int partitionOffset = (int) longIndex0 & MASK;
-
-                longAddressableSubArrays[partitionIndex][partitionOffset] = subArray;
-            }
+            constructSubArrayAtIndex(index0, constructor, args);
         } catch (InstantiationException ex) {
             throw new RuntimeException(ex);
         } catch (IllegalAccessException ex) {
@@ -908,6 +768,8 @@ public class StructuredArray<T> implements Iterable<T> {
             index = null;
         }
 
+        long length = getLength();
+
         try {
             for (long index0 = 0; index0 < length; index0++) {
                 final CtorAndArgs<T> ctorAndArgs;
@@ -926,7 +788,7 @@ public class StructuredArray<T> implements Iterable<T> {
     }
 
     private void populateSubArrays(final ArrayCtorAndArgsProvider<StructuredArray<T>> arrayCtorAndArgsProvider,
-                                  final long[] containingIndex) {
+                                   final long[] containingIndex) {
         final int thisIndex;
         final long[] index;
         if (containingIndex != null) {
@@ -938,6 +800,8 @@ public class StructuredArray<T> implements Iterable<T> {
             index = null;
         }
 
+        long length = getLength();
+
         try {
             for (long index0 = 0; index0 < length; index0++) {
                 final CtorAndArgs<StructuredArray<T>> ctorAndArgs;
@@ -947,7 +811,7 @@ public class StructuredArray<T> implements Iterable<T> {
                 } else {
                     ctorAndArgs = arrayCtorAndArgsProvider.getForIndex(index0);
                 }
-                populateSubArray(index0, ctorAndArgs.getConstructor(), ctorAndArgs.getArgs());
+                populateSubArray(index0, ctorAndArgs.getConstructor(), (ArrayConstructionArgs) ctorAndArgs.getArgs()[0]);
                 arrayCtorAndArgsProvider.recycle(ctorAndArgs);
             }
         } catch (NoSuchMethodException ex) {
@@ -961,7 +825,7 @@ public class StructuredArray<T> implements Iterable<T> {
      * @return the {@link Class} of elements stored in the array.
      */
     public Class<T> getElementClass() {
-        return elementClass;
+        return super.getElementClass();
     }
 
     /**
@@ -976,7 +840,7 @@ public class StructuredArray<T> implements Iterable<T> {
      */
     public class ElementIterator implements Iterator<T> {
 
-        private final long[] cursors = new long[dimensionCount];
+        private final long[] cursors = new long[getDimensionCount()];
         private long elementCountToCursor = 0;
 
         /**
@@ -995,6 +859,8 @@ public class StructuredArray<T> implements Iterable<T> {
             }
 
             final T element = get(cursors);
+
+            long lengths[] = getLengths();
 
             // Increment cursors from inner-most dimension out:
             for (int cursorDimension = cursors.length - 1; cursorDimension >= 0; cursorDimension--) {
@@ -1128,12 +994,12 @@ public class StructuredArray<T> implements Iterable<T> {
                                    final StructuredArray dst, final long dstOffset,
                                    final long count,
                                    final boolean allowFinalFieldOverwrite) {
-        if (src.elementClass != dst.elementClass) {
+        if (src.getElementClass() != dst.getElementClass()) {
             String msg = String.format("Only objects of the same class can be copied: %s != %s",
-                                       src.getClass(), dst.getClass());
+                    src.getClass(), dst.getClass());
             throw new ArrayStoreException(msg);
         }
-        if ((src.dimensionCount > 1) || (dst.dimensionCount > 1)) {
+        if ((src.getDimensionCount() > 1) || (dst.getDimensionCount() > 1)) {
             throw new IllegalArgumentException("shallowCopy only supported for single dimension arrays");
         }
 
@@ -1169,102 +1035,5 @@ public class StructuredArray<T> implements Iterable<T> {
                 }
             }
         }
-    }
-
-
-    // ConstructorMagic support:
-
-    private static class ConstructorMagic {
-        private boolean isActive() {
-            return active;
-        }
-
-        private void setActive(boolean active) {
-            this.active = active;
-        }
-
-        public void setArrayConstructorArgs(final CtorAndArgs arrayCtorAndArgs, int dimensionCount,
-                                            final CtorAndArgsProvider ctorAndArgsProvider,
-                                            final long[] lengths,
-                                            final long[] containingIndex) {
-            this.arrayCtorAndArgs = arrayCtorAndArgs;
-            this.dimensionCount = dimensionCount;
-            this.ctorAndArgsProvider = ctorAndArgsProvider;
-            this.lengths = lengths;
-            this.containingIndex = containingIndex;
-        }
-
-        public void setArrayConstructorArgs(Object... args) {
-            this.arrayCtorAndArgs = (CtorAndArgs) args[0];
-            this.dimensionCount = (Integer) args[1];
-            this.ctorAndArgsProvider = (CtorAndArgsProvider) args[2];
-            this.lengths = (long[]) args[3];
-            this.containingIndex = (long[]) args[4];
-        }
-
-        public CtorAndArgs getArrayCtorAndArgs() {
-            return arrayCtorAndArgs;
-        }
-
-        public int getDimensionCount() {
-            return dimensionCount;
-        }
-
-        public CtorAndArgsProvider getCtorAndArgsProvider() {
-            return ctorAndArgsProvider;
-        }
-
-        public long[] getLengths() {
-            return lengths;
-        }
-
-        public long[] getContainingIndex() {
-            return containingIndex;
-        }
-
-        private boolean active = false;
-
-        private CtorAndArgs arrayCtorAndArgs = null;
-        private int dimensionCount = 1;
-        private CtorAndArgsProvider ctorAndArgsProvider = null;
-        private long[] lengths = null;
-        private long[] containingIndex = null;
-    }
-
-    private static final ThreadLocal<ConstructorMagic> threadLocalConstructorMagic = new ThreadLocal<ConstructorMagic>();
-
-    @SuppressWarnings("unchecked")
-    private static ConstructorMagic getConstructorMagic() {
-        ConstructorMagic constructorMagic = threadLocalConstructorMagic.get();
-        if (constructorMagic == null) {
-            constructorMagic = new ConstructorMagic();
-            threadLocalConstructorMagic.set(constructorMagic);
-        }
-        return constructorMagic;
-    }
-
-    @SuppressWarnings("unchecked")
-    private static void checkConstructorMagic() {
-        final ConstructorMagic constructorMagic = threadLocalConstructorMagic.get();
-        if ((constructorMagic == null) || !constructorMagic.isActive()) {
-            throw new IllegalArgumentException("StructuredArray<> must not be directly instantiated with a constructor. Use newInstance(...) instead.");
-        }
-    }
-
-
-    public StructuredArray<T>[][] getLongAddressableSubArrays() {
-        return longAddressableSubArrays;
-    }
-
-    public StructuredArray<T>[] getIntAddressableSubArrays() {
-        return intAddressableSubArrays;
-    }
-
-    public T[][] getLongAddressableElements() {
-        return longAddressableElements;
-    }
-
-    public T[] getIntAddressableElements() {
-        return intAddressableElements;
     }
 }
