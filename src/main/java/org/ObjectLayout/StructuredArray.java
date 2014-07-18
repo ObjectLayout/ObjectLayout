@@ -44,6 +44,8 @@ public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T> imp
 
     private static final Object[] EMPTY_ARGS = new Object[0];
 
+    public static final int MASK = 0xFFFFFFFF;
+
     private final long totalElementCount; // A cached product of lengths[i]
 
 

@@ -275,6 +275,23 @@ class StructuredArrayIntrinsifiableBase<T> {
         }
     }
 
+    T[] getIntAddressableElements() {
+        return intAddressableElements; 
+    }
+    
+    StructuredArray<T>[] getIntAddressableSubArrays() {
+        return intAddressableSubArrays;
+    }
+    
+    T[][] getLongAddressableElements() {
+        return longAddressableElements;
+    }
+    
+    StructuredArray<T>[][] getLongAddressableSubArrays() {
+        return longAddressableSubArrays;
+    }
+
+    
     /**
      * Get a StructuredArray Sub array at a supplied index in a StructuredArray
      *

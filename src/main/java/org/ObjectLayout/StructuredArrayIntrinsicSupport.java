@@ -128,7 +128,7 @@ class StructuredArrayIntrinsicSupport {
         // Calculate index into long-addressable-only partitions:
         final long longIndex = (index - Integer.MAX_VALUE);
         final int partitionIndex = (int)(longIndex >>> StructuredArray.MAX_EXTRA_PARTITION_SIZE_POW2_EXPONENT);
-        final int partitionOffset = (int)longIndex & StructuredArray.MASK;
+        final int partitionOffset = (int)(longIndex & StructuredArray.MASK);
 
         return structuredArray.getLongAddressableElements()[partitionIndex][partitionOffset];
     }
