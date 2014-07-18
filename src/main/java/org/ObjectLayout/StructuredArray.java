@@ -1011,8 +1011,10 @@ public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T> imp
         if (((srcOffset + count) < Integer.MAX_VALUE) && ((dstOffset + count) < Integer.MAX_VALUE)) {
             // use the (faster) int based get
             if (dst == src && (dstOffset >= srcOffset && (dstOffset + count) >= srcOffset)) {
-                for (int srcIdx = (int)(srcOffset + count), dstIdx = (int)(dstOffset + count), limit = (int)(srcOffset - 1);
-                     srcIdx > limit; srcIdx--, dstIdx--) {
+                int srcIdx = (int)(srcOffset + count) - 1;
+                int dstIdx = (int)(dstOffset + count) - 1;
+                int limit = (int)(srcOffset - 1);
+                for (; srcIdx > limit; srcIdx--, dstIdx--) {
                     reverseShallowCopy(src.get(srcIdx), dst.get(dstIdx), fields);
                 }
             } else {
