@@ -184,9 +184,15 @@ public class BPlusTreeTest
 
     private static void putAll(BPlusTree<Integer, Integer> node, int... values)
     {
+        int counter = 0;
         for (int value : values)
         {
-            node.put(value, value);
+            try {
+                node.put(value, value);
+                counter++;
+            } catch (Exception e) {
+                throw new RuntimeException("" + counter, e);
+            }
         }
     }
 

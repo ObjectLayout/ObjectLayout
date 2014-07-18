@@ -1,9 +1,4 @@
 
-import static java.lang.System.arraycopy;
-import static java.util.Arrays.copyOf;
-import static java.util.Arrays.fill;
-
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.Map;
@@ -42,7 +37,7 @@ public class BPlusTree<K, V> implements Iterable<Map.Entry<K, V>> {
 
         if (isSplit(o)) {
             Node next = root.next();
-            root = new Branch(root, next, nodeSize);
+            root = Branch.newInstance(root, next, nodeSize);
 
             o = null;
         }
@@ -245,7 +240,8 @@ public class BPlusTree<K, V> implements Iterable<Map.Entry<K, V>> {
         @Override
         public String toString() {
             StringBuilder sb = new StringBuilder("[");
-            for (Entry entry : this) {
+            for (int i = 0; i < size; i++) {
+                Entry entry = get(i);
                 sb.append(entry.getKey()).append("->").append(entry.getValue());
                 sb.append(",");
             }
@@ -337,27 +333,27 @@ public class BPlusTree<K, V> implements Iterable<Map.Entry<K, V>> {
             return (Leaf) newSubclassInstance(Leaf.class, Entry.class, nodeSize);
         }
     }
+    
+    static class Ref
+    {
+        Object t;
+    }
 
-    static class Branch implements Node {
-        private final Object[] children;
+    static class Branch extends StructuredArray<Ref> implements Node {
         private final int capacity;
-        private int size;
+        private int size = 0;
 
-        public Branch(Node left, Node right, int nodeSize) {
-            this(nodeSize);
-
-            children[0] = left;
-            children[1] = right.firstKey();
-            children[2] = right;
-
-            size = 1;
+        public Branch() {
+            capacity = ((int) getLength() - 1) / 2;
         }
-
-        public Branch(int nodeSize) {
-            capacity = nodeSize;
-            children = new Object[nodeSize * 2 + 1];
-
-            size = 0;
+        
+        private void setChild(int i, Object o)
+        {
+            get(i).t = o;
+        }
+        
+        private Object getChild(int i) {
+            return get(i).t;
         }
 
         @Override
@@ -389,39 +385,39 @@ public class BPlusTree<K, V> implements Iterable<Map.Entry<K, V>> {
                     halfSize);
 
             if (comparison == 0) {
-                Branch nextBranch = new Branch(capacity);
+                Branch nextBranch = newInstance(capacity);
 
                 // Copy half of the nodes from the original
                 int copyFrom = keyOffset(halfSize);
                 int length = arraySize() - copyFrom;
-                arraycopy(children, copyFrom, nextBranch.children, 1, length);
+                shallowCopy(this, copyFrom, nextBranch, 1, length);
                 nextBranch.size = halfSize;
 
                 // Key from new node moved up.
                 nextBranch.firstKey(keyForNextNode);
-                nextBranch.children[0] = nextNode;
+                nextBranch.setChild(0, nextNode);
 
                 // clear out latter half...
-                fill(children, keyOffset(halfSize), children.length, null);
+                clearArrayFrom(keyOffset(halfSize));
                 size = halfSize;
 
                 // temporarily store the nextBranch for the parent.
                 next(nextBranch);
             } else if (comparison < 0) {
-                Branch nextBranch = new Branch(capacity);
+                Branch nextBranch = newInstance(capacity);
 
                 // Copy half of the nodes from the original
                 int copyFrom = keyOffset(halfSize);
                 int length = arraySize() - copyFrom;
-                arraycopy(children, copyFrom, nextBranch.children, 1, length);
+                shallowCopy(this, copyFrom, nextBranch, 1, length);
                 nextBranch.size = halfSize;
 
                 // Last key from first half moved up.
                 nextBranch.firstKey(storedKey(halfSize - 1));
-                nextBranch.children[0] = (Node) children[halfSize * 2];
+                nextBranch.setChild(0, getChild(halfSize * 2));
 
                 // clear out latter half...
-                fill(children, keyOffset(halfSize - 1), children.length, null);
+                clearArrayFrom(keyOffset(halfSize - 1));
                 size = halfSize - 1;
 
                 // Insert the new node
@@ -430,20 +426,20 @@ public class BPlusTree<K, V> implements Iterable<Map.Entry<K, V>> {
                 // temporarily store the nextBranch for the parent.
                 next(nextBranch);
             } else {
-                Branch nextBranch = new Branch(capacity);
+                Branch nextBranch = newInstance(capacity);
 
                 // Copy just under half of the nodes from the original
                 int copyFrom = keyOffset(halfSize + 1);
                 int length = arraySize() - copyFrom;
-                arraycopy(children, copyFrom, nextBranch.children, 1, length);
+                shallowCopy(this, copyFrom, nextBranch, 1, length);
                 nextBranch.size = halfSize - 1;
 
                 // First key from second half moved up.
                 nextBranch.firstKey(storedKey(halfSize));
-                nextBranch.children[0] = (Node) children[(halfSize + 1) * 2];
+                nextBranch.setChild(0, getChild((halfSize + 1) * 2));
 
                 // clear out latter half...
-                fill(children, keyOffset(halfSize), children.length, null);
+                clearArrayFrom(keyOffset(halfSize));
                 size = halfSize;
 
                 // Insert the new node
@@ -452,6 +448,16 @@ public class BPlusTree<K, V> implements Iterable<Map.Entry<K, V>> {
                 // temporarily store the nextBranch for the parent.
                 next(nextBranch);
             }
+        }
+        
+        private void clearArrayFrom(int offset) {
+            for (int i = offset; i < getLength(); i++) {
+                setChild(i, null);
+            }
+        }
+        
+        private void clear(int index) {
+            setChild(index, null);
         }
 
         @Override
@@ -464,7 +470,7 @@ public class BPlusTree<K, V> implements Iterable<Map.Entry<K, V>> {
             int index = findKeyIndex(comparator, key);
             int nodeOffset = index * 2;
 
-            Node node = (Node) children[nodeOffset];
+            Node node = (Node) getChild(nodeOffset);
             Object oldVal = node.remove(comparator, key);
 
             if (node.requiresCompacting()) {
@@ -481,20 +487,20 @@ public class BPlusTree<K, V> implements Iterable<Map.Entry<K, V>> {
         private void compactLeaves(Leaf node, int index, int nodeOffset) {
             if (index + 1 <= size) {
                 Leaf left = node;
-                Leaf right = (Leaf) children[nodeOffset + 2];
+                Leaf right = (Leaf) getChild(nodeOffset + 2);
 
                 if (left.stealFromRight(right)) {
-                    children[nodeOffset + 1] = right.firstKey();
+                    setChild(nodeOffset + 1, right.firstKey());
                 } else {
                     left.mergeFrom(right);
                     removeMergedNode(nodeOffset);
                 }
             } else {
-                Leaf left = (Leaf) children[nodeOffset - 2];
+                Leaf left = (Leaf) getChild(nodeOffset - 2);
                 Leaf right = node;
 
                 if (right.stealFromLeft(left)) {
-                    children[nodeOffset - 1] = right.firstKey();
+                    setChild(nodeOffset - 1, right.firstKey());
                 } else {
                     left.mergeFrom(right);
                     removeMergedNode(nodeOffset);
@@ -504,24 +510,24 @@ public class BPlusTree<K, V> implements Iterable<Map.Entry<K, V>> {
 
         private void compactBranches(Branch node, int index, int nodeOffset) {
             if (index + 1 <= size) {
-                Branch right = (Branch) children[nodeOffset + 2];
-                Object rightKey = children[nodeOffset + 1];
+                Branch right = (Branch) getChild(nodeOffset + 2);
+                Object rightKey = getChild(nodeOffset + 1);
 
                 if (right.size() > capacity / 2) {
                     node.append(rightKey, right.firstValue());
                     Object poppedKey = right.popKey();
-                    children[nodeOffset + 1] = poppedKey;
+                    setChild(nodeOffset + 1, poppedKey);
                 } else {
                     node.mergeFrom(rightKey, right);
                     removeMergedNode(nodeOffset);
                 }
             } else {
-                Branch left = (Branch) children[nodeOffset - 2];
-                Object nodeKey = children[nodeOffset - 1];
+                Branch left = (Branch) getChild(nodeOffset - 2);
+                Object nodeKey = getChild(nodeOffset - 1);
 
                 if (left.size() > capacity / 2) {
                     node.push(left.lastValue(), nodeKey);
-                    children[nodeOffset - 1] = left.lastKey();
+                    setChild(nodeOffset - 1, left.lastKey());
                     left.clearLast();
                 } else {
                     left.mergeFrom(nodeKey, node);
@@ -533,20 +539,18 @@ public class BPlusTree<K, V> implements Iterable<Map.Entry<K, V>> {
         private void removeMergedNode(int nodeOffset) {
             int length = arraySize() - (nodeOffset + 3);
             if (length > 0) {
-                arraycopy(children, nodeOffset + 3, children, nodeOffset + 1,
-                        length);
+                shallowCopy(this, nodeOffset + 3, this, nodeOffset + 1, length);
             }
             size--;
 
-            children[arraySize()] = null;
-            children[arraySize() + 1] = null;
+            clear(arraySize());
+            clear(arraySize() + 1);
         }
 
         public void mergeFrom(Object rightKey, Node right) {
             Branch branch = (Branch) right;
-            children[arraySize()] = rightKey;
-            arraycopy(branch.children, 0, children, arraySize() + 1,
-                    branch.arraySize());
+            setChild(arraySize(), rightKey);
+            shallowCopy(branch, 0, this, arraySize() + 1, branch.arraySize());
             size += branch.size() + 1;
         }
 
@@ -570,93 +574,93 @@ public class BPlusTree<K, V> implements Iterable<Map.Entry<K, V>> {
             int length = arraySize() - offset;
 
             if (length > 0) {
-                arraycopy(children, offset, children, offset + 2, length);
+                shallowCopy(this, offset, this, offset + 2, length);
             }
-
-            children[offset] = key;
-            children[offset + 1] = child;
+            
+            setChild(offset, key);
+            setChild(offset + 1, child);
             size++;
         }
 
         private void next(Branch nextBranch) {
             assert size < capacity : "Can only store next node if node is not full";
-            children[children.length - 1] = nextBranch;
+            setChild((int) getLength() - 1, nextBranch);
         }
 
         private void firstKey(Object storedKey) {
             assert size < capacity : "Can only store first key if node is not full";
-            children[children.length - 1] = storedKey;
+            setChild((int) getLength() - 1, storedKey);
         }
 
         @Override
         public Node next() {
-            int offset = children.length - 1;
-            Object nextNode = children[offset];
+            int offset = (int) getLength() - 1;
+            Object nextNode = getChild(offset);
 
             assert nextNode != null : "Can only fetch next once";
-            children[offset] = null;
+            setChild(offset, null);
 
             return (Node) nextNode;
         }
 
         @Override
         public Object firstKey() {
-            int offset = children.length - 1;
-            Object key = children[offset];
+            int offset = (int) getLength() - 1;
+            Object firstKey = getChild(offset);
 
-            assert key != null : "Can only fetch next once";
-            children[offset] = null;
+            assert firstKey != null : "Can only fetch firstKey once";
+            setChild(offset, null);
 
-            return key;
+            return firstKey;
         }
 
         public Object popKey() {
-            Object key = children[1];
+            Object key = getChild(1);
             int length = arraySize() - 2;
-            arraycopy(children, 2, children, 0, length);
+            shallowCopy(this, 2, this, 0, length);
             size--;
-            children[arraySize()] = null;
-            children[arraySize() + 1] = null;
+            clear(arraySize());
+            clear(arraySize() + 1);
             return key;
         }
 
         @Override
         public Node firstValue() {
-            return (Node) children[0];
+            return (Node) getChild(0);
         }
 
         @Override
         public Object lastKey() {
             assert size > 0 : "Should not be modifying branch with only child";
 
-            return children[arraySize() - 2];
+            return getChild(arraySize() - 2);
         }
 
         @Override
         public Node lastValue() {
             assert size > 0 : "Should not be modifying branch with only child";
 
-            return (Node) children[arraySize() - 1];
+            return (Node) getChild(arraySize() - 1);
         }
 
         private void clearLast() {
             assert size > 0 : "Should not be modifying branch with only child";
 
-            children[arraySize() - 1] = null;
-            children[arraySize() - 2] = null;
+            clear(arraySize() - 1);
+            clear(arraySize() - 2);
             size--;
         }
 
         public void push(Node val, Object key) {
-            arraycopy(children, 0, children, 2, arraySize());
-            children[0] = val;
-            children[1] = key;
+            shallowCopy(this, 0, this, 2, arraySize());
+            setChild(0, val);
+            setChild(1, key);
             size++;
         }
 
         public void append(Object key, Node val) {
-            children[arraySize()] = key;
-            children[arraySize() + 1] = val;
+            setChild(arraySize(), key);
+            setChild(arraySize() + 1, val);
             size++;
         }
 
@@ -674,11 +678,11 @@ public class BPlusTree<K, V> implements Iterable<Map.Entry<K, V>> {
         }
 
         private Node storedNode(int search) {
-            return (Node) children[search * 2];
+            return (Node) getChild(search * 2);
         }
 
         private Object storedKey(int index) {
-            return children[keyOffset(index)];
+            return getChild(keyOffset(index));
         }
 
         private int findKeyIndex(Comparator comparator, Object key) {
@@ -705,7 +709,17 @@ public class BPlusTree<K, V> implements Iterable<Map.Entry<K, V>> {
 
         @Override
         public String toString() {
-            return "B:" + Arrays.toString(copyOf(children, size * 2 + 1));
+            
+            StringBuilder sb = new StringBuilder("B:[");
+            
+            for (int i = 0; i < size; i++) {
+                sb.append(getChild(i)).append(",");
+            }
+            
+            sb.setLength(sb.length() - 1);
+            sb.append("]");
+            
+            return sb.toString();
         }
 
         @Override
@@ -721,6 +735,24 @@ public class BPlusTree<K, V> implements Iterable<Map.Entry<K, V>> {
         private int arraySize() {
             return size * 2 + 1;
         }
+        
+        private static Branch newInstance(Node left, Node right, int nodeSize) {
+            
+            Branch branch = (Branch) newInstance(nodeSize);
+            
+            branch.setChild(0, left);
+            branch.setChild(1, right.firstKey());
+            branch.setChild(2, right);
+            branch.size = 1;
+            
+            return branch;
+        }
+
+        private static Branch newInstance(int nodeSize) {
+            int length = (nodeSize * 2) + 1;
+            return (Branch) newSubclassInstance(Branch.class, Ref.class, length);
+        }
+
     }
 
     interface Node {
