@@ -2,7 +2,6 @@
 import static java.lang.System.arraycopy;
 import static java.util.Arrays.copyOf;
 import static java.util.Arrays.fill;
-import static org.ObjectLayout.StructuredArray.shallowCopy;
 
 import java.util.Arrays;
 import java.util.Comparator;
@@ -161,9 +160,8 @@ public class BPlusTree<K, V> implements Iterable<Map.Entry<K, V>> {
                 oldVal = null;
 
                 search = -(search + 1);
+                insert(search, key, val);
 
-                insert(this, search, size, key, val);
-                size++;
             } else {
                 Leaf next = Leaf.newInstance(capacity);
 
@@ -213,10 +211,7 @@ public class BPlusTree<K, V> implements Iterable<Map.Entry<K, V>> {
                 return null;
             }
 
-            Object oldValue = BPlusTree.remove(this, search, size);
-            size--;
-
-            return oldValue;
+            return remove(search);
         }
 
         public BPlusTree.Leaf next() {
@@ -304,13 +299,29 @@ public class BPlusTree<K, V> implements Iterable<Map.Entry<K, V>> {
         }
 
         private void removeFirst() {
-            pop(this, size);
+            remove(0);
+        }
+
+        private Object remove(int search) {
+            Object o = this.get(search).getValue();
+            if (search != size - 1) {
+                shallowCopy(this, search + 1, this, search, size - (search + 1));
+            }
+            this.get(size - 1).clear();
             size--;
+            return o;
+        }
+
+        private void insert(int search, Object key, Object val) {
+            if (search != size) {
+                shallowCopy(this, search, this, search + 1, size - search);
+            }
+            this.get(search).set(key, val);
+            size++;
         }
 
         private void push(Object key, Object val) {
-            BPlusTree.push(this, size, key, val);
-            size++;
+            insert(0, key, val);
         }
 
         private void append(Object key, Object val) {
@@ -834,59 +845,5 @@ public class BPlusTree<K, V> implements Iterable<Map.Entry<K, V>> {
         public void remove() {
             throw new UnsupportedOperationException();
         }
-    }
-
-    private static Object pop(StructuredArray<Entry> array, int length) {
-        return remove(array, 0, length);
-    }
-
-    private static void push(Object[] array, int length, Object o) {
-        arraycopy(array, 0, array, 1, length);
-        array[0] = o;
-    }
-
-    private static void push(StructuredArray<Entry> array, int length, Object key, Object val) {
-        insert(array, 0, length, key, val);
-    }
-
-    private static void insert(StructuredArray<Entry> entry, int index, int length, Object key, Object val) {
-
-        try {
-            if (index != length) {
-                shallowCopy(entry, index, entry, index + 1, length - index);
-            }
-        } catch (ArrayIndexOutOfBoundsException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-
-        entry.get(index).set(key, val);
-    }
-
-    private static void insert(Object[] array, int index, int length, Object o) {
-        if (index == 0) {
-            arraycopy(array, 0, array, 1, length);
-        } else if (index != length) {
-            arraycopy(array, index, array, index + 1, length - index);
-        }
-        array[index] = o;
-    }
-
-    private static Object remove(StructuredArray<Entry> array, int index, int length) {
-        Object o = array.get(index).getValue();
-        if (index != length - 1) {
-            shallowCopy(array, index + 1, array, index, length - (index + 1));
-        }
-        array.get(length - 1).clear();
-        return o;
-    }
-
-    private static <T> T remove(T[] array, int index, int length) {
-        T o = array[index];
-        if (index != length - 1) {
-            arraycopy(array, index + 1, array, index, length - (index + 1));
-        }
-        array[length - 1] = null;
-        return o;
     }
 }
