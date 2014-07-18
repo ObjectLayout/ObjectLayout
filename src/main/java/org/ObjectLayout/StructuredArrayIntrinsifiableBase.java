@@ -274,23 +274,6 @@ class StructuredArrayIntrinsifiableBase<T> {
             return subArray.get(indices, indexOffset + 1);
         }
     }
-
-    T[] getIntAddressableElements() {
-        return intAddressableElements; 
-    }
-    
-    StructuredArray<T>[] getIntAddressableSubArrays() {
-        return intAddressableSubArrays;
-    }
-    
-    T[][] getLongAddressableElements() {
-        return longAddressableElements;
-    }
-    
-    StructuredArray<T>[][] getLongAddressableSubArrays() {
-        return longAddressableSubArrays;
-    }
-
     
     /**
      * Get a StructuredArray Sub array at a supplied index in a StructuredArray
