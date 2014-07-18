@@ -60,8 +60,9 @@ public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T> imp
      * @throws NoSuchMethodException if the element class does not have a public default constructor
      */
 
-    public static <T> StructuredArray<T> newInstance(final Class<T> elementClass,
-                                                     final long length) throws NoSuchMethodException {
+    public static <T> StructuredArray<T> newInstance(
+            final Class<T> elementClass,
+            final long length) throws NoSuchMethodException {
         final CtorAndArgsProvider<T> ctorAndArgsProvider = new SingletonCtorAndArgsProvider<T>(elementClass);
         final long[] lengths = {length};
         return instantiate(lengths.length, ctorAndArgsProvider, lengths);
@@ -75,14 +76,13 @@ public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T> imp
      * @param length of the array to create.
      * @param elementClass of each element in the array
      */
-    @SuppressWarnings("unchecked")
-    public static <T> StructuredArray<T> newSubclassInstance(final Class<? extends StructuredArray<T>> arrayClass,
-                                                             final Class<T> elementClass,
-                                                             final long length) {
+    public static <T, S extends StructuredArray<T>> S newSubclassInstance(
+            final Class<S> arrayClass,
+            final Class<T> elementClass,
+            final long length) {
         try {
-            CtorAndArgs<StructuredArray<T>> arrayCtorAndArgs =
-                    new CtorAndArgs<StructuredArray<T>>(((Class<StructuredArray<T>>)arrayClass).getConstructor(),
-                            EMPTY_ARGS);
+            Constructor<S> ctor = arrayClass.getConstructor();
+            CtorAndArgs<S> arrayCtorAndArgs = new CtorAndArgs<S>(ctor, EMPTY_ARGS);
             return newSubclassInstance(arrayCtorAndArgs, elementClass, length);
         } catch (NoSuchMethodException ex) {
             throw new RuntimeException(ex);
@@ -98,11 +98,13 @@ public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T> imp
      * @param elementClass of each element in the array
      */
 
-    public static <T> StructuredArray<T> newSubclassInstance(final CtorAndArgs<? extends StructuredArray<T>> arrayCtorAndArgs,
-                                                             final Class<T> elementClass,
-                                                             final long length) {
+    public static <T, S extends StructuredArray<T>> S newSubclassInstance(
+            final CtorAndArgs<S> arrayCtorAndArgs,
+            final Class<T> elementClass,
+            final long length) {
         try {
-            final CtorAndArgsProvider<T> ctorAndArgsProvider = new SingletonCtorAndArgsProvider<T>(elementClass);
+            final CtorAndArgsProvider<T> ctorAndArgsProvider = 
+                    new SingletonCtorAndArgsProvider<T>(elementClass);
             final long[] lengths = {length};
             return instantiate(arrayCtorAndArgs, ctorAndArgsProvider, lengths);
         } catch (NoSuchMethodException ex) {
@@ -135,14 +137,13 @@ public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T> imp
      * @param length of the array to create.
      * @param ctorAndArgsProvider produces element constructors [potentially] on a per element basis.
      */
-    @SuppressWarnings("unchecked")
-    public static <T> StructuredArray<T> newSubclassInstance(final Class<? extends StructuredArray<T>> arrayClass,
-                                                             final CtorAndArgsProvider<T> ctorAndArgsProvider,
-                                                             final long length) {
+    public static <T, S extends StructuredArray<T>> S newSubclassInstance(
+            final Class<S> arrayClass,
+            final CtorAndArgsProvider<T> ctorAndArgsProvider,
+            final long length) {
         try {
-            CtorAndArgs<StructuredArray<T>> arrayCtorAndArgs =
-                    new CtorAndArgs<StructuredArray<T>>(((Class<StructuredArray<T>>)arrayClass).getConstructor(),
-                            EMPTY_ARGS);
+            Constructor<S> ctor = arrayClass.getConstructor();
+            CtorAndArgs<S> arrayCtorAndArgs = new CtorAndArgs<S>(ctor, EMPTY_ARGS);
             final long[] lengths = {length};
             return instantiate(arrayCtorAndArgs, ctorAndArgsProvider, lengths);
         } catch (NoSuchMethodException ex) {
@@ -161,9 +162,10 @@ public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T> imp
      * @param length of the array to create.
      * @param ctorAndArgsProvider produces element constructors [potentially] on a per element basis.
      */
-    public static <T> StructuredArray<T> newSubclassInstance(final CtorAndArgs<? extends StructuredArray<T>> arrayCtorAndArgs,
-                                                             final CtorAndArgsProvider<T> ctorAndArgsProvider,
-                                                             final long length) {
+    public static <T, S extends StructuredArray<T>> S newSubclassInstance(
+            final CtorAndArgs<S> arrayCtorAndArgs,
+            final CtorAndArgsProvider<T> ctorAndArgsProvider,
+            final long length) {
         final long[] lengths = {length};
         return instantiate(arrayCtorAndArgs, ctorAndArgsProvider, lengths);
     }
@@ -182,10 +184,12 @@ public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T> imp
      * @throws NoSuchMethodException if elementConstructorArgTypes does not match a public constructor signature in elementClass
 
      */
-    public static <T> StructuredArray<T> newInstance(final Class<T> elementClass,
-                                                     final long length,
-                                                     final Class[] elementConstructorArgTypes,
-                                                     final Object... elementConstructorArgs) throws NoSuchMethodException {
+    @SuppressWarnings("rawtypes")
+    public static <T> StructuredArray<T> newInstance(
+            final Class<T> elementClass,
+            final long length,
+            final Class[] elementConstructorArgTypes,
+            final Object... elementConstructorArgs) throws NoSuchMethodException {
         final CtorAndArgsProvider<T> ctorAndArgsProvider =
                 new SingletonCtorAndArgsProvider<T>(elementClass, elementConstructorArgTypes, elementConstructorArgs);
         final long[] lengths = {length};
@@ -204,16 +208,16 @@ public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T> imp
      * @param elementConstructorArgTypes for selecting the constructor to call for initialising each structure object.
      * @param elementConstructorArgs to be passed to a constructor for initialising each structure object.
      */
-    @SuppressWarnings("unchecked")
-    public static <T> StructuredArray<T> newSubclassInstance(final Class<? extends StructuredArray<T>> arrayClass,
-                                                             final Class<T> elementClass,
-                                                             final long length,
-                                                             final Class[] elementConstructorArgTypes,
-                                                             final Object... elementConstructorArgs) {
+    @SuppressWarnings("rawtypes")
+    public static <T, S extends StructuredArray<T>> S newSubclassInstance(
+            final Class<S> arrayClass,
+            final Class<T> elementClass,
+            final long length,
+            final Class[] elementConstructorArgTypes,
+            final Object... elementConstructorArgs) {
         try {
-            CtorAndArgs<StructuredArray<T>> arrayCtorAndArgs =
-                    new CtorAndArgs<StructuredArray<T>>(((Class<StructuredArray<T>>)arrayClass).getConstructor(),
-                            EMPTY_ARGS);
+            Constructor<S> ctor = arrayClass.getConstructor();
+            CtorAndArgs<S> arrayCtorAndArgs = new CtorAndArgs<S>(ctor, EMPTY_ARGS);
             return newSubclassInstance(arrayCtorAndArgs,
                     elementClass, length, elementConstructorArgTypes, elementConstructorArgs);
         } catch (NoSuchMethodException ex) {
@@ -233,11 +237,13 @@ public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T> imp
      * @param elementConstructorArgTypes for selecting the constructor to call for initialising each structure object.
      * @param elementConstructorArgs to be passed to a constructor for initialising each structure object.
      */
-    public static <T> StructuredArray<T> newSubclassInstance(final CtorAndArgs<? extends StructuredArray<T>> arrayCtorAndArgs,
-                                                             final Class<T> elementClass,
-                                                             final long length,
-                                                             final Class[] elementConstructorArgTypes,
-                                                             final Object... elementConstructorArgs) {
+    @SuppressWarnings("rawtypes")
+    public static <T, S extends StructuredArray<T>> S newSubclassInstance(
+            final CtorAndArgs<S> arrayCtorAndArgs,
+            final Class<T> elementClass,
+            final long length,
+            final Class[] elementConstructorArgTypes,
+            final Object... elementConstructorArgs) {
         try {
             final CtorAndArgsProvider<T> ctorAndArgsProvider =
                     new SingletonCtorAndArgsProvider<T>(elementClass, elementConstructorArgTypes, elementConstructorArgs);
@@ -274,14 +280,13 @@ public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T> imp
      * @param elementClass of each element in the array
      * @param lengths of the array dimensions to create.
      */
-    @SuppressWarnings("unchecked")
-    public static <T> StructuredArray<T> newSubclassInstance(final Class<? extends StructuredArray<T>> arrayClass,
-                                                             final Class<T> elementClass,
-                                                             final long... lengths) {
+    public static <T, S extends StructuredArray<T>> S newSubclassInstance(
+            final Class<S> arrayClass,
+            final Class<T> elementClass,
+            final long... lengths) {
         try {
-            CtorAndArgs<StructuredArray<T>> arrayCtorAndArgs =
-                    new CtorAndArgs<StructuredArray<T>>(((Class<StructuredArray<T>>)arrayClass).getConstructor(),
-                            EMPTY_ARGS);
+            Constructor<S> ctor = arrayClass.getConstructor();
+            CtorAndArgs<S> arrayCtorAndArgs = new CtorAndArgs<S>(ctor, EMPTY_ARGS);
             return newSubclassInstance(arrayCtorAndArgs, elementClass, lengths);
         } catch (NoSuchMethodException ex) {
             throw new RuntimeException(ex);
@@ -298,9 +303,10 @@ public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T> imp
      * @param elementClass of each element in the array
      * @param lengths of the array dimensions to create.
      */
-    public static <T> StructuredArray<T> newSubclassInstance(final CtorAndArgs<? extends StructuredArray<T>> arrayCtorAndArgs,
-                                                             final Class<T> elementClass,
-                                                             final long... lengths) {
+    public static <T, S extends StructuredArray<T>> S newSubclassInstance(
+            final CtorAndArgs<S> arrayCtorAndArgs,
+            final Class<T> elementClass, 
+            final long... lengths) {
         try {
             final CtorAndArgsProvider<T> ctorAndArgsProvider = new SingletonCtorAndArgsProvider<T>(elementClass);
             return instantiate(arrayCtorAndArgs, ctorAndArgsProvider, lengths);
@@ -324,6 +330,7 @@ public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T> imp
      * @throws NoSuchMethodException if elementConstructorArgTypes does not match a public constructor signature in elementClass
 
      */
+    @SuppressWarnings("rawtypes")
     public static <T> StructuredArray<T> newInstance(final Class<T> elementClass,
                                                      final long[] lengths,
                                                      final Class[] elementConstructorArgTypes,
@@ -348,16 +355,16 @@ public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T> imp
      * @throws IllegalArgumentException if elementConstructorArgTypes and constructor arguments do not match in length
 
      */
-    @SuppressWarnings("unchecked")
-    public static <T> StructuredArray<T> newSubclassInstance(final Class<? extends StructuredArray<T>> arrayClass,
-                                                             final Class<T> elementClass,
-                                                             final long[] lengths,
-                                                             final Class[] elementConstructorArgTypes,
-                                                             final Object... elementConstructorArgs) {
+    @SuppressWarnings("rawtypes")
+    public static <T, S extends StructuredArray<T>> S newSubclassInstance(
+            final Class<S> arrayClass,
+            final Class<T> elementClass,
+            final long[] lengths,
+            final Class[] elementConstructorArgTypes,
+            final Object... elementConstructorArgs) {
         try {
-            CtorAndArgs<StructuredArray<T>> arrayCtorAndArgs =
-                    new CtorAndArgs<StructuredArray<T>>(((Class<StructuredArray<T>>)arrayClass).getConstructor(),
-                            EMPTY_ARGS);
+            Constructor<S> ctor = arrayClass.getConstructor();
+            CtorAndArgs<S> arrayCtorAndArgs = new CtorAndArgs<S>(ctor, EMPTY_ARGS);
             return newSubclassInstance(arrayCtorAndArgs, elementClass, lengths,
                     elementConstructorArgTypes, elementConstructorArgs);
         } catch (NoSuchMethodException ex) {
@@ -381,11 +388,13 @@ public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T> imp
      * @throws IllegalArgumentException if elementConstructorArgTypes and constructor arguments do not match in length
 
      */
-    public static <T> StructuredArray<T> newSubclassInstance(final CtorAndArgs<? extends StructuredArray<T>> arrayCtorAndArgs,
-                                                             final Class<T> elementClass,
-                                                             final long[] lengths,
-                                                             final Class[] elementConstructorArgTypes,
-                                                             final Object... elementConstructorArgs) {
+    @SuppressWarnings("rawtypes")
+    public static <T, S extends StructuredArray<T>> S newSubclassInstance(
+            final CtorAndArgs<S> arrayCtorAndArgs,
+            final Class<T> elementClass, 
+            final long[] lengths,
+            final Class[] elementConstructorArgTypes,
+            final Object... elementConstructorArgs) {
         try {
             final CtorAndArgsProvider<T> ctorAndArgsProvider =
                     new SingletonCtorAndArgsProvider<T>(elementClass, elementConstructorArgTypes, elementConstructorArgs);
@@ -419,15 +428,15 @@ public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T> imp
      * @param arrayClass of the array to create.
      * @param ctorAndArgsProvider produces element constructors [potentially] on a per element basis.
      * @param lengths of the array dimensions to create.
+     * @return
      */
-    @SuppressWarnings("unchecked")
-    public static <T> StructuredArray<T> newSubclassInstance(final Class<? extends StructuredArray<T>> arrayClass,
-                                                             final CtorAndArgsProvider<T> ctorAndArgsProvider,
-                                                             final long... lengths) {
+    public static <T, S extends StructuredArray<T>> S newSubclassInstance(
+            final Class<S> arrayClass,
+            final CtorAndArgsProvider<T> ctorAndArgsProvider,
+            final long... lengths) {
         try {
-            CtorAndArgs<StructuredArray<T>> arrayCtorAndArgs =
-                    new CtorAndArgs<StructuredArray<T>>(((Class<StructuredArray<T>>)arrayClass).getConstructor(),
-                            EMPTY_ARGS);
+            Constructor<S> ctor = arrayClass.getConstructor();
+            CtorAndArgs<S> arrayCtorAndArgs = new CtorAndArgs<S>(ctor, EMPTY_ARGS);
             return instantiate(arrayCtorAndArgs, ctorAndArgsProvider, lengths);
         } catch (NoSuchMethodException ex) {
             throw new RuntimeException(ex);
@@ -445,9 +454,10 @@ public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T> imp
      * @param ctorAndArgsProvider produces element constructors [potentially] on a per element basis.
      * @param lengths of the array dimensions to create.
      */
-    public static <T> StructuredArray<T> newSubclassInstance(final CtorAndArgs<? extends StructuredArray<T>> arrayCtorAndArgs,
-                                                             final CtorAndArgsProvider<T> ctorAndArgsProvider,
-                                                             final long... lengths) {
+    public static <T, S extends StructuredArray<T>> S newSubclassInstance(
+            final CtorAndArgs<S> arrayCtorAndArgs,
+            final CtorAndArgsProvider<T> ctorAndArgsProvider,
+            final long... lengths) {
         return instantiate(arrayCtorAndArgs, ctorAndArgsProvider, lengths);
     }
 
@@ -500,23 +510,26 @@ public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T> imp
         return instantiate(arrayCtorAndArgs, ctorAndArgsProvider, counts);
     }
 
-    @SuppressWarnings("unchecked")
-    private static <T> StructuredArray<T> instantiate(final int dimensionCount,
-                                                      final CtorAndArgsProvider ctorAndArgsProvider,
-                                                      final long... lengths) throws NoSuchMethodException {
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    private static <T, S extends StructuredArray<T>> S instantiate(
+            final int dimensionCount,
+            final CtorAndArgsProvider<T> ctorAndArgsProvider,
+            final long... lengths) throws NoSuchMethodException {
         Class arrayClass = StructuredArray.class;
-        CtorAndArgs<StructuredArray<T>> arrayCtorAndArgs =
-                new CtorAndArgs<StructuredArray<T>>(arrayClass.getConstructor(), EMPTY_ARGS);
+        CtorAndArgs<S> arrayCtorAndArgs =
+                new CtorAndArgs<S>(arrayClass.getConstructor(), EMPTY_ARGS);
         return instantiate(arrayCtorAndArgs, ctorAndArgsProvider, lengths);
     }
 
-    private static <T> StructuredArray<T> instantiate(CtorAndArgs<? extends StructuredArray<T>> arrayCtorAndArgs,
-                                                      final CtorAndArgsProvider<T> ctorAndArgsProvider,
-                                                      final long[] lengths) {
+    private static <T, S extends StructuredArray<T>> S instantiate(
+            final CtorAndArgs<S> arrayCtorAndArgs,
+            final CtorAndArgsProvider<T> ctorAndArgsProvider,
+            final long[] lengths) {
         return StructuredArrayIntrinsifiableBase.instantiateStructuredArray(arrayCtorAndArgs,
                 ctorAndArgsProvider, lengths);
     }
 
+    @SuppressWarnings("rawtypes")
     public StructuredArray() {
         checkConstructorMagic();
         // Extract locally needed args from constructor magic:
@@ -964,6 +977,7 @@ public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T> imp
      * @throws IllegalStateException if final fields are discovered.
      * @throws ArrayStoreException if the element classes in src and dst are not identical.
      */
+    @SuppressWarnings("rawtypes")
     public static void shallowCopy(final StructuredArray src, final long srcOffset,
                                    final StructuredArray dst, final long dstOffset,
                                    final long count) {
@@ -989,6 +1003,7 @@ public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T> imp
      * if final fields are discovered and all allowFinalFieldOverwrite is not true.
      * @throws ArrayStoreException if the element classes in src and dst are not identical.
      */
+    @SuppressWarnings("rawtypes")
     public static void shallowCopy(final StructuredArray src, final long srcOffset,
                                    final StructuredArray dst, final long dstOffset,
                                    final long count,

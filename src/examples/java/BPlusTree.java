@@ -330,7 +330,7 @@ public class BPlusTree<K, V> implements Iterable<Map.Entry<K, V>> {
         }
 
         public static Leaf newInstance(int nodeSize) {
-            return (Leaf) newSubclassInstance(Leaf.class, Entry.class, nodeSize);
+            return newSubclassInstance(Leaf.class, Entry.class, nodeSize);
         }
     }
     
@@ -738,7 +738,7 @@ public class BPlusTree<K, V> implements Iterable<Map.Entry<K, V>> {
         
         private static Branch newInstance(Node left, Node right, int nodeSize) {
             
-            Branch branch = (Branch) newInstance(nodeSize);
+            Branch branch = newInstance(nodeSize);
             
             branch.setChild(0, left);
             branch.setChild(1, right.firstKey());
@@ -750,7 +750,7 @@ public class BPlusTree<K, V> implements Iterable<Map.Entry<K, V>> {
 
         private static Branch newInstance(int nodeSize) {
             int length = (nodeSize * 2) + 1;
-            return (Branch) newSubclassInstance(Branch.class, Ref.class, length);
+            return newSubclassInstance(Branch.class, Ref.class, length);
         }
 
     }

@@ -63,22 +63,25 @@ class StructuredArrayIntrinsifiableBase<T> {
      * OPTIMIZATION NOTE: Optimized JDK implementations may replace this implementation with one that
      * allocates room for the entire StructuredArray and all it's elements.
      */
-    static <T> StructuredArray<T> instantiateStructuredArray(CtorAndArgs<? extends StructuredArray<T>> arrayCtorAndArgs,
-                                                      final CtorAndArgsProvider<T> ctorAndArgsProvider,
-                                                      final long[] lengths) {
+    static <T, S extends StructuredArray<T>> S instantiateStructuredArray(
+            final CtorAndArgs<S> arrayCtorAndArgs,
+            final CtorAndArgsProvider<T> ctorAndArgsProvider,
+            final long[] lengths) {
 
-        // For implementations that need the array class and the element class, this is how
+        // For implementations that need the array class and the element class,
+        // this is how
         // how to get them:
         //
-        // Class<? extends StructuredArray<T>> arrayClass = arrayConstructor.getDeclaringClass();
+        // Class<? extends StructuredArray<T>> arrayClass =
+        // arrayConstructor.getDeclaringClass();
         // Class<T> elementClass = ctorAndArgsProvider.getElementClass();
 
         ConstructorMagic constructorMagic = getConstructorMagic();
-        constructorMagic.setArrayConstructionArgs(
-                new ArrayConstructionArgs(arrayCtorAndArgs, ctorAndArgsProvider, lengths, null));
+        constructorMagic.setArrayConstructionArgs(new ArrayConstructionArgs(
+                arrayCtorAndArgs, ctorAndArgsProvider, lengths, null));
         constructorMagic.setActive(true);
         try {
-            Constructor<? extends StructuredArray<T>> arrayConstructor = arrayCtorAndArgs.getConstructor();
+            Constructor<S> arrayConstructor = arrayCtorAndArgs.getConstructor();
             arrayConstructor.setAccessible(true);
             return arrayConstructor.newInstance(arrayCtorAndArgs.getArgs());
 
