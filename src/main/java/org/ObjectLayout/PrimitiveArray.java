@@ -15,21 +15,18 @@ abstract public class PrimitiveArray {
         return newSubclassInstance(PrimitiveArray.class, length);
     }
 
-    @SuppressWarnings("unchecked")
-    public static PrimitiveArray newSubclassInstance(final Class<? extends PrimitiveArray> arrayClass,
-                                                     final long length) {
+    public static <A extends PrimitiveArray> A newSubclassInstance(final Class<A> arrayClass,
+                                                                   final long length) {
         try {
-            CtorAndArgs<? extends PrimitiveArray> arrayCtorAndArgs =
-                    new CtorAndArgs<PrimitiveArray>(((Class<PrimitiveArray>)arrayClass).getConstructor(),
-                            EMPTY_ARGS);
+            CtorAndArgs<A> arrayCtorAndArgs = new CtorAndArgs<A>(arrayClass.getConstructor(), EMPTY_ARGS);
             return instantiate(arrayCtorAndArgs, length);
         } catch (NoSuchMethodException ex) {
             throw new RuntimeException(ex);
         }
     }
 
-    public static PrimitiveArray newSubclassInstance(final CtorAndArgs<? extends PrimitiveArray> arrayCtorAndArgs,
-                                                     final long length) {
+    public static <A extends PrimitiveArray> A newSubclassInstance(final CtorAndArgs<A> arrayCtorAndArgs,
+                                                                   final long length) {
         try {
             return instantiate(arrayCtorAndArgs, length);
         } catch (NoSuchMethodException ex) {
@@ -37,24 +34,20 @@ abstract public class PrimitiveArray {
         }
     }
 
-    @SuppressWarnings("unchecked")
-    public static PrimitiveArray newSubclassInstance(final Class<? extends PrimitiveArray> arrayClass,
-                                                     final long length,
-                                                     final Class[] arrayConstructorArgTypes,
-                                                     final Object... arrayConstructorArgs) {
+    public static <A extends PrimitiveArray> A newSubclassInstance(final Class<A> arrayClass,
+                                                                   final long length,
+                                                                   final Class[] arrayConstructorArgTypes,
+                                                                   final Object... arrayConstructorArgs) {
         try {
-            final Constructor<? extends PrimitiveArray> constructor =
-                    arrayClass.getConstructor(arrayConstructorArgTypes);
-            CtorAndArgs<? extends PrimitiveArray> arrayCtorAndArgs =
-                    new CtorAndArgs<PrimitiveArray>((Constructor<PrimitiveArray>)constructor,
-                            arrayConstructorArgs);
+            final Constructor<A> constructor = arrayClass.getConstructor(arrayConstructorArgTypes);
+            CtorAndArgs<A> arrayCtorAndArgs = new CtorAndArgs<A>(constructor, arrayConstructorArgs);
             return instantiate(arrayCtorAndArgs, length);
         } catch (NoSuchMethodException ex) {
             throw new RuntimeException(ex);
         }
     }
 
-    private static PrimitiveArray instantiate(final CtorAndArgs<? extends PrimitiveArray> arrayCtorAndArgs,
+    private static <A extends PrimitiveArray> A instantiate(final CtorAndArgs<A> arrayCtorAndArgs,
                                               final long length) throws NoSuchMethodException {
         ConstructorMagic constructorMagic = getConstructorMagic();
         constructorMagic.setArrayConstructorArgs(arrayCtorAndArgs, length);

@@ -32,7 +32,7 @@ public class PrimitiveShortArray extends PrimitiveArray {
     }
 
     public static PrimitiveShortArray newInstance(final long length) {
-        return (PrimitiveShortArray) PrimitiveArray.newSubclassInstance(PrimitiveShortArray.class, length);
+        return PrimitiveArray.newSubclassInstance(PrimitiveShortArray.class, length);
     }
 
     @Override
