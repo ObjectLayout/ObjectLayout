@@ -21,9 +21,35 @@ public class BPlusTree<K, V> implements Iterable<Map.Entry<K, V>> {
     private Node root;
     private int size;
 
+    static <T> CtorAndArgs<T> defaultCtorAndArgs(Class<T> clazz) {
+        try {
+            return new CtorAndArgs<T>(clazz, new Class[0]);
+        } catch (NoSuchMethodException e) {
+            throw new RuntimeException();
+        }
+    }
+
+    private static <T> CtorAndArgsProvider<T> defaultProvider(final Class<T> clazz) {
+        try {
+            return new CtorAndArgsProvider<T>(clazz) {
+                @Override
+                public CtorAndArgs<T> getForIndex(long... index)
+                        throws NoSuchMethodException {
+                    return defaultCtorAndArgs(clazz);
+                }
+            };
+        } catch (NoSuchMethodException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    static final CtorAndArgs<Leaf> LEAF_CTOR_AND_ARGS = defaultCtorAndArgs(Leaf.class);
+    static final CtorAndArgsProvider<Entry> ENTRY_PROVIDER = defaultProvider(Entry.class);
+
     public BPlusTree(int nodeSize) {
         this(nodeSize, null);
     }
+
 
     public BPlusTree(int nodeSize, Comparator<K> comparator) {
         this.nodeSize = nodeSize;
@@ -144,8 +170,8 @@ public class BPlusTree<K, V> implements Iterable<Map.Entry<K, V>> {
         private final int capacity;
         private Leaf next;
 
-        public Leaf(int nodeSize) {
-            capacity = nodeSize;
+        public Leaf() {
+            capacity = (int) this.getLength();
         }
 
         public Object put(Comparator comparator, Object key, Object val) {
@@ -335,40 +361,7 @@ public class BPlusTree<K, V> implements Iterable<Map.Entry<K, V>> {
         }
 
         public static Leaf newInstance(int nodeSize) {
-
-            try {
-                LeafCtorAndArgs args = new LeafCtorAndArgs(nodeSize);
-                EntryCtorAndArgsProvider provider = new EntryCtorAndArgsProvider();
-
-                return (Leaf) StructuredArray.newSubclassInstance(args, provider, nodeSize);
-            } catch (NoSuchMethodException e) {
-                throw new RuntimeException(e);
-            }
-        }
-    }
-
-    static class LeafCtorAndArgs extends CtorAndArgs<Leaf> {
-        public LeafCtorAndArgs(int size)
-                throws NoSuchMethodException {
-            super(Leaf.class, new Class[] { int.class }, size);
-        }
-    }
-
-    static class EntryCtorAndArgs extends CtorAndArgs<Entry> {
-        public EntryCtorAndArgs() throws NoSuchMethodException {
-            super(Entry.class, new Class[0], new Object[0]);
-        }
-    }
-
-    static class EntryCtorAndArgsProvider extends CtorAndArgsProvider<Entry> {
-        public EntryCtorAndArgsProvider() throws NoSuchMethodException {
-            super(Entry.class);
-        }
-
-        @Override
-        public CtorAndArgs<Entry> getForIndex(long... index)
-                throws NoSuchMethodException {
-            return new EntryCtorAndArgs();
+            return (Leaf) newSubclassInstance(LEAF_CTOR_AND_ARGS, ENTRY_PROVIDER, nodeSize);
         }
     }
 
