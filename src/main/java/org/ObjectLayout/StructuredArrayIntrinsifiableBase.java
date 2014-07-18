@@ -79,6 +79,7 @@ class StructuredArrayIntrinsifiableBase<T> {
         constructorMagic.setActive(true);
         try {
             Constructor<? extends StructuredArray<T>> arrayConstructor = arrayCtorAndArgs.getConstructor();
+            arrayConstructor.setAccessible(true);
             return arrayConstructor.newInstance(arrayCtorAndArgs.getArgs());
 
         } catch (InstantiationException ex) {
@@ -274,6 +275,23 @@ class StructuredArrayIntrinsifiableBase<T> {
         }
     }
 
+    T[] getIntAddressableElements() {
+        return intAddressableElements; 
+    }
+    
+    StructuredArray<T>[] getIntAddressableSubArrays() {
+        return intAddressableSubArrays;
+    }
+    
+    T[][] getLongAddressableElements() {
+        return longAddressableElements;
+    }
+    
+    StructuredArray<T>[][] getLongAddressableSubArrays() {
+        return longAddressableSubArrays;
+    }
+
+    
     /**
      * Get a StructuredArray Sub array at a supplied index in a StructuredArray
      *
