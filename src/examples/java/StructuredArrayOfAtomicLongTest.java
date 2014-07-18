@@ -89,9 +89,9 @@ public class StructuredArrayOfAtomicLongTest {
     public void shouldThrowOutOfBoundExceptionForAccessesOutOfBounds() throws NoSuchMethodException {
         final long length = 111;
         final StructuredArrayOfAtomicLong array =
-                StructuredArrayOfAtomicLong.newInstance(111);
+                StructuredArrayOfAtomicLong.newInstance(length);
 
-        array.get(111);
+        array.get(length);
     }
 
     @Test(expected = IllegalArgumentException.class)

@@ -13,8 +13,7 @@ import java.util.concurrent.atomic.AtomicLong;
 public class StructuredArrayOfAtomicLong extends StructuredArray<AtomicLong> {
 
     public static StructuredArrayOfAtomicLong newInstance(final long length) {
-        return (StructuredArrayOfAtomicLong)
-                StructuredArray.newSubclassInstance(StructuredArrayOfAtomicLong.class, AtomicLong.class, length);
+        return StructuredArray.newSubclassInstance(StructuredArrayOfAtomicLong.class, AtomicLong.class, length);
     }
 
     public AtomicLong get(long index) {

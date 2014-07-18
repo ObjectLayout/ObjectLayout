@@ -227,8 +227,8 @@ public class StructuredArrayOfPointTest {
         final StructuredArrayOfPoint array =
                 StructuredArrayOfPoint.newInstance(11,7,4);
 
-        StructuredArrayOfPoint subArray1 = (StructuredArrayOfPoint) array.getSubArray(2);
-        StructuredArrayOfPoint subArray2 = (StructuredArrayOfPoint) subArray1.getSubArray(2);
+        StructuredArrayOfPoint subArray1 = array.getSubArray(2);
+        StructuredArrayOfPoint subArray2 = subArray1.getSubArray(2);
         subArray2.getSubArray(2);
     }
 
@@ -240,8 +240,8 @@ public class StructuredArrayOfPointTest {
                 StructuredArrayOfPoint.newInstance(lengths);
 
         // Step by step gets of the correct type (array vs. element) per dimension:
-        StructuredArrayOfPoint subArray1 = (StructuredArrayOfPoint) array.getSubArray(2);
-        StructuredArrayOfPoint subArray2 = (StructuredArrayOfPoint) subArray1.getSubArray(2);
+        StructuredArrayOfPoint subArray1 = array.getSubArray(2);
+        StructuredArrayOfPoint subArray2 = subArray1.getSubArray(2);
         subArray2.get(2);
 
         // The end result of the above is equivalent to this:
