@@ -79,6 +79,7 @@ class StructuredArrayIntrinsifiableBase<T> {
         constructorMagic.setActive(true);
         try {
             Constructor<? extends StructuredArray<T>> arrayConstructor = arrayCtorAndArgs.getConstructor();
+            arrayConstructor.setAccessible(true);
             return arrayConstructor.newInstance(arrayCtorAndArgs.getArgs());
 
         } catch (InstantiationException ex) {
