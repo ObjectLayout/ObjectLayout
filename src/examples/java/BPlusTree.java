@@ -9,8 +9,6 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
-import org.ObjectLayout.CtorAndArgs;
-import org.ObjectLayout.CtorAndArgsProvider;
 import org.ObjectLayout.StructuredArray;
 
 @SuppressWarnings("rawtypes")
@@ -20,31 +18,6 @@ public class BPlusTree<K, V> implements Iterable<Map.Entry<K, V>> {
     private final Leaf firstNode;
     private Node root;
     private int size;
-
-    static <T> CtorAndArgs<T> defaultCtorAndArgs(Class<T> clazz) {
-        try {
-            return new CtorAndArgs<T>(clazz, new Class[0]);
-        } catch (NoSuchMethodException e) {
-            throw new RuntimeException();
-        }
-    }
-
-    private static <T> CtorAndArgsProvider<T> defaultProvider(final Class<T> clazz) {
-        try {
-            return new CtorAndArgsProvider<T>(clazz) {
-                @Override
-                public CtorAndArgs<T> getForIndex(long... index)
-                        throws NoSuchMethodException {
-                    return defaultCtorAndArgs(clazz);
-                }
-            };
-        } catch (NoSuchMethodException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    static final CtorAndArgs<Leaf> LEAF_CTOR_AND_ARGS = defaultCtorAndArgs(Leaf.class);
-    static final CtorAndArgsProvider<Entry> ENTRY_PROVIDER = defaultProvider(Entry.class);
 
     public BPlusTree(int nodeSize) {
         this(nodeSize, null);
@@ -361,7 +334,7 @@ public class BPlusTree<K, V> implements Iterable<Map.Entry<K, V>> {
         }
 
         public static Leaf newInstance(int nodeSize) {
-            return (Leaf) newSubclassInstance(LEAF_CTOR_AND_ARGS, ENTRY_PROVIDER, nodeSize);
+            return (Leaf) newSubclassInstance(Leaf.class, Entry.class, nodeSize);
         }
     }
 
