@@ -335,11 +335,6 @@ public class BPlusTree<K, V> implements Iterable<Map.Entry<K, V>> {
         }
     }
     
-    static class Ref
-    {
-        Object t;
-    }
-
     static class Branch extends ReferenceArray<Object> implements Node {
         private final int capacity;
         private int size = 0;
