@@ -5,6 +5,8 @@
 
 package org.ObjectLayout;
 
+import java.lang.reflect.Field;
+
 public class ReferenceArray<T> extends PrimitiveArray {
 
     private T[] array;
@@ -50,5 +52,17 @@ public class ReferenceArray<T> extends PrimitiveArray {
         if (index > array.length) {
             throw new ArrayIndexOutOfBoundsException();
         }
+    }
+    
+    public static <T> void shallowCopy(
+            final ReferenceArray<T> src, final long srcOffset, 
+            final ReferenceArray<T> dst, final long dstOffset, 
+            final long count) {
+        
+        int length = (int) count;
+        int srcOff = (int) srcOffset;
+        int dstOff = (int) dstOffset;
+        
+        System.arraycopy(src.array, srcOff, dst.array, dstOff, length);
     }
 }
