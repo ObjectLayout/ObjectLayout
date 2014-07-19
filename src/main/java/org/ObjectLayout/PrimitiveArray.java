@@ -11,10 +11,6 @@ import java.lang.reflect.InvocationTargetException;
 abstract public class PrimitiveArray {
     private static final Object[] EMPTY_ARGS = new Object[0];
 
-    public static PrimitiveArray newInstance(final long length) {
-        return newSubclassInstance(PrimitiveArray.class, length);
-    }
-
     public static <A extends PrimitiveArray> A newSubclassInstance(final Class<A> arrayClass,
                                                                    final long length) {
         try {
@@ -53,7 +49,9 @@ abstract public class PrimitiveArray {
         constructorMagic.setArrayConstructorArgs(arrayCtorAndArgs, length);
         constructorMagic.setActive(true);
         try {
-            return arrayCtorAndArgs.getConstructor().newInstance(arrayCtorAndArgs.getArgs());
+            A array = arrayCtorAndArgs.getConstructor().newInstance(arrayCtorAndArgs.getArgs());
+            array.initializePrimitiveArray(length);
+            return array;
         } catch (InstantiationException ex) {
             throw new RuntimeException(ex);
         } catch (IllegalAccessException ex) {
