@@ -58,6 +58,10 @@ public class ReferenceArray<T> extends PrimitiveArray {
             final ReferenceArray<T> dst, final long dstOffset, 
             final long count) {
         
+        if (srcOffset + count > Integer.MAX_VALUE || dstOffset + count > Integer.MAX_VALUE) {
+            throw new ArrayIndexOutOfBoundsException();
+        }
+        
         int length = (int) count;
         int srcOff = (int) srcOffset;
         int dstOff = (int) dstOffset;
