@@ -1,3 +1,8 @@
+/*
+ * Written by Gil Tene, Martin Thompson and Michael Barker, and released 
+ * to the public domain, as explained at:
+ * http://creativecommons.org/publicdomain/zero/1.0/
+ */
 
 import java.util.Comparator;
 import java.util.Iterator;
