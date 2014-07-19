@@ -10,7 +10,11 @@ public class ReferenceArrayTest {
     public static class Stack extends ReferenceArray<Object> {
         private int size = 0;
         private final long capacity;
-        
+
+        public static Stack newInstance(final long length) {
+            return ReferenceArray.newSubclassInstance(Stack.class, length);
+        }
+
         public Stack() {
             this.capacity = getLength();
         }
@@ -40,7 +44,7 @@ public class ReferenceArrayTest {
     
     @Test
     public void pushesAndPops() throws Exception {
-        Stack s = ReferenceArray.newSubclassInstance(Stack.class, 10);
+        Stack s = Stack.newInstance(10);
         
         String foo = "foo";
         
