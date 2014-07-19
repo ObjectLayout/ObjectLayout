@@ -4,6 +4,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
+import org.ObjectLayout.ReferenceArray;
 import org.ObjectLayout.StructuredArray;
 
 @SuppressWarnings("rawtypes")
@@ -339,7 +340,7 @@ public class BPlusTree<K, V> implements Iterable<Map.Entry<K, V>> {
         Object t;
     }
 
-    static class Branch extends StructuredArray<Ref> implements Node {
+    static class Branch extends ReferenceArray<Object> implements Node {
         private final int capacity;
         private int size = 0;
 
@@ -349,11 +350,11 @@ public class BPlusTree<K, V> implements Iterable<Map.Entry<K, V>> {
         
         private void setChild(int i, Object o)
         {
-            get(i).t = o;
+            set(i, o);
         }
         
         private Object getChild(int i) {
-            return get(i).t;
+            return get(i);
         }
 
         @Override
@@ -750,9 +751,8 @@ public class BPlusTree<K, V> implements Iterable<Map.Entry<K, V>> {
 
         private static Branch newInstance(int nodeSize) {
             int length = (nodeSize * 2) + 1;
-            return newSubclassInstance(Branch.class, Ref.class, length);
+            return ReferenceArray.newSubclassInstance(Branch.class, length);
         }
-
     }
 
     interface Node {
