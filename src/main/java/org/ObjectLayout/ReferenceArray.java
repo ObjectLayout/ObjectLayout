@@ -5,7 +5,6 @@
 
 package org.ObjectLayout;
 
-import java.lang.reflect.Field;
 
 public class ReferenceArray<T> extends PrimitiveArray {
 
