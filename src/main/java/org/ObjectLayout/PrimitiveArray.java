@@ -111,7 +111,6 @@ abstract public class PrimitiveArray {
         return length;
     }
 
-    @SuppressWarnings("unchecked")
     private static ConstructorMagic getConstructorMagic() {
         ConstructorMagic constructorMagic = threadLocalConstructorMagic.get();
         if (constructorMagic == null) {
@@ -121,7 +120,6 @@ abstract public class PrimitiveArray {
         return constructorMagic;
     }
 
-    @SuppressWarnings("unchecked")
     private static void checkConstructorMagic() {
         final ConstructorMagic constructorMagic = threadLocalConstructorMagic.get();
         if ((constructorMagic == null) || !constructorMagic.isActive()) {
