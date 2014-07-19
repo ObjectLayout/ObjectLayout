@@ -66,7 +66,7 @@ abstract public class PrimitiveArray {
     }
 
     PrimitiveArray() {
-        final long length = getConstructorMagic().getLength();
+        length = getConstructorMagic().getLength();
     }
 
     // Abstract methods:
@@ -105,6 +105,11 @@ abstract public class PrimitiveArray {
     }
 
     private static final ThreadLocal<ConstructorMagic> threadLocalConstructorMagic = new ThreadLocal<ConstructorMagic>();
+    private final long length;
+    
+    public long getLength() {
+        return length;
+    }
 
     @SuppressWarnings("unchecked")
     private static ConstructorMagic getConstructorMagic() {

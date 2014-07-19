@@ -31,10 +31,10 @@ public class ReferenceArray<T> extends PrimitiveArray {
         array[(int) index] = value;
     }
 
-    @SuppressWarnings("unchecked")
-    public static <T> ReferenceArray<T> newInstance(final long length) {
-        return PrimitiveArray.newSubclassInstance(ReferenceArray.class, length);
-    }
+//    @SuppressWarnings("unchecked")
+//    public static <T> ReferenceArray<T> newInstance(final long length) {
+//        return PrimitiveArray.newSubclassInstance(ReferenceArray.class, length);
+//    }
 
     @Override
     final void initializePrimitiveArray(final long length) {
