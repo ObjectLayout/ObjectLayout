@@ -49,7 +49,9 @@ abstract public class PrimitiveArray {
         constructorMagic.setArrayConstructorArgs(arrayCtorAndArgs, length);
         constructorMagic.setActive(true);
         try {
-            A array = arrayCtorAndArgs.getConstructor().newInstance(arrayCtorAndArgs.getArgs());
+            Constructor<A> ctor = arrayCtorAndArgs.getConstructor();
+            ctor.setAccessible(true);
+            A array = ctor.newInstance(arrayCtorAndArgs.getArgs());
             array.initializePrimitiveArray(length);
             return array;
         } catch (InstantiationException ex) {
