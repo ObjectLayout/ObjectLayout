@@ -29,8 +29,7 @@ public class ReferenceArrayTest {
                 throw new IndexOutOfBoundsException();
             }
             
-            Object o = get(size);
-            size--;
+            Object o = get(--size);
             return o;
         }
         
