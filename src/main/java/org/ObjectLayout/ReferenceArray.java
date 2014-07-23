@@ -5,6 +5,7 @@
 
 package org.ObjectLayout;
 
+
 public class ReferenceArray<T> extends PrimitiveArray {
 
     private T[] array;
@@ -50,5 +51,21 @@ public class ReferenceArray<T> extends PrimitiveArray {
         if (index > array.length) {
             throw new ArrayIndexOutOfBoundsException();
         }
+    }
+    
+    public static <T> void shallowCopy(
+            final ReferenceArray<T> src, final long srcOffset, 
+            final ReferenceArray<T> dst, final long dstOffset, 
+            final long count) {
+        
+        if (srcOffset + count > Integer.MAX_VALUE || dstOffset + count > Integer.MAX_VALUE) {
+            throw new ArrayIndexOutOfBoundsException();
+        }
+        
+        int length = (int) count;
+        int srcOff = (int) srcOffset;
+        int dstOff = (int) dstOffset;
+        
+        System.arraycopy(src.array, srcOff, dst.array, dstOff, length);
     }
 }

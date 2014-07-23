@@ -49,7 +49,9 @@ abstract public class PrimitiveArray {
         constructorMagic.setArrayConstructorArgs(arrayCtorAndArgs, length);
         constructorMagic.setActive(true);
         try {
-            A array = arrayCtorAndArgs.getConstructor().newInstance(arrayCtorAndArgs.getArgs());
+            Constructor<A> ctor = arrayCtorAndArgs.getConstructor();
+            ctor.setAccessible(true);
+            A array = ctor.newInstance(arrayCtorAndArgs.getArgs());
             array.initializePrimitiveArray(length);
             return array;
         } catch (InstantiationException ex) {
@@ -109,7 +111,6 @@ abstract public class PrimitiveArray {
         return length;
     }
 
-    @SuppressWarnings("unchecked")
     private static ConstructorMagic getConstructorMagic() {
         ConstructorMagic constructorMagic = threadLocalConstructorMagic.get();
         if (constructorMagic == null) {
@@ -119,7 +120,6 @@ abstract public class PrimitiveArray {
         return constructorMagic;
     }
 
-    @SuppressWarnings("unchecked")
     private static void checkConstructorMagic() {
         final ConstructorMagic constructorMagic = threadLocalConstructorMagic.get();
         if ((constructorMagic == null) || !constructorMagic.isActive()) {
