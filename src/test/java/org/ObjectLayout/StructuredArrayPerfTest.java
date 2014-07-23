@@ -133,7 +133,7 @@ public class StructuredArrayPerfTest {
                 new DefaultMockCtorAndArgsProvider();
 
 
-        array = StructuredArray.newInstance(ctorAndArgsProvider, length);
+        array = StructuredArray.newInstance(MockStructure.class, ctorAndArgsProvider, length);
         subclassedArray = StructuredArrayOfMockStructure.newInstance(ctorAndArgsProvider, length);
         encapsulatedArray = new EncapsulatedArray(length);
         genericEncapsulatedArray = new GenericEncapsulatedArray<MockStructure>(ctorAndArgsProvider, length);
@@ -345,8 +345,7 @@ public class StructuredArrayPerfTest {
     public static class StructuredArrayOfMockStructure extends StructuredArray<MockStructure> {
         public static StructuredArrayOfMockStructure newInstance(
                 final CtorAndArgsProvider<MockStructure> ctorAndArgsProvider,final long length) {
-            return (StructuredArrayOfMockStructure)
-                    StructuredArray.newSubclassInstance(StructuredArrayOfMockStructure.class, ctorAndArgsProvider, length);
+            return StructuredArray.newSubclassInstance(StructuredArrayOfMockStructure.class, ctorAndArgsProvider, length);
         }
 
     }

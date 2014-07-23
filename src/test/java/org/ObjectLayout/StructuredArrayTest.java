@@ -75,13 +75,13 @@ public class StructuredArrayTest {
         final CtorAndArgsProvider<MockStructure> ctorAndArgsProvider =
                 new DefaultMockCtorAndArgsProvider();
         final StructuredArray<MockStructure> array =
-                StructuredArray.newInstance(ctorAndArgsProvider, lengths);
+                StructuredArray.newInstance(MockStructure.class, ctorAndArgsProvider, lengths);
 
         assertCorrectVariableInitialisation(lengths, array);
 
         final long[] lengths2 = {8};
         final StructuredArray<MockStructure> array2 =
-                StructuredArray.newInstance(ctorAndArgsProvider, lengths2);
+                StructuredArray.newInstance(MockStructure.class, ctorAndArgsProvider, lengths2);
 
         assertCorrectVariableInitialisation(lengths, array);
     }
@@ -178,7 +178,7 @@ public class StructuredArrayTest {
         final CtorAndArgsProvider<MockStructure> ctorAndArgsProvider =
                 new DefaultMockCtorAndArgsProvider();
         final StructuredArray<MockStructure> sourceArray =
-                StructuredArray.newInstance(ctorAndArgsProvider, lengths);
+                StructuredArray.newInstance(MockStructure.class, ctorAndArgsProvider, lengths);
 
         assertThat(valueOf(sourceArray.getLength()), is(valueOf(lengths[0])));
         assertThat(valueOf(sourceArray.getTotalElementCount()), is(valueOf(lengths[0] * lengths[1] * lengths[2])));
@@ -197,7 +197,7 @@ public class StructuredArrayTest {
         final CtorAndArgsProvider<MockStructure> ctorAndArgsProvider =
                 new DefaultMockCtorAndArgsProvider();
         final StructuredArray<MockStructure> sourceArray =
-                StructuredArray.newInstance(ctorAndArgsProvider, lengths);
+                StructuredArray.newInstance(MockStructure.class, ctorAndArgsProvider, lengths);
 
         assertThat(valueOf(sourceArray.getLength()), is(valueOf(lengths[0])));
         assertThat(valueOf(sourceArray.getTotalElementCount()), is(valueOf(lengths[0] * lengths[1] * lengths[2])));

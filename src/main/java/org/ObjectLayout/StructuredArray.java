@@ -65,7 +65,7 @@ public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T> imp
             final long length) throws NoSuchMethodException {
         final CtorAndArgsProvider<T> ctorAndArgsProvider = new SingletonCtorAndArgsProvider<T>(elementClass);
         final long[] lengths = {length};
-        return instantiate(lengths.length, ctorAndArgsProvider, lengths);
+        return instantiate(ctorAndArgsProvider, lengths);
     }
 
     /**
@@ -117,14 +117,21 @@ public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T> imp
      * arguments supplied (on a potentially per element index basis) by the specified
      * <code>ctorAndArgsProvider</code> to construct and initialize each element.
      *
+     * @param elementClass of each element in the array
      * @param length of the array to create.
      * @param ctorAndArgsProvider produces element constructors [potentially] on a per element basis.
      * @throws NoSuchMethodException if the element class does not not support a supplied constructor
      */
-    public static <T> StructuredArray<T> newInstance(final CtorAndArgsProvider<T> ctorAndArgsProvider,
+    public static <T> StructuredArray<T> newInstance(final Class<T> elementClass,
+                                                     final CtorAndArgsProvider<T> ctorAndArgsProvider,
                                                      final long length) throws NoSuchMethodException {
+        if (ctorAndArgsProvider.getElementClass() != elementClass) {
+            throw new IllegalArgumentException("ElementClass (" + elementClass +
+                    ") does not match ctorAndArgsProvider.getElementClass() (" +
+                    ctorAndArgsProvider.getElementClass());
+        }
         final long[] lengths = {length};
-        return instantiate(lengths.length, ctorAndArgsProvider, lengths);
+        return instantiate(ctorAndArgsProvider, lengths);
     }
 
     /**
@@ -193,7 +200,7 @@ public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T> imp
         final CtorAndArgsProvider<T> ctorAndArgsProvider =
                 new SingletonCtorAndArgsProvider<T>(elementClass, elementConstructorArgTypes, elementConstructorArgs);
         final long[] lengths = {length};
-        return instantiate(lengths.length, ctorAndArgsProvider, lengths);
+        return instantiate(ctorAndArgsProvider, lengths);
     }
 
     /**
@@ -268,7 +275,7 @@ public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T> imp
     public static <T> StructuredArray<T> newInstance(final Class<T> elementClass,
                                                      final long... lengths) throws NoSuchMethodException {
         final CtorAndArgsProvider<T> ctorAndArgsProvider = new SingletonCtorAndArgsProvider<T>(elementClass);
-        return instantiate(lengths.length, ctorAndArgsProvider, lengths);
+        return instantiate(ctorAndArgsProvider, lengths);
     }
 
     /**
@@ -337,7 +344,7 @@ public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T> imp
                                                      final Object... elementConstructorArgs) throws NoSuchMethodException {
         final CtorAndArgsProvider<T> ctorAndArgsProvider =
                 new SingletonCtorAndArgsProvider<T>(elementClass, elementConstructorArgTypes, elementConstructorArgs);
-        return instantiate(lengths.length, ctorAndArgsProvider, lengths);
+        return instantiate(ctorAndArgsProvider, lengths);
     }
 
     /**
@@ -410,13 +417,20 @@ public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T> imp
      * constructor and arguments supplied (on a potentially per element index basis) by the specified
      * <code>ctorAndArgsProvider</code> to construct and initialize each element.
      *
+     * @param elementClass of each element in the array
      * @param ctorAndArgsProvider produces element constructors [potentially] on a per element basis.
      * @param lengths of the array dimensions to create.
      * @throws NoSuchMethodException if the element class does not not support a supplied constructor
      */
-    public static <T> StructuredArray<T> newInstance(final CtorAndArgsProvider<T> ctorAndArgsProvider,
+    public static <T> StructuredArray<T> newInstance(final Class<T> elementClass,
+                                                     final CtorAndArgsProvider<T> ctorAndArgsProvider,
                                                      final long... lengths) throws NoSuchMethodException {
-        return instantiate(lengths.length, ctorAndArgsProvider, lengths);
+        if (ctorAndArgsProvider.getElementClass() != elementClass) {
+            throw new IllegalArgumentException("ElementClass (" + elementClass +
+                    ") does not match ctorAndArgsProvider.getElementClass() (" +
+                    ctorAndArgsProvider.getElementClass());
+        }
+        return instantiate(ctorAndArgsProvider, lengths);
     }
 
     /**
@@ -512,7 +526,6 @@ public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T> imp
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     private static <T, S extends StructuredArray<T>> S instantiate(
-            final int dimensionCount,
             final CtorAndArgsProvider<T> ctorAndArgsProvider,
             final long... lengths) throws NoSuchMethodException {
         Class arrayClass = StructuredArray.class;
