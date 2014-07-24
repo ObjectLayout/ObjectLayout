@@ -15,7 +15,7 @@ import java.lang.reflect.InvocationTargetException;
  *
  * @param <T>
  */
-class StructuredArrayIntrinsifiableBase<T> {
+abstract class StructuredArrayIntrinsifiableBase<T> {
 
     //
     //
