@@ -21,31 +21,15 @@ public class PrimitiveDoubleArray extends PrimitiveArray {
         array[index] = value;
     }
 
-    public double get(final long index) {
-        checkBounds(index);
-        return array[(int) index];
-    }
-
-    public void set(final long index, final double value) {
-        checkBounds(index);
-        array[(int) index] = value;
-    }
-
-    public static PrimitiveDoubleArray newInstance(final long length) {
+    public static PrimitiveDoubleArray newInstance(final int length) {
         return PrimitiveArray.newSubclassInstance(PrimitiveDoubleArray.class, length);
     }
 
     @Override
-    final void initializePrimitiveArray(final long length) {
+    final void initializePrimitiveArray(final int length) {
         if (length > Integer.MAX_VALUE) {
             throw new IllegalArgumentException("Cannot instantiate array with more than Integer.MAX_VALUE elements");
         }
         array = new double[(int) length];
-    }
-
-    void checkBounds(final long index) {
-        if (index > array.length) {
-            throw new ArrayIndexOutOfBoundsException();
-        }
     }
 }

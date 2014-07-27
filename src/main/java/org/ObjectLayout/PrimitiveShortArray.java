@@ -21,31 +21,15 @@ public class PrimitiveShortArray extends PrimitiveArray {
         array[index] = value;
     }
 
-    public short get(final long index) {
-        checkBounds(index);
-        return get((int) index);
-    }
-
-    public void set(final long index, final short value) {
-        checkBounds(index);
-        set((int) index, value);
-    }
-
-    public static PrimitiveShortArray newInstance(final long length) {
+    public static PrimitiveShortArray newInstance(final int length) {
         return PrimitiveArray.newSubclassInstance(PrimitiveShortArray.class, length);
     }
 
     @Override
-    final void initializePrimitiveArray(final long length) {
+    final void initializePrimitiveArray(final int length) {
         if (length > Integer.MAX_VALUE) {
             throw new IllegalArgumentException("Cannot instantiate array with more than Integer.MAX_VALUE elements");
         }
         array = new short[(int) length];
-    }
-
-    void checkBounds(final long index) {
-        if (index > array.length) {
-            throw new ArrayIndexOutOfBoundsException();
-        }
     }
 }

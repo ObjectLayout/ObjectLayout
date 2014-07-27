@@ -12,7 +12,7 @@ abstract public class PrimitiveArray {
     private static final Object[] EMPTY_ARGS = new Object[0];
 
     public static <A extends PrimitiveArray> A newSubclassInstance(final Class<A> arrayClass,
-                                                                   final long length) {
+                                                                   final int length) {
         try {
             CtorAndArgs<A> arrayCtorAndArgs = new CtorAndArgs<A>(arrayClass.getConstructor(), EMPTY_ARGS);
             return instantiate(arrayCtorAndArgs, length);
@@ -22,7 +22,7 @@ abstract public class PrimitiveArray {
     }
 
     public static <A extends PrimitiveArray> A newSubclassInstance(final CtorAndArgs<A> arrayCtorAndArgs,
-                                                                   final long length) {
+                                                                   final int length) {
         try {
             return instantiate(arrayCtorAndArgs, length);
         } catch (NoSuchMethodException ex) {
@@ -31,7 +31,7 @@ abstract public class PrimitiveArray {
     }
 
     public static <A extends PrimitiveArray> A newSubclassInstance(final Class<A> arrayClass,
-                                                                   final long length,
+                                                                   final int length,
                                                                    final Class[] arrayConstructorArgTypes,
                                                                    final Object... arrayConstructorArgs) {
         try {
@@ -44,7 +44,7 @@ abstract public class PrimitiveArray {
     }
 
     private static <A extends PrimitiveArray> A instantiate(final CtorAndArgs<A> arrayCtorAndArgs,
-                                              final long length) throws NoSuchMethodException {
+                                              final int length) throws NoSuchMethodException {
         ConstructorMagic constructorMagic = getConstructorMagic();
         constructorMagic.setArrayConstructorArgs(arrayCtorAndArgs, length);
         constructorMagic.setActive(true);
@@ -71,7 +71,7 @@ abstract public class PrimitiveArray {
 
     // Abstract methods:
 
-    abstract void initializePrimitiveArray(long length);
+    abstract void initializePrimitiveArray(int length);
 
     // ConstructorMagic support:
 
@@ -85,7 +85,7 @@ abstract public class PrimitiveArray {
         }
 
         public void setArrayConstructorArgs(final CtorAndArgs arrayCtorAndArgs,
-                                            final long length) {
+                                            final int length) {
             this.arrayCtorAndArgs = arrayCtorAndArgs;
             this.length = length;
         }
@@ -94,20 +94,20 @@ abstract public class PrimitiveArray {
             return arrayCtorAndArgs;
         }
 
-        public long getLength() {
+        public int getLength() {
             return length;
         }
 
         private boolean active = false;
 
         private CtorAndArgs arrayCtorAndArgs = null;
-        private long length = 0;
+        private int length = 0;
     }
 
     private static final ThreadLocal<ConstructorMagic> threadLocalConstructorMagic = new ThreadLocal<ConstructorMagic>();
-    private final long length;
+    private final int length;
     
-    public long getLength() {
+    public int getLength() {
         return length;
     }
 

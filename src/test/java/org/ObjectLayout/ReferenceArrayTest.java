@@ -9,9 +9,9 @@ public class ReferenceArrayTest {
 
     public static class Stack extends ReferenceArray<Object> {
         private int size = 0;
-        private final long capacity;
+        private final int capacity;
 
-        public static Stack newInstance(final long length) {
+        public static Stack newInstance(final int length) {
             return ReferenceArray.newSubclassInstance(Stack.class, length);
         }
 

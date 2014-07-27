@@ -21,31 +21,15 @@ public class PrimitiveFloatArray extends PrimitiveArray {
         array[index] = value;
     }
 
-    public float get(final long index) {
-        checkBounds(index);
-        return get((int) index);
-    }
-
-    public void set(final long index, final float value) {
-        checkBounds(index);
-        set((int) index, value);
-    }
-
-    public static PrimitiveFloatArray newInstance(final long length) {
+    public static PrimitiveFloatArray newInstance(final int length) {
         return PrimitiveArray.newSubclassInstance(PrimitiveFloatArray.class, length);
     }
 
     @Override
-    final void initializePrimitiveArray(final long length) {
+    final void initializePrimitiveArray(final int length) {
         if (length > Integer.MAX_VALUE) {
             throw new IllegalArgumentException("Cannot instantiate array with more than Integer.MAX_VALUE elements");
         }
         array = new float[(int) length];
-    }
-
-    void checkBounds(final long index) {
-        if (index > array.length) {
-            throw new ArrayIndexOutOfBoundsException();
-        }
     }
 }

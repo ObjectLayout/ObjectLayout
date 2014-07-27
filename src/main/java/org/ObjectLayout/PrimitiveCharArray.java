@@ -21,31 +21,15 @@ public class PrimitiveCharArray extends PrimitiveArray {
         array[index] = value;
     }
 
-    public char get(final long index) {
-        checkBounds(index);
-        return array[(int) index];
-    }
-
-    public void set(final long index, final char value) {
-        checkBounds(index);
-        array[(int) index] = value;
-    }
-
-    public static PrimitiveCharArray newInstance(final long length) {
+    public static PrimitiveCharArray newInstance(final int length) {
         return PrimitiveArray.newSubclassInstance(PrimitiveCharArray.class, length);
     }
 
     @Override
-    final void initializePrimitiveArray(final long length) {
+    final void initializePrimitiveArray(final int length) {
         if (length > Integer.MAX_VALUE) {
             throw new IllegalArgumentException("Cannot instantiate array with more than Integer.MAX_VALUE elements");
         }
         array = new char[(int) length];
-    }
-
-    void checkBounds(final long index) {
-        if (index > array.length) {
-            throw new ArrayIndexOutOfBoundsException();
-        }
     }
 }
