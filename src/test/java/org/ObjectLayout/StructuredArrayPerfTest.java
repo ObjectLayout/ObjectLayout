@@ -8,6 +8,7 @@ package org.ObjectLayout;
 import org.junit.Test;
 
 import java.lang.reflect.Constructor;
+import java.util.Random;
 
 import static java.lang.Long.valueOf;
 import static org.hamcrest.CoreMatchers.is;
@@ -19,6 +20,7 @@ public class StructuredArrayPerfTest {
     StructuredArrayOfMockStructure subclassedArray;
     GenericEncapsulatedArray<MockStructure> genericEncapsulatedArray;
     EncapsulatedArray encapsulatedArray;
+    EncapsulatedRandomizedArray encapsulatedRandomizedArray;
 
     class EncapsulatedArray {
         final MockStructure[] array;
@@ -27,6 +29,33 @@ public class StructuredArrayPerfTest {
             array = new MockStructure[length];
             for (int i = 0; i < array.length; i++) {
                 array[i] = new MockStructure(i, i*2);
+            }
+        }
+
+        MockStructure get(final int index) {
+            return array[index];
+        }
+
+        int getLength() {
+            return array.length;
+        }
+    }
+
+    class EncapsulatedRandomizedArray {
+        final MockStructure[] array;
+
+        EncapsulatedRandomizedArray(int length) {
+            array = new MockStructure[length];
+            for (int i = 0; i < array.length; i++) {
+                array[i] = new MockStructure(i, i*2);
+            }
+            // swap elements around randomly
+            Random generator = new Random();
+            for (int i = 0; i < array.length; i++) {
+                int target = generator.nextInt(array.length);
+                MockStructure temp = array[target];
+                array[target] = array[i];
+                array[i] = temp;
             }
         }
 
@@ -96,7 +125,19 @@ public class StructuredArrayPerfTest {
         return sum;
     }
 
+    long loopEncapsulatedRandomizedArraySumTest() {
+        long sum = 0;
+        for (int i = 0 ; i < encapsulatedRandomizedArray.getLength(); i++) {
+            sum += encapsulatedRandomizedArray.get(i).getTestValue();
+        }
+        return sum;
+    }
+
     public void testLoop(int length) {
+        long startTime5 = System.nanoTime();
+        long sum5 = loopEncapsulatedRandomizedArraySumTest();
+        long endTime5 = System.nanoTime();
+        double loopsPerSec5 = 1000 * (double) length / (endTime5 - startTime5);
 
         long startTime4 = System.nanoTime();
         long sum4 = loopEncapsulatedArraySumTest();
@@ -122,7 +163,8 @@ public class StructuredArrayPerfTest {
                 "M), SubclassedSA: (" + loopsPerSec2 +
                 "M), GenericEncapsulatedArray: (" + loopsPerSec3 +
                 "M), EncapsulatedArray: (" + loopsPerSec4 +
-                "M) cksum = " + (sum1 + sum2 + sum3 + sum4));
+                "M), EncapsulatedRandomizedArray: (" + loopsPerSec5 +
+                "M) cksum = " + (sum1 + sum2 + sum3 + sum4 + sum5));
     }
 
     @Test
@@ -136,6 +178,7 @@ public class StructuredArrayPerfTest {
         array = StructuredArray.newInstance(MockStructure.class, ctorAndArgsProvider, length);
         subclassedArray = StructuredArrayOfMockStructure.newInstance(ctorAndArgsProvider, length);
         encapsulatedArray = new EncapsulatedArray(length);
+        encapsulatedRandomizedArray = new EncapsulatedRandomizedArray(length);
         genericEncapsulatedArray = new GenericEncapsulatedArray<MockStructure>(ctorAndArgsProvider, length);
 
         for (int i = 0; i < 10; i++) {
