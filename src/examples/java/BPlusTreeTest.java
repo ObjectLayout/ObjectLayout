@@ -16,19 +16,15 @@ import java.util.TreeMap;
 
 import org.junit.Test;
 
-public class BPlusTreeTest
-{
-    private final BPlusTree<Integer, Integer> tree =
-        new BPlusTree<Integer, Integer>(8);
+public class BPlusTreeTest {
+    private final BPlusTree<Integer, Integer> tree = new BPlusTree<Integer, Integer>(
+            8);
 
     @Test
-    public void test()
-    {
-        int[] values = new int[]
-        { 10, 20, 30, 40, 50, 60, 70, 80 };
+    public void test() {
+        int[] values = new int[] { 10, 20, 30, 40, 50, 60, 70, 80 };
 
-        for (int value : values)
-        {
+        for (int value : values) {
             tree.put(value, value);
         }
 
@@ -41,10 +37,9 @@ public class BPlusTreeTest
     }
 
     @Test
-    public void insertsAndGetsAndRemovesRandomValues() throws Exception
-    {
-        int[] values =
-            nextInts(new Random(5), Integer.MAX_VALUE, new int[10000]);
+    public void insertsAndGetsAndRemovesRandomValues() throws Exception {
+        int[] values = nextInts(new Random(5), Integer.MAX_VALUE,
+                new int[10000]);
 
         putAll(tree, values);
         assertGet(tree, values);
@@ -56,10 +51,9 @@ public class BPlusTreeTest
         assertThat(count(tree), is(treeMap.size()));
 
         int count = 0;
-        for (int value : values)
-        {
-            assertThat(
-                "{" + count + "}", tree.get(value), is(treeMap.get(value)));
+        for (int value : values) {
+            assertThat("{" + count + "}", tree.get(value),
+                    is(treeMap.get(value)));
             Integer removed = tree.remove(value);
             Integer mapRemoved = treeMap.remove(value);
 
@@ -72,12 +66,10 @@ public class BPlusTreeTest
         }
     }
 
-    private int count(BPlusTree<Integer, Integer> tree)
-    {
+    private int count(BPlusTree<Integer, Integer> tree) {
         Iterator<Entry<Integer, Integer>> iterator = tree.iterator();
         int i = 0;
-        while (iterator.hasNext())
-        {
+        while (iterator.hasNext()) {
             iterator.next();
             i++;
         }
@@ -85,16 +77,13 @@ public class BPlusTreeTest
     }
 
     @Test
-    public void putsAndDeletesWithoutBranching()
-    {
-        int[] values = new int[]
-        { 10, 20, 30, 40, 50, 60, 70, 80 };
+    public void putsAndDeletesWithoutBranching() {
+        int[] values = new int[] { 10, 20, 30, 40, 50, 60, 70, 80 };
         putAll(tree, values);
 
         int size = tree.size();
 
-        for (int value : values)
-        {
+        for (int value : values) {
             int removed = tree.remove(value);
             assertThat(removed, is(value));
             assertThat(tree.size(), is(--size));
@@ -102,16 +91,13 @@ public class BPlusTreeTest
     }
 
     @Test
-    public void putsAndDeletesFromLeftWithBranching()
-    {
-        int[] values = new int[]
-        { 10, 20, 30, 40, 50, 60, 70, 80, 90 };
+    public void putsAndDeletesFromLeftWithBranching() {
+        int[] values = new int[] { 10, 20, 30, 40, 50, 60, 70, 80, 90 };
         putAll(tree, values);
 
         int size = tree.size();
 
-        for (int value : values)
-        {
+        for (int value : values) {
             int removed = tree.remove(value);
             assertThat(removed, is(value));
             assertThat(tree.size(), is(--size));
@@ -119,30 +105,25 @@ public class BPlusTreeTest
     }
 
     @Test
-    public void putsAndDeletesFromRightWithBranching()
-    {
-        int[] values = new int[]
-        { 10, 20, 30, 40, 50, 60, 70, 80, 90, 45 };
+    public void putsAndDeletesFromRightWithBranching() {
+        int[] values = new int[] { 10, 20, 30, 40, 50, 60, 70, 80, 90, 45 };
         putAll(tree, values);
 
         int size = tree.size();
         sort(values);
 
-        for (int value : reverse(values))
-        {
+        for (int value : reverse(values)) {
             int removed = tree.remove(value);
             assertThat(removed, is(value));
             assertThat(tree.size(), is(--size));
         }
     }
 
-    private int[] reverse(int[] values)
-    {
+    private int[] reverse(int[] values) {
 
         int[] reversed = new int[values.length];
         int index = reversed.length;
-        for (int value : values)
-        {
+        for (int value : values) {
             reversed[--index] = value;
         }
 
@@ -150,47 +131,39 @@ public class BPlusTreeTest
     }
 
     @Test
-    public void splitsLeavesTwiceToRight() throws Exception
-    {
-        int[] values = new int[]
-        { 10, 20, 30, 40, 50, 60, 70, 80, 51, 52, 53, 54, 55 };
+    public void splitsLeavesTwiceToRight() throws Exception {
+        int[] values = new int[] { 10, 20, 30, 40, 50, 60, 70, 80, 51, 52, 53,
+                54, 55 };
         assertPutAndGet(values);
     }
 
     @Test
-    public void splitsLeavesTwiceToLeft() throws Exception
-    {
-        int[] values = new int[]
-        { 10, 20, 30, 40, 50, 60, 70, 80, 1, 2, 3, 4, 5 };
+    public void splitsLeavesTwiceToLeft() throws Exception {
+        int[] values = new int[] { 10, 20, 30, 40, 50, 60, 70, 80, 1, 2, 3, 4,
+                5 };
         assertPutAndGet(values);
     }
 
     @Test
-    public void splitsLeavesTwiceBothWays() throws Exception
-    {
-        int[] values = new int[]
-        { 10, 20, 30, 40, 50, 60, 70, 80, 41, 42, 43, 44, 45 };
+    public void splitsLeavesTwiceBothWays() throws Exception {
+        int[] values = new int[] { 10, 20, 30, 40, 50, 60, 70, 80, 41, 42, 43,
+                44, 45 };
         assertPutAndGet(values);
     }
 
-    private void assertPutAndGet(int[] values)
-    {
-        for (int value : values)
-        {
+    private void assertPutAndGet(int[] values) {
+        for (int value : values) {
             tree.put(value, value);
         }
 
-        for (int value : values)
-        {
+        for (int value : values) {
             assertThat(tree.get(value), is((Object) value));
         }
     }
 
-    private static void putAll(BPlusTree<Integer, Integer> node, int... values)
-    {
+    private static void putAll(BPlusTree<Integer, Integer> node, int... values) {
         int counter = 0;
-        for (int value : values)
-        {
+        for (int value : values) {
             try {
                 node.put(value, value);
                 counter++;
@@ -200,26 +173,20 @@ public class BPlusTreeTest
         }
     }
 
-    private static void assertGet(BPlusTree<Integer, Integer> tree, int[] values)
-    {
-        for (int value : values)
-        {
+    private static void assertGet(BPlusTree<Integer, Integer> tree, int[] values) {
+        for (int value : values) {
             assertThat(tree.get(value), is((Object) value));
         }
     }
 
-    private static void putAll(TreeMap<Integer, Integer> treeMap, int[] values)
-    {
-        for (int value : values)
-        {
+    private static void putAll(TreeMap<Integer, Integer> treeMap, int[] values) {
+        for (int value : values) {
             treeMap.put(value, value);
         }
     }
 
-    private int[] nextInts(Random r, int maxValue, int[] values)
-    {
-        for (int i = 0; i < values.length; i++)
-        {
+    private int[] nextInts(Random r, int maxValue, int[] values) {
+        for (int i = 0; i < values.length; i++) {
             values[i] = r.nextInt(maxValue);
         }
 
