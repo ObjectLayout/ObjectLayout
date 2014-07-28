@@ -22,8 +22,8 @@ import static java.lang.reflect.Modifier.isStatic;
  *     and can support elements of any class that provides public constructors. The elements in a StructuredArray
  *     are all allocated and constructed at array creation time, and individual elements cannot be removed or
  *     replaced after array creation. Array elements can be accessed using an index-based accessor methods in
- *     the form of {@link StructuredArray#get}() using either {@link int} or
- *     {@link long} indices. Individual element contents can then be accessed and manipulated using any and all
+ *     the form of {@link StructuredArray#get}() using either int or
+ *     long indices. Individual element contents can then be accessed and manipulated using any and all
  *     operations supported by the member element's class.
  * <p>
  *     While simple creation of default-constructed elements and fixed constructor parameters are available through
@@ -442,7 +442,6 @@ public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T> imp
      * @param arrayClass of the array to create.
      * @param ctorAndArgsProvider produces element constructors [potentially] on a per element basis.
      * @param lengths of the array dimensions to create.
-     * @return
      */
     public static <T, S extends StructuredArray<T>> S newSubclassInstance(
             final Class<S> arrayClass,
