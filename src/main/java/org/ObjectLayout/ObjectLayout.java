@@ -41,7 +41,7 @@ public abstract class ObjectLayout {
      *
      * @param objectClass
      * @param <IntrinsicType>
-     * @return
+     * @return An instance of objectClass constructed using a default constructor
      */
     public static <IntrinsicType> IntrinsicType createIntrinsicObject(final Class<IntrinsicType> objectClass) {
         return createIntrinsicObject(objectClass, EMPTY_ARG_TYPES, EMPTY_ARGS);
@@ -58,7 +58,7 @@ public abstract class ObjectLayout {
      * @param constructorArgTypes
      * @param constructorArgs
      * @param <IntrinsicType>
-     * @return
+     * @return An instance of objectClass constructed with constructorArgs arguments to a matching constructor
      */
     public static <IntrinsicType> IntrinsicType createIntrinsicObject(final Class<IntrinsicType> objectClass,
                                                                       final Class[] constructorArgTypes,
@@ -73,20 +73,18 @@ public abstract class ObjectLayout {
 
     /**
      * Instantiate an object of the given objectClass using the constructor and arguments indicated by
-     * objectCtorAndArgs. If called to initialize a final field in a
-     * containing object instance, JVMs capable of optimized object layout for intrinsic objects
-     * may choose to lay out the containing object contents in memory and in a way that would
-     * eliminate or minimize reference-following costs.
+     * objectCtorAndArgs. If called to initialize a final field in a containing object instance, JVMs
+     * capable of optimized object layout for intrinsic objects may choose to lay out the containing
+     * object contents in memory and in a way that would eliminate or minimize reference-following costs.
      *
      * @param objectCtorAndArgs
-     * @param constructorArgs
      * @param <IntrinsicType>
-     * @return
+     * @return An object instance constructed with the given constructor and args.
      */
-    public static <IntrinsicType> IntrinsicType createIntrinsicObject(final CtorAndArgs<IntrinsicType> objectCtorAndArgs,
-                                                                      final Object... constructorArgs) {
+    public static <IntrinsicType> IntrinsicType createIntrinsicObject(
+            final CtorAndArgs<IntrinsicType> objectCtorAndArgs) {
         try {
-            return objectCtorAndArgs.getConstructor().newInstance(constructorArgs);
+            return objectCtorAndArgs.getConstructor().newInstance(objectCtorAndArgs.getArgs());
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         }
