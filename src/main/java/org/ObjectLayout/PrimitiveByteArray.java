@@ -5,6 +5,10 @@
 
 package org.ObjectLayout;
 
+/**
+ * A subclassable array of bytes.
+ */
+
 public class PrimitiveByteArray extends PrimitiveArray {
 
     private byte[] array;

@@ -5,6 +5,10 @@
 
 package org.ObjectLayout;
 
+/**
+ * A subclassable array of chars.
+ */
+
 public class PrimitiveCharArray extends PrimitiveArray {
 
     private char[] array;

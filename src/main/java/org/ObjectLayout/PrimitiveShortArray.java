@@ -5,6 +5,10 @@
 
 package org.ObjectLayout;
 
+/**
+ * A subclassable array of shorts.
+ */
+
 public class PrimitiveShortArray extends PrimitiveArray {
 
     private short[] array;

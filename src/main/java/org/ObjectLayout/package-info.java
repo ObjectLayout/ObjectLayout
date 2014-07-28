@@ -13,11 +13,43 @@
  * and execution speeds. However, the classes are carefully designed with semantics that would allow an
  * optimised JVM to implement them with improved memory layout not directly expressible in Java.
  * <p>
- * The {@link StructuredArray} class is a good example of this design pattern. StructuredArray is carefully designed
- * to allow a JVM to store it in memory with a layout similar to an array of structs in C-like languages.
- * When a JVM optimises StructuredArray in such a way, array access benefits from both direct (as opposed
- * to de-referenced) dead-reckoning index access, as well as from fixed memory strides during streaming
- * operations.
+ * The {@link org.ObjectLayout.StructuredArray} class is a good example of this design pattern.
+ * StructuredArray is carefully designed to allow a JVM to store it in memory with a layout similar to
+ * an array of structs in C-like languages. When a JVM optimises StructuredArray in such a way, array
+ * access benefits from both direct (as opposed to de-referenced) dead-reckoning index access, as well
+ * as from fixed memory strides during streaming operations.
+ * <p>
+ * The three commonly used C-style container layout forms that ObjectLayout seeks to enable in Java are:
+ *
+ * <li>An array of structs: struct foo[];  </li>
+ * <li>A struct with a struct inside: struct foo { int a; bar b; int c; }; </li>
+ * <li>A struct an array at the end: struct foo { int len; char[] payload; }; </li>
+ * <p>
+ * The speed benefits in these three forms of layout derive from two dominant benefits:
+ * <li>1. Dead reckoning: In all three forms, the address of the target data field accessed
+ * through the containing object can be directly derived from the containing object reference
+ * without a data-dependent load operation (no de-referencing or equivalent operation needed).</li>
+ * <li>2. Streaming: In the case of an array of structs, sequential access through multiple members
+ * of the containing array result in predictable striding access in memory, enabling prefetch logic
+ * (hardware assisted or otherwise) to compensate for much of the latency involved in cache misses.</li>
+ * <h3>The matching ObjectLayout forms</h3>
+ * <p>
+ * {@link org.ObjectLayout.StructuredArray} is meant to provide an idiomatic Java container form
+ * with speed (and semantics) similar to an "array of structs" form, supporting any constructable
+ * java Object as an array member.
+ * <p><
+ * {@link org.ObjectLayout.ObjectLayout} is meant to support an idiomatic Java way to declare
+ * a "struct in struct" equivalent relationship between Java objects, exposing the speed benefits
+ * similar to the same form in the C family languages.
+ * <p>
+ * Sub-classable Primitive and Reference array classes (e.g. {@link org.ObjectLayout.PrimitiveLongArray}
+ * and {@link org.ObjectLayout.ReferenceArray}) are meant to support an idiomatic Java means of
+ * declaring constructs with speed (and semantics) similar to "struct with array at the end". They do
+ * so by supporting the subclassing of arrays of the various primitive and reference forms possible
+ * in Java. {@link org.ObjectLayout.StructuredArray} similarly supports this capability (via
+ * subclassing) for the equivalent of "struct with array of structs at the end".
+ *
+ *
  */
 
 package org.ObjectLayout;

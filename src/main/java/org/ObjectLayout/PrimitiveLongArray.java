@@ -5,6 +5,10 @@
 
 package org.ObjectLayout;
 
+/**
+ * A subclassable array of longs.
+ */
+
 public class PrimitiveLongArray extends PrimitiveArray {
 
     private long[] array;

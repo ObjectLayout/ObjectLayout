@@ -5,6 +5,10 @@
 
 package org.ObjectLayout;
 
+/**
+ * A subclassable array of doubles.
+ */
+
 public class PrimitiveDoubleArray extends PrimitiveArray {
 
     private double[] array;

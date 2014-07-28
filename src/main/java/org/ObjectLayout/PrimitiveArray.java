@@ -8,6 +8,10 @@ package org.ObjectLayout;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 
+/**
+ * A abstract base class for subclassable primitive and reference arrays.
+ */
+
 abstract public class PrimitiveArray {
     private static final Object[] EMPTY_ARGS = new Object[0];
 

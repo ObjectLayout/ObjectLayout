@@ -5,6 +5,10 @@
 
 package org.ObjectLayout;
 
+/**
+ * A subclassable array of floats.
+ */
+
 public class PrimitiveFloatArray extends PrimitiveArray {
 
     private float[] array;

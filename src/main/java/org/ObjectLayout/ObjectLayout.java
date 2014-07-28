@@ -8,8 +8,7 @@ package org.ObjectLayout;
 import java.lang.reflect.Constructor;
 
 /**
- * The ObjectLayout class provides static methods for creating object instances that are intrinsic
- * to other containing objects.
+ * Support the declaration of object instances that are intrinsic to other containing objects.
  * <p>
  * Intrinsic object instances are instances of java Objects (or any derived constructable class)
  * that are instantiated as part of the initialization of a containing object instance. Where

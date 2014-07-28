@@ -5,6 +5,10 @@
 
 package org.ObjectLayout;
 
+/**
+ * A subclassable array of ints.
+ */
+
 public class PrimitiveIntArray extends PrimitiveArray {
 
     private int[] array;

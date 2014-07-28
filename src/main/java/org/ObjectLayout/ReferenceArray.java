@@ -6,6 +6,10 @@
 package org.ObjectLayout;
 
 
+/**
+ * A subclassable array of object references.
+ */
+
 public class ReferenceArray<T> extends PrimitiveArray {
 
     private T[] array;
