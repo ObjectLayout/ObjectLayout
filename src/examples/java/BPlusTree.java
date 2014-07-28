@@ -386,7 +386,7 @@ public class BPlusTree<K, V> implements Iterable<Map.Entry<K, V>> {
                     halfSize);
 
             if (comparison == 0) {
-                Branch nextBranch = newInstance(capacity);
+                Branch nextBranch = create(capacity);
 
                 // Copy half of the nodes from the original
                 int copyFrom = keyOffset(halfSize);
@@ -405,7 +405,7 @@ public class BPlusTree<K, V> implements Iterable<Map.Entry<K, V>> {
                 // temporarily store the nextBranch for the parent.
                 next(nextBranch);
             } else if (comparison < 0) {
-                Branch nextBranch = newInstance(capacity);
+                Branch nextBranch = create(capacity);
 
                 // Copy half of the nodes from the original
                 int copyFrom = keyOffset(halfSize);
@@ -427,7 +427,7 @@ public class BPlusTree<K, V> implements Iterable<Map.Entry<K, V>> {
                 // temporarily store the nextBranch for the parent.
                 next(nextBranch);
             } else {
-                Branch nextBranch = newInstance(capacity);
+                Branch nextBranch = create(capacity);
 
                 // Copy just under half of the nodes from the original
                 int copyFrom = keyOffset(halfSize + 1);
@@ -739,7 +739,7 @@ public class BPlusTree<K, V> implements Iterable<Map.Entry<K, V>> {
         
         private static Branch newInstance(Node left, Node right, int nodeSize) {
             
-            Branch branch = newInstance(nodeSize);
+            Branch branch = create(nodeSize);
             
             branch.setChild(0, left);
             branch.setChild(1, right.firstKey());
@@ -749,7 +749,7 @@ public class BPlusTree<K, V> implements Iterable<Map.Entry<K, V>> {
             return branch;
         }
 
-        private static Branch newInstance(int nodeSize) {
+        private static Branch create(int nodeSize) {
             int length = (nodeSize * 2) + 1;
             return ReferenceArray.newSubclassInstance(Branch.class, length);
         }
@@ -844,4 +844,20 @@ public class BPlusTree<K, V> implements Iterable<Map.Entry<K, V>> {
             throw new UnsupportedOperationException();
         }
     }
+    
+    public static <T> void shallowCopy(
+            final ReferenceArray<T> src, final long srcOffset, 
+            final ReferenceArray<T> dst, final long dstOffset, 
+            final long count) {
+        
+        if (srcOffset + count > Integer.MAX_VALUE || dstOffset + count > Integer.MAX_VALUE) {
+            throw new ArrayIndexOutOfBoundsException();
+        }
+        
+        int length = (int) count;
+        int srcOff = (int) srcOffset;
+        int dstOff = (int) dstOffset;
+        
+        System.arraycopy(src.getArray(), srcOff, dst.getArray(), dstOff, length);
+    }    
 }
