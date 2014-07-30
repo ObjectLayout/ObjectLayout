@@ -1,8 +1,11 @@
 target
 .idea
 out
+classes
 gh-pages
-ObjectLayout.iml
+ObjectLayout-parent.iml
+ObjectLayout/ObjectLayout.iml
+ObjectLayout-benchmarks/ObjectLayout-benchmarks.iml
 .classpath
 .project
 .settings
