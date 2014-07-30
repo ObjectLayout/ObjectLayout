@@ -51,8 +51,8 @@ abstract public class PrimitiveArray {
                                               final int length) throws NoSuchMethodException {
         ConstructorMagic constructorMagic = getConstructorMagic();
         constructorMagic.setArrayConstructorArgs(arrayCtorAndArgs, length);
-        constructorMagic.setActive(true);
         try {
+            constructorMagic.setActive(true);
             Constructor<A> ctor = arrayCtorAndArgs.getConstructor();
             ctor.setAccessible(true);
             A array = ctor.newInstance(arrayCtorAndArgs.getArgs());
@@ -70,7 +70,10 @@ abstract public class PrimitiveArray {
     }
 
     PrimitiveArray() {
-        length = getConstructorMagic().getLength();
+        checkConstructorMagic();
+        ConstructorMagic constructorMagic = getConstructorMagic();
+        length = constructorMagic.getLength();
+        constructorMagic.setActive(true);
     }
 
     // Abstract methods:
