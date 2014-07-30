@@ -537,8 +537,15 @@ public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T> imp
             final CtorAndArgs<S> arrayCtorAndArgs,
             final CtorAndArgsProvider<T> ctorAndArgsProvider,
             final long[] lengths) {
-        return StructuredArrayIntrinsifiableBase.instantiateStructuredArray(arrayCtorAndArgs,
-                ctorAndArgsProvider, lengths);
+        ConstructorMagic constructorMagic = getConstructorMagic();
+        constructorMagic.setConstructionArgs(arrayCtorAndArgs, ctorAndArgsProvider, null);
+        try {
+            constructorMagic.setActive(true);
+            return StructuredArrayIntrinsifiableBase.instantiateStructuredArray(arrayCtorAndArgs,
+                    ctorAndArgsProvider, lengths);
+        } finally {
+            constructorMagic.setActive(false);
+        }
     }
 
     @SuppressWarnings("rawtypes")
@@ -552,6 +559,8 @@ public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T> imp
         final CtorAndArgsProvider<T> ctorAndArgsProvider = constructorMagic.getCtorAndArgsProvider();
         final long[] containingIndex = constructorMagic.getContainingIndex();
 
+        // Finish consuming constructMagic arguments:
+        constructorMagic.setActive(false);
 
         // Compute and cache total element count:
         long totalCount = 1;
@@ -767,7 +776,11 @@ public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T> imp
     private void populateSubArray(final long index0,
                                   final Constructor<StructuredArray<T>> constructor,
                                   ArrayConstructionArgs args) {
+        ConstructorMagic constructorMagic = getConstructorMagic();
+        constructorMagic.setConstructionArgs(
+                args.arrayCtorAndArgs, args.ctorAndArgsProvider, args.containingIndex);
         try {
+            constructorMagic.setActive(true);
             // Instantiate:
             constructSubArrayAtIndex(index0, constructor, args);
         } catch (InstantiationException ex) {
@@ -776,6 +789,8 @@ public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T> imp
             throw new RuntimeException(ex);
         } catch (InvocationTargetException ex) {
             throw new RuntimeException(ex);
+        } finally {
+            constructorMagic.setActive(false);
         }
     }
 
@@ -1062,6 +1077,73 @@ public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T> imp
                     shallowCopy(src.get(srcIdx), dst.get(dstIdx), fields);
                 }
             }
+        }
+    }
+
+    //
+    //
+    // ConstructorMagic support:
+    //
+    //
+
+    /**
+     * OPTIMIZATION NOTE: The ConstructorMagic will likely not need to be modified in any way even for
+     * optimized JDK implementations. It resides in this class for scoping reasons.
+     */
+
+    static class ConstructorMagic {
+        private boolean isActive() {
+            return active;
+        }
+
+        private void setActive(boolean active) {
+            this.active = active;
+        }
+
+        public void setConstructionArgs(CtorAndArgs arrayCtorAndArgs,
+                                        CtorAndArgsProvider CtorAndArgsProvider,
+                                        long[] containingIndex) {
+            this.arrayCtorAndArgs = arrayCtorAndArgs;
+            this.ctorAndArgsProvider = CtorAndArgsProvider;
+            this.containingIndex = containingIndex;
+        }
+
+        public CtorAndArgs getArrayCtorAndArgs() {
+            return arrayCtorAndArgs;
+        }
+
+        public CtorAndArgsProvider getCtorAndArgsProvider() {
+            return ctorAndArgsProvider;
+        }
+
+        public long[] getContainingIndex() {
+            return containingIndex;
+        }
+
+        private boolean active = false;
+
+        private CtorAndArgs arrayCtorAndArgs = null;
+        private CtorAndArgsProvider ctorAndArgsProvider = null;
+        private long[] containingIndex = null;
+    }
+
+    private static final ThreadLocal<ConstructorMagic> threadLocalConstructorMagic = new ThreadLocal<ConstructorMagic>();
+
+    @SuppressWarnings("unchecked")
+    private static ConstructorMagic getConstructorMagic() {
+        ConstructorMagic constructorMagic = threadLocalConstructorMagic.get();
+        if (constructorMagic == null) {
+            constructorMagic = new ConstructorMagic();
+            threadLocalConstructorMagic.set(constructorMagic);
+        }
+        return constructorMagic;
+    }
+
+    @SuppressWarnings("unchecked")
+    private static void checkConstructorMagic() {
+        final ConstructorMagic constructorMagic = threadLocalConstructorMagic.get();
+        if ((constructorMagic == null) || !constructorMagic.isActive()) {
+            throw new IllegalArgumentException("StructuredArray<> must not be directly instantiated with a constructor. Use newInstance(...) instead.");
         }
     }
 }
