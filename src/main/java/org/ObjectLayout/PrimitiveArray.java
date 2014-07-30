@@ -73,7 +73,7 @@ abstract public class PrimitiveArray {
         checkConstructorMagic();
         ConstructorMagic constructorMagic = getConstructorMagic();
         length = constructorMagic.getLength();
-        constructorMagic.setActive(true);
+        constructorMagic.setActive(false);
     }
 
     // Abstract methods:
