@@ -4,8 +4,8 @@ out
 classes
 gh-pages
 ObjectLayout-parent.iml
-ObjectLayout/ObjectLayout.iml
-ObjectLayout-benchmarks/ObjectLayout-benchmarks.iml
+ObjectLayout.iml
+ObjectLayout-benchmarks.iml
 .classpath
 .project
 .settings
