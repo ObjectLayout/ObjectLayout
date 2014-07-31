@@ -20,24 +20,27 @@
  * as from fixed memory strides during streaming operations.
  * <p>
  * The three commonly used C-style container layout forms that ObjectLayout seeks to enable in Java are:
- *
+ * <ul>
  * <li>An array of structs: struct foo[];  </li>
  * <li>A struct with a struct inside: struct foo { int a; bar b; int c; }; </li>
  * <li>A struct an array at the end: struct foo { int len; char[] payload; }; </li>
+ * </ul>
  * <p>
  * The speed benefits in these three forms of layout derive from two dominant benefits:
+ * <ol>
  * <li>1. Dead reckoning: In all three forms, the address of the target data field accessed
  * through the containing object can be directly derived from the containing object reference
  * without a data-dependent load operation (no de-referencing or equivalent operation needed).</li>
  * <li>2. Streaming: In the case of an array of structs, sequential access through multiple members
  * of the containing array result in predictable striding access in memory, enabling prefetch logic
  * (hardware assisted or otherwise) to compensate for much of the latency involved in cache misses.</li>
+ * </ol>
  * <h3>The matching ObjectLayout forms</h3>
  * <p>
  * {@link org.ObjectLayout.StructuredArray} is meant to provide an idiomatic Java container form
  * with speed (and semantics) similar to an "array of structs" form, supporting any constructable
  * java Object as an array member.
- * <p><
+ * <p>
  * {@link org.ObjectLayout.ObjectLayout} is meant to support an idiomatic Java way to declare
  * a "struct in struct" equivalent relationship between Java objects, exposing the speed benefits
  * similar to the same form in the C family languages.

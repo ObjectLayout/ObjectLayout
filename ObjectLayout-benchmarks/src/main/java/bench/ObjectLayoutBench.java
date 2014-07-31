@@ -1,8 +1,6 @@
 package bench;
 
-import org.ObjectLayout.CtorAndArgs;
-import org.ObjectLayout.CtorAndArgsProvider;
-import org.ObjectLayout.StructuredArray;
+import org.ObjectLayout.*;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.Fork;
 import org.openjdk.jmh.annotations.Measurement;
@@ -42,7 +40,7 @@ public class ObjectLayoutBench {
     public void setup() throws NoSuchMethodException {
         final int length = 1000000;
 
-        final CtorAndArgsProvider<MockStructure> ctorAndArgsProvider =
+        final SingleDimensionalCtorAndArgsProvider<MockStructure> ctorAndArgsProvider =
                 new DefaultMockCtorAndArgsProvider();
 
         array = StructuredArray.newInstance(MockStructure.class, ctorAndArgsProvider, length);
@@ -167,10 +165,6 @@ public class ObjectLayoutBench {
 
         private final Class[] argsTypes = {Long.TYPE, Long.TYPE};
 
-        public DefaultMockCtorAndArgsProvider() throws NoSuchMethodException {
-            super(MockStructure.class);
-        }
-
         @Override
         public CtorAndArgs<MockStructure> getForIndex(long... indices) throws NoSuchMethodException {
             long indexSum = 0;
@@ -187,8 +181,9 @@ public class ObjectLayoutBench {
 
     public static class StructuredArrayOfMockStructure extends StructuredArray<MockStructure> {
         public static StructuredArrayOfMockStructure newInstance(
-                final CtorAndArgsProvider<MockStructure> ctorAndArgsProvider,final long length) {
-            return StructuredArray.newSubclassInstance(StructuredArrayOfMockStructure.class, ctorAndArgsProvider, length);
+                final SingleDimensionalCtorAndArgsProvider<MockStructure> ctorAndArgsProvider,final long length) {
+            return StructuredArray.newSubclassInstance(
+                    StructuredArrayOfMockStructure.class, MockStructure.class, ctorAndArgsProvider, length);
         }
 
     }
@@ -242,7 +237,8 @@ public class ObjectLayoutBench {
     static class GenericEncapsulatedArray<E> {
         final E[] array;
 
-        GenericEncapsulatedArray(CtorAndArgsProvider ctorAndArgsProvider, int length)  throws NoSuchMethodException {
+        GenericEncapsulatedArray(SingleDimensionalCtorAndArgsProvider<E> ctorAndArgsProvider, int length)
+                throws NoSuchMethodException {
             array = (E[]) new Object[length];
             try {
                 for (int i = 0; i < array.length; i++) {

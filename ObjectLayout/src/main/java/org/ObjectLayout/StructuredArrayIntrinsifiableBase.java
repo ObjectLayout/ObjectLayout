@@ -34,7 +34,8 @@ abstract class StructuredArrayIntrinsifiableBase<T> {
         ConstructorMagic constructorMagic = getConstructorMagic();
 
         @SuppressWarnings("unchecked")
-        final CtorAndArgsProvider<T> ctorAndArgsProvider = constructorMagic.getCtorAndArgsProvider();
+        final Class<T> elementClass = constructorMagic.getElementClass();
+        final AbstractCtorAndArgsProvider<T> ctorAndArgsProvider = constructorMagic.getCtorAndArgsProvider();
         final long[] lengths = constructorMagic.getLengths();
         final int dimensionCount = lengths.length;
 
@@ -52,8 +53,7 @@ abstract class StructuredArrayIntrinsifiableBase<T> {
         this.dimensionCount = dimensionCount;
         this.lengths = lengths;
         this.length = lengths[0];
-
-        this.elementClass = ctorAndArgsProvider.getElementClass();
+        this.elementClass = elementClass;
 
         allocateInternalStorage(dimensionCount, length);
     }
@@ -67,8 +67,9 @@ abstract class StructuredArrayIntrinsifiableBase<T> {
      * allocates room for the entire StructuredArray and all it's elements.
      */
     static <T, S extends StructuredArray<T>> S instantiateStructuredArray(
+            final Class<T> elementClass,
             final CtorAndArgs<S> arrayCtorAndArgs,
-            final CtorAndArgsProvider<T> ctorAndArgsProvider,
+            final AbstractCtorAndArgsProvider<T> ctorAndArgsProvider,
             final long[] lengths) {
 
         // For implementations that need the array class and the element class,
@@ -80,7 +81,7 @@ abstract class StructuredArrayIntrinsifiableBase<T> {
         // Class<T> elementClass = ctorAndArgsProvider.getElementClass();
 
         ConstructorMagic constructorMagic = getConstructorMagic();
-        constructorMagic.setConstructionArgs(ctorAndArgsProvider, lengths);
+        constructorMagic.setConstructionArgs(elementClass, ctorAndArgsProvider, lengths);
         try {
             constructorMagic.setActive(true);
             Constructor<S> arrayConstructor = arrayCtorAndArgs.getConstructor();
@@ -122,7 +123,7 @@ abstract class StructuredArrayIntrinsifiableBase<T> {
                                   ArrayConstructionArgs arrayConstructionArgs)
             throws InstantiationException, IllegalAccessException, InvocationTargetException {
         ConstructorMagic constructorMagic = getConstructorMagic();
-        constructorMagic.setConstructionArgs(
+        constructorMagic.setConstructionArgs(arrayConstructionArgs.elementClass,
                 arrayConstructionArgs.ctorAndArgsProvider, arrayConstructionArgs.lengths);
         try {
             constructorMagic.setActive(true);
@@ -483,12 +484,19 @@ abstract class StructuredArrayIntrinsifiableBase<T> {
             this.active = active;
         }
 
-        public void setConstructionArgs(final CtorAndArgsProvider ctorAndArgsProvider, final long[] lengths) {
+        public void setConstructionArgs(final Class elementClass,
+                                        final AbstractCtorAndArgsProvider ctorAndArgsProvider,
+                                        final long[] lengths) {
+            this.elementClass = elementClass;
             this.ctorAndArgsProvider = ctorAndArgsProvider;
             this.lengths = lengths;
         }
 
-        public CtorAndArgsProvider getCtorAndArgsProvider() {
+        public Class getElementClass() {
+            return elementClass;
+        }
+
+        public AbstractCtorAndArgsProvider getCtorAndArgsProvider() {
             return ctorAndArgsProvider;
         }
 
@@ -498,7 +506,8 @@ abstract class StructuredArrayIntrinsifiableBase<T> {
 
         private boolean active = false;
 
-        private CtorAndArgsProvider ctorAndArgsProvider = null;
+        Class elementClass;
+        private AbstractCtorAndArgsProvider ctorAndArgsProvider = null;
         private long[] lengths = null;
     }
 

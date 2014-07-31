@@ -27,6 +27,7 @@ import java.lang.reflect.Constructor;
  *     ...
  * }
  * </code>
+ * </pre>
  *
  */
 public abstract class ObjectLayout {

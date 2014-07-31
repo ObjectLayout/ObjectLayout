@@ -42,7 +42,6 @@ public class SingletonCtorAndArgsProvider<T> extends CtorAndArgsProvider<T> {
     public SingletonCtorAndArgsProvider(final Class<T> elementClass,
                                         final Class[] constructorArgTypes,
                                         final Object... args) throws NoSuchMethodException {
-        super(elementClass);
         ctorAndArgs = new CtorAndArgs<T>(elementClass, constructorArgTypes, args);
     }
 
@@ -56,15 +55,14 @@ public class SingletonCtorAndArgsProvider<T> extends CtorAndArgsProvider<T> {
      */
     public SingletonCtorAndArgsProvider(final Constructor<T> constructor,
                                         final Object... args) throws NoSuchMethodException {
-        super(constructor.getDeclaringClass());
         ctorAndArgs = new CtorAndArgs<T>(constructor, args);
     }
 
     /**
      * Set the constructor arguments to be indicated in this CtorAndArgsProvider. Enables recycling of
-     * {@link CtorAndArgsProvider} objects to avoid re-allocation. E.g. in copy construction loops.
+     * {@link AbstractCtorAndArgsProvider} objects to avoid re-allocation. E.g. in copy construction loops.
      *
-     * @param args constructor arguments to be indicated in this {@link CtorAndArgsProvider}
+     * @param args constructor arguments to be indicated in this {@link AbstractCtorAndArgsProvider}
      */
     public final void setArgs(final Object... args) {
         ctorAndArgs.setArgs(args);

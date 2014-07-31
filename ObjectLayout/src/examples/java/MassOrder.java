@@ -144,7 +144,6 @@ public class MassOrder extends
         private CtorAndArgs<SimpleOrder> simpleOrderCtorAndArgs;
 
         public Builder() throws NoSuchMethodException {
-            super(SimpleOrder.class);
             massOrderCtorAndArgs.setArgs(this);
             reset();
         }
@@ -227,7 +226,7 @@ public class MassOrder extends
 
             long length = bidIndex + askIndex;
             return (MassOrder) StructuredArray.newSubclassInstance(
-                    massOrderCtorAndArgs, this, length);
+                    massOrderCtorAndArgs, SimpleOrder.class, this, length);
         }
     }
 }

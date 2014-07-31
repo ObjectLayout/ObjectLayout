@@ -7,21 +7,24 @@ package org.ObjectLayout;
 
 class ArrayConstructionArgs {
     final CtorAndArgs arrayCtorAndArgs;
-    final CtorAndArgsProvider ctorAndArgsProvider;
+    final Class elementClass;
+    final AbstractCtorAndArgsProvider ctorAndArgsProvider;
     final long[] lengths;
     long[] containingIndex;
 
     ArrayConstructionArgs(final CtorAndArgs arrayCtorAndArgs,
-                          final CtorAndArgsProvider ctorAndArgsProvider,
+                          final Class elementClass,
+                          final AbstractCtorAndArgsProvider ctorAndArgsProvider,
                           final long[] lengths,
                           final long[] containingIndex) {
         this.arrayCtorAndArgs = arrayCtorAndArgs;
+        this.elementClass = elementClass;
         this.ctorAndArgsProvider = ctorAndArgsProvider;
         this.lengths = lengths;
         this.containingIndex = containingIndex;
     }
 
     ArrayConstructionArgs(ArrayConstructionArgs args) {
-        this(args.arrayCtorAndArgs, args.ctorAndArgsProvider, args.lengths, args.containingIndex);
+        this(args.arrayCtorAndArgs, args.elementClass, args.ctorAndArgsProvider, args.lengths, args.containingIndex);
     }
 }

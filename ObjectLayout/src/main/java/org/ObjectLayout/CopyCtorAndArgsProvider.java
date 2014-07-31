@@ -67,7 +67,6 @@ public class CopyCtorAndArgsProvider<T> extends CtorAndArgsProvider<T> {
                                    final StructuredArray<T> source,
                                    final long[] sourceOffsets,
                                    final boolean keepInternalCachingThreadSafe) throws NoSuchMethodException {
-        super(elementClass);
         copyConstructor = elementClass.getConstructor(elementClass);
         this.source = source;
         if (sourceOffsets != null) {
@@ -105,12 +104,6 @@ public class CopyCtorAndArgsProvider<T> extends CtorAndArgsProvider<T> {
         if (ctorAndArgs == null) {
             // We have nothing cached that's not being used. A bit of allocation in contended cases won't kill us:
             ctorAndArgs = new CtorAndArgs<T>(copyConstructor, new Object[1]);
-        }
-
-        if (sourceOffsets.length != 1) {
-            throw new IllegalArgumentException(
-                    "number of dimensions in index (1) does not match number of dimensions in source offsets ("
-                            + sourceOffsets.length + ")");
         }
 
         long targetIndex = index + sourceOffsets[0];
@@ -152,11 +145,6 @@ public class CopyCtorAndArgsProvider<T> extends CtorAndArgsProvider<T> {
         }
         if (targetIndex == null) {
             targetIndex = new long[sourceOffsets.length];
-        }
-
-        if (index.length != sourceOffsets.length) {
-            throw new IllegalArgumentException("number of dimensions in index (" + index.length +
-                    ") does not match number of dimensions in source offsets (" + sourceOffsets.length + ")");
         }
 
         for (int i = 0; i < index.length; i++) {

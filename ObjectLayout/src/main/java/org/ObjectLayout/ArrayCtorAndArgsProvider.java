@@ -34,7 +34,6 @@ class ArrayCtorAndArgsProvider<T> extends CtorAndArgsProvider<T> {
      */
     ArrayCtorAndArgsProvider(final Constructor<T> constructor,
                              final ArrayConstructionArgs args) throws NoSuchMethodException {
-        super(constructor.getDeclaringClass());
         this.constructor = constructor;
         this.originalArgs = args;
     }

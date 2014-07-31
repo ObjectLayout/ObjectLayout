@@ -8,7 +8,7 @@ import org.ObjectLayout.StructuredArray;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
- * A simple, minimalistic example of a non-generic subclass of StructuredArray<AtomicLong>.
+ * A simple, minimalistic example of a non-generic subclass of StructuredArray&lt;AtomicLong&gt;.
  */
 public class StructuredArrayOfAtomicLong extends StructuredArray<AtomicLong> {
 

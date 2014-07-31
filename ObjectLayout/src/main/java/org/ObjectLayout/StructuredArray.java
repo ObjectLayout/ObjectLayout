@@ -63,9 +63,9 @@ public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T> imp
     public static <T> StructuredArray<T> newInstance(
             final Class<T> elementClass,
             final long length) throws NoSuchMethodException {
-        final CtorAndArgsProvider<T> ctorAndArgsProvider = new SingletonCtorAndArgsProvider<T>(elementClass);
+        final AbstractCtorAndArgsProvider<T> ctorAndArgsProvider = new SingletonCtorAndArgsProvider<T>(elementClass);
         final long[] lengths = {length};
-        return instantiate(ctorAndArgsProvider, lengths);
+        return instantiate(elementClass, ctorAndArgsProvider, lengths);
     }
 
     /**
@@ -103,10 +103,10 @@ public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T> imp
             final Class<T> elementClass,
             final long length) {
         try {
-            final CtorAndArgsProvider<T> ctorAndArgsProvider = 
+            final AbstractCtorAndArgsProvider<T> ctorAndArgsProvider =
                     new SingletonCtorAndArgsProvider<T>(elementClass);
             final long[] lengths = {length};
-            return instantiate(arrayCtorAndArgs, ctorAndArgsProvider, lengths);
+            return instantiate(arrayCtorAndArgs, elementClass, ctorAndArgsProvider, lengths);
         } catch (NoSuchMethodException ex) {
             throw new RuntimeException(ex);
         }
@@ -123,15 +123,10 @@ public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T> imp
      * @throws NoSuchMethodException if the element class does not not support a supplied constructor
      */
     public static <T> StructuredArray<T> newInstance(final Class<T> elementClass,
-                                                     final CtorAndArgsProvider<T> ctorAndArgsProvider,
+                                                     final SingleDimensionalCtorAndArgsProvider<T> ctorAndArgsProvider,
                                                      final long length) throws NoSuchMethodException {
-        if (ctorAndArgsProvider.getElementClass() != elementClass) {
-            throw new IllegalArgumentException("ElementClass (" + elementClass +
-                    ") does not match ctorAndArgsProvider.getElementClass() (" +
-                    ctorAndArgsProvider.getElementClass());
-        }
         final long[] lengths = {length};
-        return instantiate(ctorAndArgsProvider, lengths);
+        return instantiate(elementClass, ctorAndArgsProvider, lengths);
     }
 
     /**
@@ -146,13 +141,14 @@ public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T> imp
      */
     public static <T, S extends StructuredArray<T>> S newSubclassInstance(
             final Class<S> arrayClass,
-            final CtorAndArgsProvider<T> ctorAndArgsProvider,
+            final Class<T> elementClass,
+            final SingleDimensionalCtorAndArgsProvider<T> ctorAndArgsProvider,
             final long length) {
         try {
             Constructor<S> ctor = arrayClass.getConstructor();
             CtorAndArgs<S> arrayCtorAndArgs = new CtorAndArgs<S>(ctor, EMPTY_ARGS);
             final long[] lengths = {length};
-            return instantiate(arrayCtorAndArgs, ctorAndArgsProvider, lengths);
+            return instantiate(arrayCtorAndArgs, elementClass, ctorAndArgsProvider, lengths);
         } catch (NoSuchMethodException ex) {
             throw new RuntimeException(ex);
         }
@@ -171,10 +167,11 @@ public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T> imp
      */
     public static <T, S extends StructuredArray<T>> S newSubclassInstance(
             final CtorAndArgs<S> arrayCtorAndArgs,
-            final CtorAndArgsProvider<T> ctorAndArgsProvider,
+            final Class<T> elementClass,
+            final SingleDimensionalCtorAndArgsProvider<T> ctorAndArgsProvider,
             final long length) {
         final long[] lengths = {length};
-        return instantiate(arrayCtorAndArgs, ctorAndArgsProvider, lengths);
+        return instantiate(arrayCtorAndArgs, elementClass, ctorAndArgsProvider, lengths);
     }
 
     /**
@@ -197,10 +194,10 @@ public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T> imp
             final long length,
             final Class[] elementConstructorArgTypes,
             final Object... elementConstructorArgs) throws NoSuchMethodException {
-        final CtorAndArgsProvider<T> ctorAndArgsProvider =
+        final AbstractCtorAndArgsProvider<T> ctorAndArgsProvider =
                 new SingletonCtorAndArgsProvider<T>(elementClass, elementConstructorArgTypes, elementConstructorArgs);
         final long[] lengths = {length};
-        return instantiate(ctorAndArgsProvider, lengths);
+        return instantiate(elementClass, ctorAndArgsProvider, lengths);
     }
 
     /**
@@ -252,10 +249,10 @@ public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T> imp
             final Class[] elementConstructorArgTypes,
             final Object... elementConstructorArgs) {
         try {
-            final CtorAndArgsProvider<T> ctorAndArgsProvider =
+            final AbstractCtorAndArgsProvider<T> ctorAndArgsProvider =
                     new SingletonCtorAndArgsProvider<T>(elementClass, elementConstructorArgTypes, elementConstructorArgs);
             final long[] lengths = {length};
-            return instantiate(arrayCtorAndArgs, ctorAndArgsProvider, lengths);
+            return instantiate(arrayCtorAndArgs, elementClass, ctorAndArgsProvider, lengths);
         } catch (NoSuchMethodException ex) {
             throw new RuntimeException(ex);
         }
@@ -274,8 +271,8 @@ public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T> imp
      */
     public static <T> StructuredArray<T> newInstance(final Class<T> elementClass,
                                                      final long... lengths) throws NoSuchMethodException {
-        final CtorAndArgsProvider<T> ctorAndArgsProvider = new SingletonCtorAndArgsProvider<T>(elementClass);
-        return instantiate(ctorAndArgsProvider, lengths);
+        final AbstractCtorAndArgsProvider<T> ctorAndArgsProvider = new SingletonCtorAndArgsProvider<T>(elementClass);
+        return instantiate(elementClass, ctorAndArgsProvider, lengths);
     }
 
     /**
@@ -315,8 +312,8 @@ public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T> imp
             final Class<T> elementClass, 
             final long... lengths) {
         try {
-            final CtorAndArgsProvider<T> ctorAndArgsProvider = new SingletonCtorAndArgsProvider<T>(elementClass);
-            return instantiate(arrayCtorAndArgs, ctorAndArgsProvider, lengths);
+            final AbstractCtorAndArgsProvider<T> ctorAndArgsProvider = new SingletonCtorAndArgsProvider<T>(elementClass);
+            return instantiate(arrayCtorAndArgs, elementClass, ctorAndArgsProvider, lengths);
         } catch (NoSuchMethodException ex) {
             throw new RuntimeException(ex);
         }
@@ -342,9 +339,9 @@ public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T> imp
                                                      final long[] lengths,
                                                      final Class[] elementConstructorArgTypes,
                                                      final Object... elementConstructorArgs) throws NoSuchMethodException {
-        final CtorAndArgsProvider<T> ctorAndArgsProvider =
+        final AbstractCtorAndArgsProvider<T> ctorAndArgsProvider =
                 new SingletonCtorAndArgsProvider<T>(elementClass, elementConstructorArgTypes, elementConstructorArgs);
-        return instantiate(ctorAndArgsProvider, lengths);
+        return instantiate(elementClass, ctorAndArgsProvider, lengths);
     }
 
     /**
@@ -403,9 +400,9 @@ public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T> imp
             final Class[] elementConstructorArgTypes,
             final Object... elementConstructorArgs) {
         try {
-            final CtorAndArgsProvider<T> ctorAndArgsProvider =
+            final AbstractCtorAndArgsProvider<T> ctorAndArgsProvider =
                     new SingletonCtorAndArgsProvider<T>(elementClass, elementConstructorArgTypes, elementConstructorArgs);
-            return instantiate(arrayCtorAndArgs, ctorAndArgsProvider, lengths);
+            return instantiate(arrayCtorAndArgs, elementClass, ctorAndArgsProvider, lengths);
         } catch (NoSuchMethodException ex) {
             throw new RuntimeException(ex);
         }
@@ -423,14 +420,9 @@ public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T> imp
      * @throws NoSuchMethodException if the element class does not not support a supplied constructor
      */
     public static <T> StructuredArray<T> newInstance(final Class<T> elementClass,
-                                                     final CtorAndArgsProvider<T> ctorAndArgsProvider,
+                                                     final MultiDimensionalCtorAndArgsProvider<T> ctorAndArgsProvider,
                                                      final long... lengths) throws NoSuchMethodException {
-        if (ctorAndArgsProvider.getElementClass() != elementClass) {
-            throw new IllegalArgumentException("ElementClass (" + elementClass +
-                    ") does not match ctorAndArgsProvider.getElementClass() (" +
-                    ctorAndArgsProvider.getElementClass());
-        }
-        return instantiate(ctorAndArgsProvider, lengths);
+        return instantiate(elementClass, ctorAndArgsProvider, lengths);
     }
 
     /**
@@ -445,12 +437,13 @@ public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T> imp
      */
     public static <T, S extends StructuredArray<T>> S newSubclassInstance(
             final Class<S> arrayClass,
-            final CtorAndArgsProvider<T> ctorAndArgsProvider,
+            final Class<T> elementClass,
+            final MultiDimensionalCtorAndArgsProvider<T> ctorAndArgsProvider,
             final long... lengths) {
         try {
             Constructor<S> ctor = arrayClass.getConstructor();
             CtorAndArgs<S> arrayCtorAndArgs = new CtorAndArgs<S>(ctor, EMPTY_ARGS);
-            return instantiate(arrayCtorAndArgs, ctorAndArgsProvider, lengths);
+            return instantiate(arrayCtorAndArgs, elementClass, ctorAndArgsProvider, lengths);
         } catch (NoSuchMethodException ex) {
             throw new RuntimeException(ex);
         }
@@ -469,9 +462,10 @@ public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T> imp
      */
     public static <T, S extends StructuredArray<T>> S newSubclassInstance(
             final CtorAndArgs<S> arrayCtorAndArgs,
-            final CtorAndArgsProvider<T> ctorAndArgsProvider,
+            final Class<T> elementClass,
+            final MultiDimensionalCtorAndArgsProvider<T> ctorAndArgsProvider,
             final long... lengths) {
-        return instantiate(arrayCtorAndArgs, ctorAndArgsProvider, lengths);
+        return instantiate(arrayCtorAndArgs, elementClass, ctorAndArgsProvider, lengths);
     }
 
     /**
@@ -515,33 +509,41 @@ public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T> imp
             }
         }
 
-        final CtorAndArgsProvider<T> ctorAndArgsProvider =
+        final AbstractCtorAndArgsProvider<T> ctorAndArgsProvider =
                 new CopyCtorAndArgsProvider<T>(source.getElementClass(), source, sourceOffsets, false);
         CtorAndArgs<StructuredArray<T>> arrayCtorAndArgs =
                 new CtorAndArgs<StructuredArray<T>>(((Class<StructuredArray<T>>) source.getClass()).getConstructor(),
                         EMPTY_ARGS);
-        return instantiate(arrayCtorAndArgs, ctorAndArgsProvider, counts);
+        return instantiate(arrayCtorAndArgs, source.getElementClass(), ctorAndArgsProvider, counts);
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     private static <T, S extends StructuredArray<T>> S instantiate(
-            final CtorAndArgsProvider<T> ctorAndArgsProvider,
+            final Class<T> elementClass,
+            final AbstractCtorAndArgsProvider<T> ctorAndArgsProvider,
             final long... lengths) throws NoSuchMethodException {
         Class arrayClass = StructuredArray.class;
         CtorAndArgs<S> arrayCtorAndArgs =
                 new CtorAndArgs<S>(arrayClass.getConstructor(), EMPTY_ARGS);
-        return instantiate(arrayCtorAndArgs, ctorAndArgsProvider, lengths);
+        return instantiate(arrayCtorAndArgs, elementClass, ctorAndArgsProvider, lengths);
     }
 
     private static <T, S extends StructuredArray<T>> S instantiate(
             final CtorAndArgs<S> arrayCtorAndArgs,
-            final CtorAndArgsProvider<T> ctorAndArgsProvider,
+            final Class<T> elementClass,
+            final AbstractCtorAndArgsProvider<T> ctorAndArgsProvider,
             final long[] lengths) {
+        if (!(((lengths.length == 1) && (ctorAndArgsProvider instanceof SingleDimensionalCtorAndArgsProvider)) ||
+                (ctorAndArgsProvider instanceof MultiDimensionalCtorAndArgsProvider))) {
+            throw new IllegalArgumentException("arrayCtorAndArgs must be and instance of" +
+                    ((lengths.length == 1) ? "either SingleDimensionalCtorAndArgsProvider or" : "") +
+                    "MultiDimensionalCtorAndArgsProvider");
+        }
         ConstructorMagic constructorMagic = getConstructorMagic();
         constructorMagic.setConstructionArgs(arrayCtorAndArgs, ctorAndArgsProvider, null);
         try {
             constructorMagic.setActive(true);
-            return StructuredArrayIntrinsifiableBase.instantiateStructuredArray(arrayCtorAndArgs,
+            return StructuredArrayIntrinsifiableBase.instantiateStructuredArray(elementClass, arrayCtorAndArgs,
                     ctorAndArgsProvider, lengths);
         } finally {
             constructorMagic.setActive(false);
@@ -556,7 +558,7 @@ public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T> imp
         @SuppressWarnings("unchecked")
         final CtorAndArgs<? extends StructuredArray<T>> arrayCtorAndArgs = constructorMagic.getArrayCtorAndArgs();
         @SuppressWarnings("unchecked")
-        final CtorAndArgsProvider<T> ctorAndArgsProvider = constructorMagic.getCtorAndArgsProvider();
+        final AbstractCtorAndArgsProvider<T> ctorAndArgsProvider = constructorMagic.getCtorAndArgsProvider();
         final long[] containingIndex = constructorMagic.getContainingIndex();
 
         // Finish consuming constructMagic arguments:
@@ -587,7 +589,8 @@ public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T> imp
                 System.arraycopy(lengths, 1, subArrayLengths, 0, subArrayLengths.length);
 
                 final ArrayConstructionArgs subArrayArgs =
-                        new ArrayConstructionArgs(arrayCtorAndArgs, ctorAndArgsProvider, subArrayLengths, null);
+                        new ArrayConstructionArgs(arrayCtorAndArgs, getElementClass(),
+                                ctorAndArgsProvider, subArrayLengths, null);
                 @SuppressWarnings("unchecked")
                 final ArrayCtorAndArgsProvider<StructuredArray<T>> subArrayCtorAndArgsProvider =
                         new ArrayCtorAndArgsProvider(arrayCtorAndArgs.getConstructor(), subArrayArgs);
@@ -794,7 +797,7 @@ public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T> imp
         }
     }
 
-    private void populateLeafElements(final CtorAndArgsProvider<T> ctorAndArgsProvider,
+    private void populateLeafElements(final AbstractCtorAndArgsProvider<T> ctorAndArgsProvider,
                                       final long[] containingIndex) {
         final int thisIndex;
         final long[] index;
@@ -814,12 +817,22 @@ public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T> imp
                 final CtorAndArgs<T> ctorAndArgs;
                 if (index != null) {
                     index[thisIndex] = index0;
-                    ctorAndArgs = ctorAndArgsProvider.getForIndex(index);
+                    ctorAndArgs = ((MultiDimensionalCtorAndArgsProvider<T>) ctorAndArgsProvider).getForIndex(index);
                 } else {
-                    ctorAndArgs = ctorAndArgsProvider.getForIndex(index0);
+                    if (ctorAndArgsProvider instanceof SingleDimensionalCtorAndArgsProvider)
+                        ctorAndArgs = ((SingleDimensionalCtorAndArgsProvider<T>) ctorAndArgsProvider).getForIndex(index0);
+                    else
+                        ctorAndArgs = ((MultiDimensionalCtorAndArgsProvider<T>) ctorAndArgsProvider).getForIndex(index0);
+                }
+                if (ctorAndArgs.getConstructor().getDeclaringClass() != getElementClass()) {
+                    throw new IllegalArgumentException("ElementClass (" + getElementClass() +
+                            ") does not match ctorAndArgs.getConstructor().getDeclaringClass() (" +
+                            ctorAndArgs.getConstructor().getDeclaringClass() + ")");
                 }
                 populateElement(index0, ctorAndArgs.getConstructor(), ctorAndArgs.getArgs());
-                ctorAndArgsProvider.recycle(ctorAndArgs);
+                if (ctorAndArgsProvider instanceof CtorAndArgsProvider) {
+                    ((CtorAndArgsProvider<T>) ctorAndArgsProvider).recycle(ctorAndArgs);
+                }
             }
         } catch (NoSuchMethodException ex) {
             throw new RuntimeException(ex);
@@ -1101,10 +1114,10 @@ public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T> imp
         }
 
         public void setConstructionArgs(CtorAndArgs arrayCtorAndArgs,
-                                        CtorAndArgsProvider CtorAndArgsProvider,
+                                        AbstractCtorAndArgsProvider ctorAndArgsProvider,
                                         long[] containingIndex) {
             this.arrayCtorAndArgs = arrayCtorAndArgs;
-            this.ctorAndArgsProvider = CtorAndArgsProvider;
+            this.ctorAndArgsProvider = ctorAndArgsProvider;
             this.containingIndex = containingIndex;
         }
 
@@ -1112,7 +1125,7 @@ public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T> imp
             return arrayCtorAndArgs;
         }
 
-        public CtorAndArgsProvider getCtorAndArgsProvider() {
+        public AbstractCtorAndArgsProvider getCtorAndArgsProvider() {
             return ctorAndArgsProvider;
         }
 
@@ -1123,7 +1136,7 @@ public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T> imp
         private boolean active = false;
 
         private CtorAndArgs arrayCtorAndArgs = null;
-        private CtorAndArgsProvider ctorAndArgsProvider = null;
+        private AbstractCtorAndArgsProvider ctorAndArgsProvider = null;
         private long[] containingIndex = null;
     }
 

@@ -7,6 +7,8 @@ package org.ObjectLayout;
 
 import org.junit.Test;
 
+import java.lang.reflect.Constructor;
+
 import static java.lang.Long.valueOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
@@ -84,6 +86,40 @@ public class StructuredArrayTest {
                 StructuredArray.newInstance(MockStructure.class, ctorAndArgsProvider, lengths2);
 
         assertCorrectVariableInitialisation(lengths, array);
+    }
+
+    @Test
+    public void shouldConstructArrayElementsViaLambdas() throws NoSuchMethodException {
+//        Uncomment for Java 8, keep commented for Java 7 and 6
+//
+//        final long[] lengths = {7, 8, 9};
+//
+//        Constructor<MockStructure> constructor =
+//                MockStructure.class.getConstructor(Long.TYPE, Long.TYPE);
+//
+//        final StructuredArray<MockStructure> array =
+//                StructuredArray.newInstance(MockStructure.class,
+//                        index -> {
+//                            long indexSum = 0;
+//                            for (long index0 : index) {
+//                                indexSum += index0;
+//                            }
+//                            return new CtorAndArgs<MockStructure>(constructor,
+//                                    indexSum, (indexSum * 2L));
+//                        },
+//                        lengths);
+//
+//        assertCorrectVariableInitialisation(lengths, array);
+//
+//        final long length2 = 8;
+//        final StructuredArray<MockStructure> array2 =
+//                StructuredArray.newInstance(MockStructure.class,
+//                        index -> new CtorAndArgs<MockStructure>(
+//                                constructor,
+//                                index, index * 2),
+//                        8);
+//
+//        assertCorrectVariableInitialisation(lengths, array);
     }
 
     @Test
@@ -486,10 +522,6 @@ public class StructuredArrayTest {
     private static class DefaultMockCtorAndArgsProvider extends CtorAndArgsProvider<MockStructure> {
 
         private final Class[] argsTypes = {Long.TYPE, Long.TYPE};
-
-        public DefaultMockCtorAndArgsProvider() throws NoSuchMethodException {
-            super(MockStructure.class);
-        }
 
         // Single dimension form is not strictly necessary (will call multi-dimension form if it wasn't here)
         // but this way we get to demonstrate that path too.

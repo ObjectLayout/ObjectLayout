@@ -3,7 +3,8 @@
  * as explained at http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-import org.ObjectLayout.CtorAndArgsProvider;
+import org.ObjectLayout.MultiDimensionalCtorAndArgsProvider;
+import org.ObjectLayout.SingleDimensionalCtorAndArgsProvider;
 import org.ObjectLayout.StructuredArray;
 
 import java.awt.*;
@@ -22,9 +23,10 @@ public class StructuredArrayOfPoint extends StructuredArray<Point> {
                         elementConstructorArgTypes, initialElementValue);
     }
 
-    public static StructuredArrayOfPoint newInstance(final CtorAndArgsProvider<Point> ctorAndArgsProvider,
+    public static StructuredArrayOfPoint newInstance(final SingleDimensionalCtorAndArgsProvider<Point> ctorAndArgsProvider,
                                                      final long length) {
-        return StructuredArray.newSubclassInstance(StructuredArrayOfPoint.class, ctorAndArgsProvider, length);
+        return StructuredArray.newSubclassInstance(
+                StructuredArrayOfPoint.class, Point.class, ctorAndArgsProvider, length);
     }
 
     // Multi dimensional instantiation:
@@ -40,9 +42,10 @@ public class StructuredArrayOfPoint extends StructuredArray<Point> {
                         elementConstructorArgTypes, elementConstructorArgs);
     }
 
-    public static StructuredArrayOfPoint newInstance(final CtorAndArgsProvider<Point> ctorAndArgsProvider,
+    public static StructuredArrayOfPoint newInstance(final MultiDimensionalCtorAndArgsProvider<Point> ctorAndArgsProvider,
                                                      final long... lengths) {
-        return StructuredArray.newSubclassInstance(StructuredArrayOfPoint.class, ctorAndArgsProvider, lengths);
+        return StructuredArray.newSubclassInstance(
+                StructuredArrayOfPoint.class, Point.class, ctorAndArgsProvider, lengths);
     }
 
     // getSubArray convenience version, allowing user to avoid casting boiler plate in partial-dimension access:

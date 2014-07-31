@@ -57,8 +57,7 @@ public class StructuredArrayOfPointTest {
     @Test
     public void shouldConstructArrayElementsViaElementConstructorGenerator() throws NoSuchMethodException {
         final long[] lengths = {7, 8, 9};
-        final CtorAndArgsProvider<Point> ctorAndArgsProvider =
-                new PointCtorAndArgsProvider();
+        final PointCtorAndArgsProvider ctorAndArgsProvider = new PointCtorAndArgsProvider();
         final StructuredArrayOfPoint array =
                 StructuredArrayOfPoint.newInstance(ctorAndArgsProvider, lengths);
 
@@ -154,8 +153,7 @@ public class StructuredArrayOfPointTest {
     @Test
     public void shouldConstructCopyOfArray() throws NoSuchMethodException {
         final long[] lengths = {15, 7, 5};
-        final CtorAndArgsProvider<Point> ctorAndArgsProvider =
-                new PointCtorAndArgsProvider();
+        final PointCtorAndArgsProvider ctorAndArgsProvider = new PointCtorAndArgsProvider();
         final StructuredArrayOfPoint sourceArray =
                 StructuredArrayOfPoint.newInstance(ctorAndArgsProvider, lengths);
 
@@ -173,8 +171,7 @@ public class StructuredArrayOfPointTest {
     @Test
     public void shouldConstructCopyOfArrayRange() throws NoSuchMethodException {
         final long[] lengths = {15, 7, 5};
-        final CtorAndArgsProvider<Point> ctorAndArgsProvider =
-                new PointCtorAndArgsProvider();
+        final PointCtorAndArgsProvider ctorAndArgsProvider = new PointCtorAndArgsProvider();
         final StructuredArrayOfPoint sourceArray =
                 StructuredArrayOfPoint.newInstance(ctorAndArgsProvider, lengths);
 
@@ -389,10 +386,6 @@ public class StructuredArrayOfPointTest {
     private static class PointCtorAndArgsProvider extends CtorAndArgsProvider<Point> {
 
         private final Class[] argsTypes = {Integer.TYPE, Integer.TYPE};
-
-        public PointCtorAndArgsProvider() throws NoSuchMethodException {
-            super(Point.class);
-        }
 
         public CtorAndArgs<Point> getForIndex(long... indices) throws NoSuchMethodException {
             long indexSum = 0;

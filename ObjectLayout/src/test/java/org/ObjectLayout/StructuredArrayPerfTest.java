@@ -71,7 +71,7 @@ public class StructuredArrayPerfTest {
     class GenericEncapsulatedArray<E> {
         final E[] array;
 
-        GenericEncapsulatedArray(CtorAndArgsProvider ctorAndArgsProvider, int length)  throws NoSuchMethodException {
+        GenericEncapsulatedArray(SingleDimensionalCtorAndArgsProvider<E> ctorAndArgsProvider, int length)  throws NoSuchMethodException {
             array = (E[]) new Object[length];
             try {
                 for (int i = 0; i < array.length; i++) {
@@ -171,7 +171,7 @@ public class StructuredArrayPerfTest {
     public void testLoopingSpeeds() throws NoSuchMethodException {
         final int length = 1000000;
 
-        final CtorAndArgsProvider<MockStructure> ctorAndArgsProvider =
+        final SingleDimensionalCtorAndArgsProvider<MockStructure> ctorAndArgsProvider =
                 new DefaultMockCtorAndArgsProvider();
 
 
@@ -367,10 +367,6 @@ public class StructuredArrayPerfTest {
 
         private final Class[] argsTypes = {Long.TYPE, Long.TYPE};
 
-        public DefaultMockCtorAndArgsProvider() throws NoSuchMethodException {
-            super(MockStructure.class);
-        }
-
         @Override
         public CtorAndArgs<MockStructure> getForIndex(long... indices) throws NoSuchMethodException {
             long indexSum = 0;
@@ -387,8 +383,9 @@ public class StructuredArrayPerfTest {
 
     public static class StructuredArrayOfMockStructure extends StructuredArray<MockStructure> {
         public static StructuredArrayOfMockStructure newInstance(
-                final CtorAndArgsProvider<MockStructure> ctorAndArgsProvider,final long length) {
-            return StructuredArray.newSubclassInstance(StructuredArrayOfMockStructure.class, ctorAndArgsProvider, length);
+                final SingleDimensionalCtorAndArgsProvider<MockStructure> ctorAndArgsProvider,final long length) {
+            return StructuredArray.newSubclassInstance(
+                    StructuredArrayOfMockStructure.class, MockStructure.class, ctorAndArgsProvider, length);
         }
 
     }
