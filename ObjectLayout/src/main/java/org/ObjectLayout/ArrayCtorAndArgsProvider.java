@@ -69,7 +69,7 @@ class ArrayCtorAndArgsProvider<T> extends CtorAndArgsProvider<T> {
             arrayConstructionArgs = new ArrayConstructionArgs(originalArgs);
         }
 
-        arrayConstructionArgs.containingIndex = containingIndex;
+        arrayConstructionArgs.setContainingIndex(containingIndex);
 
         if (ctorAndArgs == null) {
             // We have nothing cached that's not being used. A bit of allocation in contended cases won't kill us:
@@ -112,7 +112,7 @@ class ArrayCtorAndArgsProvider<T> extends CtorAndArgsProvider<T> {
             arrayConstructionArgs = new ArrayConstructionArgs(originalArgs);
         }
 
-        arrayConstructionArgs.containingIndex = containingIndex;
+        arrayConstructionArgs.setContainingIndex(containingIndex);
 
         if (ctorAndArgs == null) {
             // We have nothing cached that's not being used. A bit of allocation in contended cases won't kill us:
@@ -149,7 +149,7 @@ class ArrayCtorAndArgsProvider<T> extends CtorAndArgsProvider<T> {
             return;
         }
 
-        long[] containingIndex = arrayConstructionArgs.containingIndex;
+        long[] containingIndex = arrayConstructionArgs.getContainingIndex();
 
         cachedCtorAndArgs = ctorAndArgs;
         cachedArrayConstructionArgs = arrayConstructionArgs;

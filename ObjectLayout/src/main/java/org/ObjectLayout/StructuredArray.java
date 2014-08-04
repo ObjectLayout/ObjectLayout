@@ -5,6 +5,8 @@
 
 package org.ObjectLayout;
 
+import org.ObjectLayout.intrinsifiable.StructuredArrayIntrinsifiableBase;
+
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -781,7 +783,7 @@ public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T> imp
                                   ArrayConstructionArgs args) {
         ConstructorMagic constructorMagic = getConstructorMagic();
         constructorMagic.setConstructionArgs(
-                args.arrayCtorAndArgs, args.ctorAndArgsProvider, args.containingIndex);
+                args.getArrayCtorAndArgs(), args.getCtorAndArgsProvider(), args.getContainingIndex());
         try {
             constructorMagic.setActive(true);
             // Instantiate:
@@ -1104,7 +1106,7 @@ public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T> imp
      * optimized JDK implementations. It resides in this class for scoping reasons.
      */
 
-    static class ConstructorMagic {
+    private static class ConstructorMagic {
         private boolean isActive() {
             return active;
         }
