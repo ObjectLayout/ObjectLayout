@@ -1142,22 +1142,19 @@ public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T> imp
         private long[] containingIndex = null;
     }
 
-    private static final ThreadLocal<ConstructorMagic> threadLocalConstructorMagic = new ThreadLocal<ConstructorMagic>();
+    private static final ThreadLocal<ConstructorMagic> threadLocalConstructorMagic =
+            new ThreadLocal<ConstructorMagic>() {
+                @Override protected ConstructorMagic initialValue() {
+                    return new ConstructorMagic();
+                }
+            };
 
-    @SuppressWarnings("unchecked")
     private static ConstructorMagic getConstructorMagic() {
-        ConstructorMagic constructorMagic = threadLocalConstructorMagic.get();
-        if (constructorMagic == null) {
-            constructorMagic = new ConstructorMagic();
-            threadLocalConstructorMagic.set(constructorMagic);
-        }
-        return constructorMagic;
+        return threadLocalConstructorMagic.get();
     }
 
-    @SuppressWarnings("unchecked")
     private static void checkConstructorMagic() {
-        final ConstructorMagic constructorMagic = threadLocalConstructorMagic.get();
-        if ((constructorMagic == null) || !constructorMagic.isActive()) {
+        if (!getConstructorMagic().isActive()) {
             throw new IllegalArgumentException("StructuredArray<> must not be directly instantiated with a constructor. Use newInstance(...) instead.");
         }
     }
