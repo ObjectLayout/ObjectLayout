@@ -5,11 +5,6 @@
 
 package org.ObjectLayout.intrinsifiable;
 
-import org.ObjectLayout.AbstractCtorAndArgsProvider;
-import org.ObjectLayout.ArrayConstructionArgs;
-import org.ObjectLayout.CtorAndArgs;
-import org.ObjectLayout.StructuredArray;
-
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 
@@ -19,8 +14,9 @@ import java.lang.reflect.InvocationTargetException;
  * base class.
  *
  * @param <T>
+ * @param <A>
  */
-public abstract class StructuredArrayIntrinsifiableBase<T> {
+public abstract class StructuredArrayIntrinsifiableBase<T, A extends StructuredArrayIntrinsifiableBase<T, A>> {
 
     //
     //
@@ -40,7 +36,6 @@ public abstract class StructuredArrayIntrinsifiableBase<T> {
 
         @SuppressWarnings("unchecked")
         final Class<T> elementClass = constructorMagic.getElementClass();
-        final AbstractCtorAndArgsProvider<T> ctorAndArgsProvider = constructorMagic.getCtorAndArgsProvider();
         final long[] lengths = constructorMagic.getLengths();
         final int dimensionCount = lengths.length;
 
@@ -71,10 +66,10 @@ public abstract class StructuredArrayIntrinsifiableBase<T> {
      * OPTIMIZATION NOTE: Optimized JDK implementations may replace this implementation with one that
      * allocates room for the entire StructuredArray and all it's elements.
      */
-    protected static <T, S extends StructuredArray<T>> S instantiateStructuredArray(
+    protected static <T, A extends StructuredArrayIntrinsifiableBase> A instantiateStructuredArray(
             final Class<T> elementClass,
-            final CtorAndArgs<S> arrayCtorAndArgs,
-            final AbstractCtorAndArgsProvider<T> ctorAndArgsProvider,
+            final Constructor<A> arrayConstructor,
+            final Object[] arrayCtorArgs,
             final long[] lengths) {
 
         // For implementations that need the array class and the element class,
@@ -86,12 +81,11 @@ public abstract class StructuredArrayIntrinsifiableBase<T> {
         // Class<T> elementClass = ctorAndArgsProvider.getElementClass();
 
         ConstructorMagic constructorMagic = getConstructorMagic();
-        constructorMagic.setConstructionArgs(elementClass, ctorAndArgsProvider, lengths);
+        constructorMagic.setConstructionArgs(elementClass, lengths);
         try {
             constructorMagic.setActive(true);
-            Constructor<S> arrayConstructor = arrayCtorAndArgs.getConstructor();
             arrayConstructor.setAccessible(true);
-            return arrayConstructor.newInstance(arrayCtorAndArgs.getArgs());
+            return arrayConstructor.newInstance(arrayCtorArgs);
 
         } catch (InstantiationException ex) {
             throw new RuntimeException(ex);
@@ -124,15 +118,16 @@ public abstract class StructuredArrayIntrinsifiableBase<T> {
      * OPTIMIZATION NOTE: Optimized JDK implementations may replace this implementation with a
      * construction-in-place call on a previously allocated memory location associated with the given index.
      */
-    protected void constructSubArrayAtIndex(long index0, final Constructor<StructuredArray<T>> constructor,
-                                  ArrayConstructionArgs arrayConstructionArgs)
+    protected void constructSubArrayAtIndex(long index0,
+                                            final Constructor<A> constructor,
+                                            Class<T> elementClass,
+                                            long[] lengths)
             throws InstantiationException, IllegalAccessException, InvocationTargetException {
         ConstructorMagic constructorMagic = getConstructorMagic();
-        constructorMagic.setConstructionArgs(arrayConstructionArgs.getElementClass(),
-                arrayConstructionArgs.getCtorAndArgsProvider(), arrayConstructionArgs.getLengths());
+        constructorMagic.setConstructionArgs(elementClass, lengths);
         try {
             constructorMagic.setActive(true);
-            StructuredArray<T> subArray = constructor.newInstance();
+            A subArray = constructor.newInstance();
             storeSubArrayInLocalStorageAtIndex(subArray, index0);
         } finally {
             constructorMagic.setActive(false);
@@ -263,7 +258,7 @@ public abstract class StructuredArrayIntrinsifiableBase<T> {
         if (dimensionCount == 1) {
             return get(indices[indexOffset]);
         } else {
-            StructuredArray<T> subArray = getSubArray(indices[indexOffset]);
+            A subArray = getSubArray(indices[indexOffset]);
             return subArray.get(indices, indexOffset + 1);
         }
     }
@@ -288,7 +283,7 @@ public abstract class StructuredArrayIntrinsifiableBase<T> {
         if (dimensionCount == 1) {
             return get(indices[indexOffset]);
         } else {
-            StructuredArray<T> subArray = getSubArray(indices[indexOffset]);
+            A subArray = getSubArray(indices[indexOffset]);
             return subArray.get(indices, indexOffset + 1);
         }
     }
@@ -301,7 +296,7 @@ public abstract class StructuredArrayIntrinsifiableBase<T> {
      * structuredArray reference without requiring a de-reference).
      */
     @SuppressWarnings("unchecked")
-    protected StructuredArray<T> getSubArray(final long index) throws IllegalArgumentException {
+    protected A getSubArray(final long index) throws IllegalArgumentException {
         if (index < Integer.MAX_VALUE) {
             return getSubArray((int) index);
         }
@@ -326,7 +321,7 @@ public abstract class StructuredArrayIntrinsifiableBase<T> {
      * structuredArray reference without requiring a de-reference).
      */
     @SuppressWarnings("unchecked")
-    protected StructuredArray<T> getSubArray(final int index) throws IllegalArgumentException {
+    protected A getSubArray(final int index) throws IllegalArgumentException {
         if (getDimensionCount() < 2) {
             throw new IllegalArgumentException("cannot call getSubArray() on single dimensional array");
         }
@@ -397,8 +392,8 @@ public abstract class StructuredArrayIntrinsifiableBase<T> {
     // Wrong dimension count gets (of the wrong type for the dimension depth) will result in NPEs rather
     // than class cast exceptions.
 
-    private StructuredArray<T>[][] longAddressableSubArrays; // Used to store subArrays at indexes above Integer.MAX_VALUE
-    private StructuredArray<T>[] intAddressableSubArrays;
+    private A[][] longAddressableSubArrays; // Used to store subArrays at indexes above Integer.MAX_VALUE
+    private A[] intAddressableSubArrays;
 
     private T[][] longAddressableElements; // Used to store elements at indexes above Integer.MAX_VALUE
     private T[] intAddressableElements;
@@ -420,14 +415,14 @@ public abstract class StructuredArrayIntrinsifiableBase<T> {
             intAddressableElements = null;
             longAddressableElements = null;
 
-            intAddressableSubArrays = new StructuredArray[intLength];
-            longAddressableSubArrays = new StructuredArray[numFullPartitions + 1][];
+            intAddressableSubArrays = (A[]) new StructuredArrayIntrinsifiableBase[intLength];
+            longAddressableSubArrays = (A[][]) new StructuredArrayIntrinsifiableBase[numFullPartitions + 1][];
             // full long-addressable-only partitions:
             for (int i = 0; i < numFullPartitions; i++) {
-                longAddressableSubArrays[i] = new StructuredArray[MAX_EXTRA_PARTITION_SIZE];
+                longAddressableSubArrays[i] = (A[]) new StructuredArrayIntrinsifiableBase[MAX_EXTRA_PARTITION_SIZE];
             }
             // Last partition with leftover long-addressable-only size:
-            longAddressableSubArrays[numFullPartitions] = new StructuredArray[lastPartitionSize];
+            longAddressableSubArrays[numFullPartitions] = (A[]) new StructuredArrayIntrinsifiableBase[lastPartitionSize];
 
         } else {
             // We have elements, not sub arrays:
@@ -460,7 +455,7 @@ public abstract class StructuredArrayIntrinsifiableBase<T> {
             longAddressableElements[partitionIndex][partitionOffset] = element;
     }
 
-    private void storeSubArrayInLocalStorageAtIndex(StructuredArray<T> subArray, long index0) {
+    private void storeSubArrayInLocalStorageAtIndex(A subArray, long index0) {
         // place in proper internal storage location:
         if (index0 < Integer.MAX_VALUE) {
             intAddressableSubArrays[(int) index0] = subArray;
@@ -496,19 +491,13 @@ public abstract class StructuredArrayIntrinsifiableBase<T> {
         }
 
         public void setConstructionArgs(final Class elementClass,
-                                        final AbstractCtorAndArgsProvider ctorAndArgsProvider,
                                         final long[] lengths) {
             this.elementClass = elementClass;
-            this.ctorAndArgsProvider = ctorAndArgsProvider;
             this.lengths = lengths;
         }
 
         public Class getElementClass() {
             return elementClass;
-        }
-
-        public AbstractCtorAndArgsProvider getCtorAndArgsProvider() {
-            return ctorAndArgsProvider;
         }
 
         public long[] getLengths() {
@@ -518,7 +507,6 @@ public abstract class StructuredArrayIntrinsifiableBase<T> {
         private boolean active = false;
 
         Class elementClass;
-        private AbstractCtorAndArgsProvider ctorAndArgsProvider = null;
         private long[] lengths = null;
     }
 

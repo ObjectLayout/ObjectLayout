@@ -13,14 +13,14 @@ import java.lang.reflect.Constructor;
  * externally serialized manner (i.e. recycling and use are done on a serialized manner and do not need to
  * be internally synchronized)
  *
- * @param <T> type of the element occupying each array slot
+ * @param <A> type of the element occupying each array slot
  */
-class ArrayCtorAndArgsProvider<T> extends CtorAndArgsProvider<T> {
+class ArrayCtorAndArgsProvider<T, A extends StructuredArray<T>> extends CtorAndArgsProvider<A> {
 
-    private final Constructor<T> constructor;
+    private final Constructor<A> constructor;
     private final ArrayConstructionArgs originalArgs;
 
-    private CtorAndArgs<T> cachedCtorAndArgs = null;
+    private CtorAndArgs<A> cachedCtorAndArgs = null;
     private ArrayConstructionArgs cachedArrayConstructionArgs = null;
     private long[] cachedContainingIndex = null;
 
@@ -32,7 +32,7 @@ class ArrayCtorAndArgsProvider<T> extends CtorAndArgsProvider<T> {
      * @throws NoSuchMethodException if a constructor matching argTypes
      * @throws IllegalArgumentException if argTypes and args conflict
      */
-    ArrayCtorAndArgsProvider(final Constructor<T> constructor,
+    ArrayCtorAndArgsProvider(final Constructor<A> constructor,
                              final ArrayConstructionArgs args) throws NoSuchMethodException {
         this.constructor = constructor;
         this.originalArgs = args;
@@ -47,8 +47,8 @@ class ArrayCtorAndArgsProvider<T> extends CtorAndArgsProvider<T> {
      * @throws NoSuchMethodException
      */
     @Override
-    public CtorAndArgs<T> getForIndex(final long index) throws NoSuchMethodException {
-        CtorAndArgs<T> ctorAndArgs;
+    public CtorAndArgs<A> getForIndex(final long index) throws NoSuchMethodException {
+        CtorAndArgs<A> ctorAndArgs;
         ArrayConstructionArgs arrayConstructionArgs;
         long[] containingIndex;
 
@@ -73,7 +73,7 @@ class ArrayCtorAndArgsProvider<T> extends CtorAndArgsProvider<T> {
 
         if (ctorAndArgs == null) {
             // We have nothing cached that's not being used. A bit of allocation in contended cases won't kill us:
-            ctorAndArgs = new CtorAndArgs<T>(constructor, arrayConstructionArgs);
+            ctorAndArgs = new CtorAndArgs<A>(constructor, arrayConstructionArgs);
         }
         ctorAndArgs.setArgs(arrayConstructionArgs);
 
@@ -89,8 +89,8 @@ class ArrayCtorAndArgsProvider<T> extends CtorAndArgsProvider<T> {
      * @throws NoSuchMethodException
      */
     @Override
-    public CtorAndArgs<T> getForIndex(final long... index) throws NoSuchMethodException {
-        CtorAndArgs<T> ctorAndArgs;
+    public CtorAndArgs<A> getForIndex(final long... index) throws NoSuchMethodException {
+        CtorAndArgs<A> ctorAndArgs;
         ArrayConstructionArgs arrayConstructionArgs;
         long[] containingIndex;
 
@@ -116,7 +116,7 @@ class ArrayCtorAndArgsProvider<T> extends CtorAndArgsProvider<T> {
 
         if (ctorAndArgs == null) {
             // We have nothing cached that's not being used. A bit of allocation in contended cases won't kill us:
-            ctorAndArgs = new CtorAndArgs<T>(constructor, arrayConstructionArgs);
+            ctorAndArgs = new CtorAndArgs<A>(constructor, arrayConstructionArgs);
         }
         ctorAndArgs.setArgs(arrayConstructionArgs);
 
@@ -134,7 +134,7 @@ class ArrayCtorAndArgsProvider<T> extends CtorAndArgsProvider<T> {
      * @param ctorAndArgs the {@link CtorAndArgs} instance to recycle
      */
     @SuppressWarnings("unchecked")
-    public void recycle(final CtorAndArgs<T> ctorAndArgs) {
+    public void recycle(final CtorAndArgs<A> ctorAndArgs) {
         // Only recycle ctorAndArgs if ctorAndArgs is compatible with our state:
         if ((ctorAndArgs == null) || (ctorAndArgs.getConstructor() != constructor)) {
             return;

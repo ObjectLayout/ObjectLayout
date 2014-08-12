@@ -5,17 +5,17 @@
 
 package org.ObjectLayout;
 
-public class ArrayConstructionArgs {
+public class ArrayConstructionArgs<T> {
 
     private final CtorAndArgs arrayCtorAndArgs;
-    private final Class elementClass;
-    private final AbstractCtorAndArgsProvider ctorAndArgsProvider;
+    private final Class<T> elementClass;
+    private final AbstractCtorAndArgsProvider<T> ctorAndArgsProvider;
     private final long[] lengths;
     private long[] containingIndex;
 
     ArrayConstructionArgs(final CtorAndArgs arrayCtorAndArgs,
-                          final Class elementClass,
-                          final AbstractCtorAndArgsProvider ctorAndArgsProvider,
+                          final Class<T> elementClass,
+                          final AbstractCtorAndArgsProvider<T> ctorAndArgsProvider,
                           final long[] lengths,
                           final long[] containingIndex) {
         this.arrayCtorAndArgs = arrayCtorAndArgs;
@@ -25,7 +25,7 @@ public class ArrayConstructionArgs {
         this.containingIndex = containingIndex;
     }
 
-    ArrayConstructionArgs(ArrayConstructionArgs args) {
+    ArrayConstructionArgs(ArrayConstructionArgs<T> args) {
         this(args.arrayCtorAndArgs, args.elementClass, args.ctorAndArgsProvider, args.lengths, args.containingIndex);
     }
 
@@ -33,11 +33,11 @@ public class ArrayConstructionArgs {
         return arrayCtorAndArgs;
     }
 
-    public Class getElementClass() {
+    public Class<T> getElementClass() {
         return elementClass;
     }
 
-    public AbstractCtorAndArgsProvider getCtorAndArgsProvider() {
+    public AbstractCtorAndArgsProvider<T> getCtorAndArgsProvider() {
         return ctorAndArgsProvider;
     }
 

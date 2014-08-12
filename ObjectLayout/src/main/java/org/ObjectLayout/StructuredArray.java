@@ -41,7 +41,7 @@ import static java.lang.reflect.Modifier.isStatic;
  *
  * @param <T> type of the element occupying each array slot.
  */
-public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T> implements Iterable<T> {
+public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T, StructuredArray<T>> implements Iterable<T> {
 
 
     private static final Object[] EMPTY_ARGS = new Object[0];
@@ -545,8 +545,8 @@ public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T> imp
         constructorMagic.setConstructionArgs(arrayCtorAndArgs, ctorAndArgsProvider, null);
         try {
             constructorMagic.setActive(true);
-            return StructuredArrayIntrinsifiableBase.instantiateStructuredArray(elementClass, arrayCtorAndArgs,
-                    ctorAndArgsProvider, lengths);
+            return StructuredArrayIntrinsifiableBase.instantiateStructuredArray(
+                    elementClass, arrayCtorAndArgs.getConstructor(), arrayCtorAndArgs.getArgs(), lengths);
         } finally {
             constructorMagic.setActive(false);
         }
@@ -591,10 +591,10 @@ public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T> imp
                 System.arraycopy(lengths, 1, subArrayLengths, 0, subArrayLengths.length);
 
                 final ArrayConstructionArgs subArrayArgs =
-                        new ArrayConstructionArgs(arrayCtorAndArgs, getElementClass(),
+                        new ArrayConstructionArgs<T>(arrayCtorAndArgs, getElementClass(),
                                 ctorAndArgsProvider, subArrayLengths, null);
                 @SuppressWarnings("unchecked")
-                final ArrayCtorAndArgsProvider<StructuredArray<T>> subArrayCtorAndArgsProvider =
+                final ArrayCtorAndArgsProvider<T, StructuredArray<T>> subArrayCtorAndArgsProvider =
                         new ArrayCtorAndArgsProvider(arrayCtorAndArgs.getConstructor(), subArrayArgs);
 
                 populateSubArrays(subArrayCtorAndArgsProvider, containingIndex);
@@ -780,14 +780,14 @@ public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T> imp
 
     private void populateSubArray(final long index0,
                                   final Constructor<StructuredArray<T>> constructor,
-                                  ArrayConstructionArgs args) {
+                                  ArrayConstructionArgs<T> args) {
         ConstructorMagic constructorMagic = getConstructorMagic();
         constructorMagic.setConstructionArgs(
                 args.getArrayCtorAndArgs(), args.getCtorAndArgsProvider(), args.getContainingIndex());
         try {
             constructorMagic.setActive(true);
             // Instantiate:
-            constructSubArrayAtIndex(index0, constructor, args);
+            constructSubArrayAtIndex(index0, constructor, args.getElementClass(), args.getLengths());
         } catch (InstantiationException ex) {
             throw new RuntimeException(ex);
         } catch (IllegalAccessException ex) {
@@ -841,7 +841,8 @@ public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T> imp
         }
     }
 
-    private void populateSubArrays(final ArrayCtorAndArgsProvider<StructuredArray<T>> arrayCtorAndArgsProvider,
+    @SuppressWarnings("unchecked")
+    private void populateSubArrays(final ArrayCtorAndArgsProvider<T, StructuredArray<T>> arrayCtorAndArgsProvider,
                                    final long[] containingIndex) {
         final int thisIndex;
         final long[] index;
@@ -865,7 +866,7 @@ public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T> imp
                 } else {
                     ctorAndArgs = arrayCtorAndArgsProvider.getForIndex(index0);
                 }
-                populateSubArray(index0, ctorAndArgs.getConstructor(), (ArrayConstructionArgs) ctorAndArgs.getArgs()[0]);
+                populateSubArray(index0, ctorAndArgs.getConstructor(), (ArrayConstructionArgs<T>) ctorAndArgs.getArgs()[0]);
                 arrayCtorAndArgsProvider.recycle(ctorAndArgs);
             }
         } catch (NoSuchMethodException ex) {
