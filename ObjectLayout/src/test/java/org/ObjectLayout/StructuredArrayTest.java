@@ -1,7 +1,7 @@
 /*
- * Written by Gil Tene and Martin Thompson, and released to the public domain,
- * as explained at http://creativecommons.org/publicdomain/zero/1.0/
- */
+* Written by Gil Tene and Martin Thompson, and released to the public domain,
+* as explained at http://creativecommons.org/publicdomain/zero/1.0/
+*/
 
 package org.ObjectLayout;
 
@@ -18,44 +18,55 @@ public class StructuredArrayTest {
 
     @Test
     public void shouldConstructArrayOfGivenDirectLengths() throws NoSuchMethodException {
-        final Long[] lengths = {7L, 8L, 9L};
-        final StructuredArray<MockStructure> array =
-                StructuredArray.newInstance(MockStructure.class, 7L, 8L, 9L);
+        final long[] lengths = {7L, 8L, 9L};
 
-        for (int i = 0; i < lengths.length; i++) {
-            assertThat(valueOf(array.getLengths()[i]), is(lengths[i]));
-        }
+        @SuppressWarnings("unchecked")
+        final StructuredArray<StructuredArray<StructuredArray<MockStructure>>> array =
+                new StructuredArrayBuilder(
+                        StructuredArray.class,
+                        new StructuredArrayBuilder(
+                                StructuredArray.class,
+                                new StructuredArrayBuilder(
+                                        StructuredArray.class,
+                                        MockStructure.class,
+                                        lengths[2]
+                                ),
+                                lengths[1]
+                        ),
+                        lengths[0]
+                ).build();
+
+        assertThat(valueOf(array.getLength()), is(lengths[0]));
+        assertThat(valueOf(array.get(0).getLength()), is(lengths[1]));
+        assertThat(valueOf(array.get(0).get(0).getLength()), is(lengths[2]));
+
+        assertTrue(array.getElementClass().isAssignableFrom(StructuredArray.class));
+        assertTrue(array.get(0).getElementClass().isAssignableFrom(StructuredArray.class));
+        assertTrue(array.get(0).get(0).getElementClass() == MockStructure.class);
+    }
+
+    @Test
+    public void shouldConstructArrayOfGivenLengthWithNewInstance() throws NoSuchMethodException {
+        long length = 9L;
+        StructuredArray<MockStructure> array = StructuredArray.newInstance(MockStructure.class, length);
+
+        assertThat(valueOf(array.getLength()), is(valueOf(length)));
         assertTrue(array.getElementClass() == MockStructure.class);
     }
 
     @Test
-    public void shouldConstructArrayOfGivenLengthsPrimitiveLongArray() throws NoSuchMethodException {
-        final long[] lengths = {7L, 8L, 9L};
-        final StructuredArray<MockStructure> array =
-                StructuredArray.newInstance(MockStructure.class, lengths);
+    public void shouldConstructArrayOfGivenLengthWithBuilder() throws NoSuchMethodException {
+        long length = 9L;
+        @SuppressWarnings("unchecked")
+        StructuredArray<MockStructure> array =
+                new StructuredArrayBuilder(
+                        StructuredArray.class,
+                        MockStructure.class,
+                        length
+                ).build();
 
-        for (int i = 0; i < lengths.length; i++) {
-            assertThat(valueOf(array.getLengths()[i]), is(valueOf(lengths[i])));
-        }
+        assertThat(valueOf(array.getLength()), is(valueOf(length)));
         assertTrue(array.getElementClass() == MockStructure.class);
-
-        final long[] lengths2 = {7L, 8L};
-        final StructuredArray<MockStructure> array2 =
-                StructuredArray.newInstance(MockStructure.class, lengths2);
-
-        for (int i = 0; i < lengths2.length; i++) {
-            assertThat(valueOf(array2.getLengths()[i]), is(valueOf(lengths2[i])));
-        }
-        assertTrue(array2.getElementClass() == MockStructure.class);
-
-        final long[] lengths3 = {8L};
-        final StructuredArray<MockStructure> array3 =
-                StructuredArray.newInstance(MockStructure.class, lengths3);
-
-        for (int i = 0; i < lengths3.length; i++) {
-            assertThat(valueOf(array3.getLengths()[i]), is(valueOf(lengths3[i])));
-        }
-        assertTrue(array3.getElementClass() == MockStructure.class);
     }
 
     @Test
@@ -63,27 +74,35 @@ public class StructuredArrayTest {
         final Class[] initArgTypes = {long.class, long.class};
         final long expectedIndex = 4L;
         final long expectedValue = 777L;
-        final long[] lengths = {7, 8, 9};
+        long length = 9L;
 
         final StructuredArray<MockStructure> array =
-                StructuredArray.newInstance(MockStructure.class, lengths, initArgTypes, expectedIndex, expectedValue);
+                StructuredArray.newInstance(MockStructure.class, length, initArgTypes, expectedIndex, expectedValue);
 
-        assertCorrectFixedInitialisation(expectedIndex, expectedValue, lengths, array);
+        assertCorrectFixedInitialisation(expectedIndex, expectedValue, new long[] {length}, array);
     }
 
     @Test
-    public void shouldConstructArrayElementsViaElementConstructorGenerator() throws NoSuchMethodException {
-        final long[] lengths = {7, 8, 9};
-        final CtorAndArgsProvider<MockStructure> ctorAndArgsProvider =
-                new DefaultMockCtorAndArgsProvider();
+    public void shouldConstructArrayElementsViaCtorAndArgsProvider() throws NoSuchMethodException {
+        final long[] lengths = {9};
+        final DefaultMockCtorAndArgsProvider ctorAndArgsProvider = new DefaultMockCtorAndArgsProvider();
         final StructuredArray<MockStructure> array =
-                StructuredArray.newInstance(MockStructure.class, ctorAndArgsProvider, lengths);
+                StructuredArray.newInstance(MockStructure.class, ctorAndArgsProvider, lengths[0]);
 
         assertCorrectVariableInitialisation(lengths, array);
+    }
 
-        final long[] lengths2 = {8};
-        final StructuredArray<MockStructure> array2 =
-                StructuredArray.newInstance(MockStructure.class, ctorAndArgsProvider, lengths2);
+    @SuppressWarnings("unchecked")
+    @Test
+    public void shouldConstructArrayElementsViaCtorAndArgsProvider3D() throws NoSuchMethodException {
+        final long[] lengths = {7, 8, 9};
+        final DefaultMockCtorAndArgsProvider ctorAndArgsProvider = new DefaultMockCtorAndArgsProvider();
+
+        final StructuredArrayBuilder<StructuredArray<StructuredArray<StructuredArray<MockStructure>>>,
+                StructuredArray<StructuredArray<MockStructure>>> builder = get3dBuilder(lengths);
+        builder.getSubArrayBuilder().getSubArrayBuilder().elementCtorAndArgsProvider(ctorAndArgsProvider);
+
+        final StructuredArray<StructuredArray<StructuredArray<MockStructure>>> array = builder.build();
 
         assertCorrectVariableInitialisation(lengths, array);
     }
@@ -92,41 +111,43 @@ public class StructuredArrayTest {
     public void shouldConstructArrayElementsViaLambdas() throws NoSuchMethodException {
 //        Uncomment for Java 8, keep commented for Java 7 and 6
 //
-//        final long[] lengths = {7, 8, 9};
-//
-//        Constructor<MockStructure> constructor =
+//        final Constructor<MockStructure> constructor =
 //                MockStructure.class.getConstructor(Long.TYPE, Long.TYPE);
 //
+//        final long length = 8;
 //        final StructuredArray<MockStructure> array =
 //                StructuredArray.newInstance(MockStructure.class,
-//                        index -> {
-//                            long indexSum = 0;
-//                            for (long index0 : index) {
-//                                indexSum += index0;
-//                            }
-//                            return new CtorAndArgs<MockStructure>(constructor,
-//                                    indexSum, (indexSum * 2L));
-//                        },
-//                        lengths);
-//
-//        assertCorrectVariableInitialisation(lengths, array);
-//
-//        final long length2 = 8;
-//        final StructuredArray<MockStructure> array2 =
-//                StructuredArray.newInstance(MockStructure.class,
-//                        index -> new CtorAndArgs<MockStructure>(
+//                        context -> new CtorAndArgs<MockStructure>(
 //                                constructor,
-//                                index, index * 2),
-//                        8);
+//                                context.getIndex(), context.getIndex() * 2),
+//                        length);
 //
-//        assertCorrectVariableInitialisation(lengths, array);
+//        assertCorrectVariableInitialisation(new long[] {length}, array);
+//
+//        final long[] lengths = {7, 8, 9};
+//
+//        final StructuredArrayBuilder<StructuredArray<StructuredArray<StructuredArray<MockStructure>>>,
+//                StructuredArray<StructuredArray<MockStructure>>> builder = get3dBuilder(lengths);
+//        builder.getSubArrayBuilder().getSubArrayBuilder().elementCtorAndArgsProvider(
+//                context -> {
+//                    long indexSum = 0;
+//                    for (ConstructionContext c = context; c != null; c = c.getContainingContext()) {
+//                        indexSum += c.getIndex();
+//                    }
+//                    return new CtorAndArgs<MockStructure>(constructor,
+//                            indexSum, (indexSum * 2L));
+//                }
+//        );
+//
+//        final StructuredArray<StructuredArray<StructuredArray<MockStructure>>> array2 = builder.build();
+//
+//        assertCorrectVariableInitialisation(lengths, array2);
     }
 
     @Test
     public void shouldSetAndGetCorrectValueAtGivenIndex() throws NoSuchMethodException {
         final long[] lengths = {11, 10, 3};
-        final StructuredArray<MockStructure> array =
-                StructuredArray.newInstance(MockStructure.class, lengths);
+        final StructuredArray<StructuredArray<StructuredArray<MockStructure>>> array = get3dBuilder(lengths).build();
 
         initValues(lengths, array);
         assertCorrectVariableInitialisation(lengths, array);
@@ -134,9 +155,9 @@ public class StructuredArrayTest {
 
     @Test
     public void shouldIterateOverArray() throws NoSuchMethodException {
-        final long[] lengths = {11, 8, 3};
+        final long[] lengths = {11};
         final StructuredArray<MockStructure> array =
-                StructuredArray.newInstance(MockStructure.class, lengths);
+                StructuredArray.newInstance(MockStructure.class, lengths[0]);
 
         initValues(lengths, array);
 
@@ -145,15 +166,12 @@ public class StructuredArrayTest {
         long sum = 0;
         long elementCount = 0;
         while (iter.hasNext()) {
-            final long[] cursors = iter.getCursors();
+            final long index = iter.getCursor();
             final MockStructure mockStructure = iter.next();
-            long indexSum = 0;
-            for (long index : cursors) {
-                indexSum += index;
-            }
-            assertThat(valueOf(mockStructure.getIndex()), is(valueOf(indexSum)));
-            assertThat(valueOf(mockStructure.getTestValue()), is(valueOf(indexSum * 2)));
-            sum += indexSum;
+
+            assertThat(valueOf(mockStructure.getIndex()), is(valueOf(index)));
+            assertThat(valueOf(mockStructure.getTestValue()), is(valueOf(index * 2)));
+            sum += index;
             elementCount++;
         }
 
@@ -164,146 +182,132 @@ public class StructuredArrayTest {
             elementCount2++;
         }
 
-        assertThat(valueOf(elementCount), is(valueOf(array.getTotalElementCount())));
+        assertThat(valueOf(elementCount), is(valueOf(array.getLength())));
         assertThat(valueOf(sum), is(valueOf(sum2)));
         assertThat(valueOf(elementCount), is(valueOf(elementCount2)));
     }
 
     @Test
     public void shouldIterateOverArrayAndResetAgain() throws NoSuchMethodException {
-        final long[] lengths = {11, 8, 4};
+        final long length = 11;
         final StructuredArray<MockStructure> array =
-                StructuredArray.newInstance(MockStructure.class, lengths);
+                StructuredArray.newInstance(MockStructure.class, length);
 
-        initValues(lengths, array);
+        initValues(new long[] {length}, array);
 
         int i = 0;
         final StructuredArray<MockStructure>.ElementIterator iter = array.iterator();
         while (iter.hasNext()) {
-            final long[] cursors = iter.getCursors();
+            final long index = iter.getCursor();
             final MockStructure mockStructure = iter.next();
-            long indexSum = 0;
-            for (long index : cursors) {
-                indexSum += index;
-            }
-            assertThat(valueOf(mockStructure.getIndex()), is(valueOf(indexSum)));
-            assertThat(valueOf(mockStructure.getTestValue()), is(valueOf(indexSum * 2)));
+            assertThat(valueOf(mockStructure.getIndex()), is(valueOf(index)));
+            assertThat(valueOf(mockStructure.getTestValue()), is(valueOf(index * 2)));
             i++;
         }
 
         iter.reset();
         i = 0;
         while (iter.hasNext()) {
-            final long[] cursors = iter.getCursors();
+            final long index = iter.getCursor();
             final MockStructure mockStructure = iter.next();
-            long indexSum = 0;
-            for (long index : cursors) {
-                indexSum += index;
-            }
-            assertThat(valueOf(mockStructure.getIndex()), is(valueOf(indexSum)));
-            assertThat(valueOf(mockStructure.getTestValue()), is(valueOf(indexSum * 2)));
+            assertThat(valueOf(mockStructure.getIndex()), is(valueOf(index)));
+            assertThat(valueOf(mockStructure.getTestValue()), is(valueOf(index * 2)));
             i++;
         }
 
-        assertThat(valueOf(i), is(valueOf(lengths[0] * lengths[1] * lengths[2])));
+        assertThat(valueOf(i), is(valueOf(length)));
     }
 
     @Test
     public void shouldConstructCopyOfArray() throws NoSuchMethodException {
-        final long[] lengths = {15, 7, 5};
-        final CtorAndArgsProvider<MockStructure> ctorAndArgsProvider =
-                new DefaultMockCtorAndArgsProvider();
+        final long length = 15;
+        final DefaultMockCtorAndArgsProvider ctorAndArgsProvider = new DefaultMockCtorAndArgsProvider();
         final StructuredArray<MockStructure> sourceArray =
-                StructuredArray.newInstance(MockStructure.class, ctorAndArgsProvider, lengths);
+                StructuredArray.newInstance(MockStructure.class, ctorAndArgsProvider, length);
 
-        assertThat(valueOf(sourceArray.getLength()), is(valueOf(lengths[0])));
-        assertThat(valueOf(sourceArray.getTotalElementCount()), is(valueOf(lengths[0] * lengths[1] * lengths[2])));
+        assertThat(valueOf(sourceArray.getLength()), is(valueOf(length)));
         assertTrue(sourceArray.getElementClass() == MockStructure.class);
 
-        final StructuredArray<MockStructure> newArray =
+        final StructuredArray<MockStructure> newArray = StructuredArray.copyInstance(sourceArray);
+
+        // We expect MockStructure elements to be initialized with index = index, and testValue = index * 2:
+        assertCorrectVariableInitialisation(new long[] {length}, newArray);
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    public void shouldConstructCopyOfArray3D() throws NoSuchMethodException {
+        final long[] lengths = {15, 7, 5};
+        final DefaultMockCtorAndArgsProvider ctorAndArgsProvider = new DefaultMockCtorAndArgsProvider();
+
+        final StructuredArrayBuilder<StructuredArray<StructuredArray<StructuredArray<MockStructure>>>,
+                StructuredArray<StructuredArray<MockStructure>>> builder = get3dBuilder(lengths);
+        builder.getSubArrayBuilder().getSubArrayBuilder().elementCtorAndArgsProvider(ctorAndArgsProvider);
+
+        final StructuredArray<StructuredArray<StructuredArray<MockStructure>>> sourceArray = builder.build();
+
+        StructuredArray<StructuredArray<MockStructure>> subArray1 = sourceArray.get(0);
+        StructuredArray<MockStructure> subArray2 = subArray1.get(0);
+
+        assertThat(valueOf(sourceArray.getLength()), is(valueOf(lengths[0])));
+        assertThat(valueOf(subArray1.getLength()), is(valueOf(lengths[1])));
+        assertThat(valueOf(subArray2.getLength()), is(valueOf(lengths[2])));
+        assertTrue(subArray2.getElementClass() == MockStructure.class);
+
+        final StructuredArray<StructuredArray<StructuredArray<MockStructure>>> newArray =
                 StructuredArray.copyInstance(sourceArray);
 
         // We expect MockStructure elements to be initialized with index = index, and testValue = index * 2:
         assertCorrectVariableInitialisation(lengths, newArray);
     }
 
+    @SuppressWarnings("unchecked")
     @Test
     public void shouldConstructCopyOfArrayRange() throws NoSuchMethodException {
         final long[] lengths = {15, 7, 5};
-        final CtorAndArgsProvider<MockStructure> ctorAndArgsProvider =
-                new DefaultMockCtorAndArgsProvider();
-        final StructuredArray<MockStructure> sourceArray =
-                StructuredArray.newInstance(MockStructure.class, ctorAndArgsProvider, lengths);
+        final DefaultMockCtorAndArgsProvider ctorAndArgsProvider = new DefaultMockCtorAndArgsProvider();
+
+        final StructuredArrayBuilder<StructuredArray<StructuredArray<StructuredArray<MockStructure>>>,
+                StructuredArray<StructuredArray<MockStructure>>> builder = get3dBuilder(lengths);
+        builder.getSubArrayBuilder().getSubArrayBuilder().elementCtorAndArgsProvider(ctorAndArgsProvider);
+
+        final StructuredArray<StructuredArray<StructuredArray<MockStructure>>> sourceArray = builder.build();
+
+        StructuredArray<StructuredArray<MockStructure>> subArray1 = sourceArray.get(0);
+        StructuredArray<MockStructure> subArray2 = subArray1.get(0);
 
         assertThat(valueOf(sourceArray.getLength()), is(valueOf(lengths[0])));
-        assertThat(valueOf(sourceArray.getTotalElementCount()), is(valueOf(lengths[0] * lengths[1] * lengths[2])));
-        assertTrue(sourceArray.getElementClass() == MockStructure.class);
+        assertThat(valueOf(subArray1.getLength()), is(valueOf(lengths[1])));
+        assertThat(valueOf(subArray2.getLength()), is(valueOf(lengths[2])));
+        assertTrue(subArray2.getElementClass() == MockStructure.class);
 
-        long[] offsets = {1, 1, 1};
-        long[] counts = {14, 6, 4};
-        final StructuredArray<MockStructure> newArray =
+        long[] offsets = {2, 2, 2};
+        long[] counts = {13, 5, 3};
+        final StructuredArray<StructuredArray<StructuredArray<MockStructure>>> newArray =
                 StructuredArray.copyInstance(sourceArray, offsets, counts);
 
-        final StructuredArray<MockStructure>.ElementIterator iter = newArray.iterator();
-
-        // We expect MockStructure elements to be initialized with index = indexSum, and testValue = indexSum * 2,
-        // but with the sums based on index+1 for each cursor (due to the {1, 1, 1} offset above):
-        while (iter.hasNext()) {
-            final long[] cursors = iter.getCursors();
-            final MockStructure mockStructure = iter.next();
-            long indexSum = 0;
-            for (long index : cursors) {
-                indexSum += (index + 1);
-            }
-            assertThat(valueOf(mockStructure.getIndex()), is(valueOf(indexSum)));
-            assertThat(valueOf(mockStructure.getTestValue()), is(valueOf(indexSum * 2)));
-        }
+        assertCorrectVariableInitialisation(counts, newArray, 2);
     }
 
     @Test(expected = ArrayIndexOutOfBoundsException.class)
     public void shouldThrowOutOfBoundExceptionForAccessesOutOfBounds() throws NoSuchMethodException {
-        final long[] lengths = {11, 7, 4};
+        final long length = 11;
         final StructuredArray<MockStructure> array =
-                StructuredArray.newInstance(MockStructure.class, lengths);
+                StructuredArray.newInstance(MockStructure.class, length);
 
-        array.get(lengths);
+        array.get(length);
     }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void shouldThrowIncompatibleTypeExceptionForGetOfAnElementInsteadOfArray() throws NoSuchMethodException {
-        final long[] lengths = {11, 7, 4};
-        final StructuredArray<MockStructure> array =
-                StructuredArray.newInstance(MockStructure.class, lengths);
-
-        // A 2D get in a 3D array is expected to throw an NPE:
-        array.get(2, 2);
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void shouldThrowIncompatibleTypeExceptionForGetOfAnArrayInsteadOfElement() throws NoSuchMethodException {
-        final long[] lengths = {11, 7, 4};
-        final StructuredArray<MockStructure> array =
-                StructuredArray.newInstance(MockStructure.class, lengths);
-
-        StructuredArray<MockStructure> subArray1 = array.getSubArray(2);
-        StructuredArray<MockStructure> subArray2 = subArray1.getSubArray(2);
-        subArray2.getSubArray(2);
-    }
-
 
     @Test
     public void shouldNotThrowIncompatibleTypeExceptionForGetsOfProperTypes() throws NoSuchMethodException {
         final long[] lengths = {11, 7, 4};
-        final StructuredArray<MockStructure> array =
-                StructuredArray.newInstance(MockStructure.class, lengths);
+        final StructuredArray<StructuredArray<StructuredArray<MockStructure>>> array = get3dBuilder(lengths).build();
 
         // Step by step gets of the correct type (array vs. element) per dimension:
-        StructuredArray<MockStructure> subArray1 = array.getSubArray(2);
-        StructuredArray<MockStructure> subArray2 = subArray1.getSubArray(2);
+        StructuredArray<StructuredArray<MockStructure>> subArray1 = array.get(2);
+        StructuredArray<MockStructure> subArray2 = subArray1.get(2);
         subArray2.get(2);
 
-        // The end result of the above is equivalent to this:
-        array.get(2, 2, 2);
     }
 
     @Test
@@ -361,18 +365,33 @@ public class StructuredArrayTest {
 
     private void assertCorrectFixedInitialisation(final long expectedIndex, final long expectedValue, final long[] lengths,
                                                   final StructuredArray<MockStructure> array) {
-        for (int i = 0; i < lengths.length; i++) {
-            assertThat(valueOf(array.getLengths()[i]), is(valueOf(lengths[i])));
+        StructuredArray a = array;
+        for (int i = 0; i < lengths.length - 1; i++) {
+            assertThat(valueOf(a.getLength()), is(valueOf(lengths[i])));
+            a = (StructuredArray) a.get(0);
         }
-        assertTrue(array.getElementClass() == MockStructure.class);
+        assertThat(valueOf(a.getLength()), is(valueOf(lengths[lengths.length - 1])));
+
+        assertTrue(a.getElementClass() == MockStructure.class);
+
+        long totalElementCount = 1;
+        for (long l : lengths) {
+            totalElementCount *= l;
+        }
 
         final long[] cursors = new long[lengths.length];
-        final long totalElementCount = array.getTotalElementCount();
+
         long elementCountToCursor = 0;
 
         while (elementCountToCursor < totalElementCount) {
             // Check element at cursors:
-            MockStructure mockStructure = array.get(cursors);
+            // Check element at cursors:
+            a = array;
+            for (int i = 0; i < cursors.length - 1; i++) {
+                a = (StructuredArray) a.get(cursors[i]);
+            }
+            MockStructure mockStructure = (MockStructure) a.get(cursors[cursors.length - 1]);
+
             assertThat(valueOf(mockStructure.getIndex()), is(valueOf(expectedIndex)));
             assertThat(valueOf(mockStructure.getTestValue()), is(valueOf(expectedValue)));
 
@@ -389,24 +408,42 @@ public class StructuredArrayTest {
     }
 
     private void assertCorrectVariableInitialisation(final long[] lengths,
-                                             final StructuredArray<MockStructure> array) {
-        for (int i = 0; i < lengths.length; i++) {
-            assertThat(valueOf(array.getLengths()[i]), is(valueOf(lengths[i])));
+                                                     final StructuredArray array) {
+        assertCorrectVariableInitialisation(lengths, array, 0);
+    }
+
+    private void assertCorrectVariableInitialisation(final long[] lengths,
+                                                     final StructuredArray array, long indexOffset) {
+        StructuredArray a = array;
+        for (int i = 0; i < lengths.length - 1; i++) {
+            assertThat(valueOf(a.getLength()), is(valueOf(lengths[i])));
+            a = (StructuredArray) a.get(0);
         }
-        assertTrue(array.getElementClass() == MockStructure.class);
+        assertThat(valueOf(a.getLength()), is(valueOf(lengths[lengths.length - 1])));
+
+        assertTrue(a.getElementClass() == MockStructure.class);
+
+        long totalElementCount = 1;
+        for (long l : lengths) {
+            totalElementCount *= l;
+        }
 
         final long[] cursors = new long[lengths.length];
-        final long totalElementCount = array.getTotalElementCount();
+
         long elementCountToCursor = 0;
 
         while (elementCountToCursor < totalElementCount) {
             // Check element at cursors:
-            MockStructure mockStructure = array.get(cursors);
+            a = array;
+            for (int i = 0; i < cursors.length - 1; i++) {
+                a = (StructuredArray) a.get(cursors[i]);
+            }
+            MockStructure mockStructure = (MockStructure) a.get(cursors[cursors.length - 1]);
 
             long indexSum = 0;
             String cursorsString = "";
             for (long index : cursors) {
-                indexSum += index;
+                indexSum += index + indexOffset;
                 cursorsString += index + ",";
             }
 
@@ -427,14 +464,22 @@ public class StructuredArrayTest {
         }
     }
 
-    private void initValues(final long[] lengths, final StructuredArray<MockStructure> array) {
+    private void initValues(final long[] lengths, final StructuredArray array) {
         final long[] cursors = new long[lengths.length];
-        final long totalElementCount = array.getTotalElementCount();
+        long totalElementCount = 1;
+        for (long l : lengths) {
+            totalElementCount *= l;
+        }
+
         long elementCountToCursor = 0;
 
         while (elementCountToCursor < totalElementCount) {
             // Check element at cursors:
-            MockStructure mockStructure = array.get(cursors);
+            StructuredArray a = array;
+            for (int i = 0; i < cursors.length - 1; i++) {
+                a = (StructuredArray) a.get(cursors[i]);
+            }
+            MockStructure mockStructure = (MockStructure) a.get(cursors[cursors.length - 1]);
 
             long indexSum = 0;
             for (long index : cursors) {
@@ -515,33 +560,43 @@ public class StructuredArrayTest {
     }
 
     public static class MockStructureWithFinalField {
-
         private final int value = 888;
     }
 
-    private static class DefaultMockCtorAndArgsProvider extends CtorAndArgsProvider<MockStructure> {
+    private static class DefaultMockCtorAndArgsProvider extends AbstractCtorAndArgsProvider<MockStructure> {
 
         private final Class[] argsTypes = {Long.TYPE, Long.TYPE};
 
-        // Single dimension form is not strictly necessary (will call multi-dimension form if it wasn't here)
-        // but this way we get to demonstrate that path too.
-        public CtorAndArgs<MockStructure> getForIndex(long index) throws NoSuchMethodException {
-            Object[] args = {index, index * 2};
-            // We could do this much more efficiently with atomic caching of a single allocated CtorAndArgs,
-            // as CopyCtorAndArgsProvider does, but no need to put in the effort in a test...
-            return new CtorAndArgs<MockStructure>(MockStructure.class.getConstructor(argsTypes), args);
-        }
-
-        // Multi-dimension form needed if we expect to have multi-dimensional arrays:
-        public CtorAndArgs<MockStructure> getForIndex(long... index) throws NoSuchMethodException {
+        public CtorAndArgs<MockStructure> getForContext(ConstructionContext<MockStructure> context) throws NoSuchMethodException {
             long indexSum = 0;
-            for (long index0 : index) {
-                indexSum += index0;
+            for (ConstructionContext c = context; c != null; c = c.getContainingContext()) {
+                indexSum += c.getIndex();
             }
             Object[] args = {indexSum, indexSum * 2};
             // We could do this much more efficiently with atomic caching of a single allocated CtorAndArgs,
             // as CopyCtorAndArgsProvider does, but no need to put in the effort in a test...
             return new CtorAndArgs<MockStructure>(MockStructure.class.getConstructor(argsTypes), args);
         }
+    }
+
+    StructuredArrayBuilder<StructuredArray<StructuredArray<StructuredArray<MockStructure>>>,
+            StructuredArray<StructuredArray<MockStructure>>> get3dBuilder(long... lengths) {
+        @SuppressWarnings("unchecked")
+        StructuredArrayBuilder<StructuredArray<StructuredArray<StructuredArray<MockStructure>>>,
+                StructuredArray<StructuredArray<MockStructure>>> builder =
+                new StructuredArrayBuilder(
+                        StructuredArray.class,
+                        new StructuredArrayBuilder(
+                                StructuredArray.class,
+                                new StructuredArrayBuilder(
+                                        StructuredArray.class,
+                                        MockStructure.class,
+                                        lengths[2]
+                                ),
+                                lengths[1]
+                        ),
+                        lengths[0]
+                );
+        return builder;
     }
 }

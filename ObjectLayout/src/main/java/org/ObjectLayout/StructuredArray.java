@@ -5,17 +5,16 @@
 
 package org.ObjectLayout;
 
+import com.sun.tools.internal.xjc.util.StringCutter;
 import org.ObjectLayout.intrinsifiable.StructuredArrayIntrinsifiableBase;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
-import static java.lang.reflect.Modifier.isFinal;
-import static java.lang.reflect.Modifier.isStatic;
+import static java.lang.reflect.Modifier.*;
 
 /**
  *     An array of (potentially) mutable but non-replaceable objects.
@@ -41,15 +40,14 @@ import static java.lang.reflect.Modifier.isStatic;
  *
  * @param <T> type of the element occupying each array slot.
  */
-public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T, StructuredArray<T>> implements Iterable<T> {
-
+public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T> implements Iterable<T> {
 
     private static final Object[] EMPTY_ARGS = new Object[0];
 
-    private final long totalElementCount; // A cached product of lengths[i]
-
     private final Field[] fields;
     private final boolean hasFinalFields;
+
+    private final StructuredArrayModel<? extends StructuredArray<T>, T> arrayModel;
 
     // Single-dimensional newInstance forms:
 
@@ -65,9 +63,8 @@ public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T, Str
     public static <T> StructuredArray<T> newInstance(
             final Class<T> elementClass,
             final long length) throws NoSuchMethodException {
-        final AbstractCtorAndArgsProvider<T> ctorAndArgsProvider = new SingletonCtorAndArgsProvider<T>(elementClass);
-        final long[] lengths = {length};
-        return instantiate(elementClass, ctorAndArgsProvider, lengths);
+        final CtorAndArgsProvider<T> ctorAndArgsProvider = new SingletonCtorAndArgsProvider<T>(elementClass);
+        return instantiate(elementClass, ctorAndArgsProvider, length);
     }
 
     /**
@@ -105,10 +102,13 @@ public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T, Str
             final Class<T> elementClass,
             final long length) {
         try {
-            final AbstractCtorAndArgsProvider<T> ctorAndArgsProvider =
-                    new SingletonCtorAndArgsProvider<T>(elementClass);
-            final long[] lengths = {length};
-            return instantiate(arrayCtorAndArgs, elementClass, ctorAndArgsProvider, lengths);
+            StructuredArrayBuilder<S, T> arrayBuilder = new StructuredArrayBuilder<S, T>(
+                    arrayCtorAndArgs.getConstructor().getDeclaringClass(),
+                    elementClass,
+                    length).
+                    arrayCtorAndArgs(arrayCtorAndArgs).
+                    resolve();
+            return instantiate(arrayBuilder);
         } catch (NoSuchMethodException ex) {
             throw new RuntimeException(ex);
         }
@@ -125,10 +125,9 @@ public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T, Str
      * @throws NoSuchMethodException if the element class does not not support a supplied constructor
      */
     public static <T> StructuredArray<T> newInstance(final Class<T> elementClass,
-                                                     final SingleDimensionalCtorAndArgsProvider<T> ctorAndArgsProvider,
+                                                     final CtorAndArgsProvider<T> ctorAndArgsProvider,
                                                      final long length) throws NoSuchMethodException {
-        final long[] lengths = {length};
-        return instantiate(elementClass, ctorAndArgsProvider, lengths);
+        return instantiate(elementClass, ctorAndArgsProvider, length);
     }
 
     /**
@@ -144,13 +143,12 @@ public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T, Str
     public static <T, S extends StructuredArray<T>> S newSubclassInstance(
             final Class<S> arrayClass,
             final Class<T> elementClass,
-            final SingleDimensionalCtorAndArgsProvider<T> ctorAndArgsProvider,
+            final CtorAndArgsProvider<T> ctorAndArgsProvider,
             final long length) {
         try {
             Constructor<S> ctor = arrayClass.getConstructor();
             CtorAndArgs<S> arrayCtorAndArgs = new CtorAndArgs<S>(ctor, EMPTY_ARGS);
-            final long[] lengths = {length};
-            return instantiate(arrayCtorAndArgs, elementClass, ctorAndArgsProvider, lengths);
+            return instantiate(arrayCtorAndArgs, elementClass, ctorAndArgsProvider, length);
         } catch (NoSuchMethodException ex) {
             throw new RuntimeException(ex);
         }
@@ -170,10 +168,13 @@ public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T, Str
     public static <T, S extends StructuredArray<T>> S newSubclassInstance(
             final CtorAndArgs<S> arrayCtorAndArgs,
             final Class<T> elementClass,
-            final SingleDimensionalCtorAndArgsProvider<T> ctorAndArgsProvider,
+            final CtorAndArgsProvider<T> ctorAndArgsProvider,
             final long length) {
-        final long[] lengths = {length};
-        return instantiate(arrayCtorAndArgs, elementClass, ctorAndArgsProvider, lengths);
+        try{
+            return instantiate(arrayCtorAndArgs, elementClass, ctorAndArgsProvider, length);
+        } catch (NoSuchMethodException ex) {
+            throw new RuntimeException(ex);
+        }
     }
 
     /**
@@ -196,10 +197,9 @@ public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T, Str
             final long length,
             final Class[] elementConstructorArgTypes,
             final Object... elementConstructorArgs) throws NoSuchMethodException {
-        final AbstractCtorAndArgsProvider<T> ctorAndArgsProvider =
+        final CtorAndArgsProvider<T> ctorAndArgsProvider =
                 new SingletonCtorAndArgsProvider<T>(elementClass, elementConstructorArgTypes, elementConstructorArgs);
-        final long[] lengths = {length};
-        return instantiate(elementClass, ctorAndArgsProvider, lengths);
+        return instantiate(elementClass, ctorAndArgsProvider, length);
     }
 
     /**
@@ -251,223 +251,24 @@ public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T, Str
             final Class[] elementConstructorArgTypes,
             final Object... elementConstructorArgs) {
         try {
-            final AbstractCtorAndArgsProvider<T> ctorAndArgsProvider =
+            final CtorAndArgsProvider<T> ctorAndArgsProvider =
                     new SingletonCtorAndArgsProvider<T>(elementClass, elementConstructorArgTypes, elementConstructorArgs);
-            final long[] lengths = {length};
-            return instantiate(arrayCtorAndArgs, elementClass, ctorAndArgsProvider, lengths);
-        } catch (NoSuchMethodException ex) {
-            throw new RuntimeException(ex);
-        }
-    }
-
-    // Multi-dimensional newInstance forms:
-
-    /**
-     * Create a multi dimensional array of elements of type <code>elementClass</code>. Each dimension of the array
-     * will be of a length designated in the <code>lengths[]</code>  passed. Elements will be constructed Using the
-     * <code>elementClass</code>'s default constructor.
-     *
-     * @param elementClass of each element in the array
-     * @param lengths of the array dimensions to create.
-     * @throws NoSuchMethodException if the element class does not not support a supplied constructor
-     */
-    public static <T> StructuredArray<T> newInstance(final Class<T> elementClass,
-                                                     final long... lengths) throws NoSuchMethodException {
-        final AbstractCtorAndArgsProvider<T> ctorAndArgsProvider = new SingletonCtorAndArgsProvider<T>(elementClass);
-        return instantiate(elementClass, ctorAndArgsProvider, lengths);
-    }
-
-    /**
-     * Create a multi dimensional <code>arrayClass</code> array of elements of type <code>elementClass</code>.
-     * Each dimension of the array will be of a length designated in the <code>lengths[]</code>  passed.
-     * Elements will be constructed Using the <code>elementClass</code>'s default constructor.
-     *
-     * @param arrayClass of the array to create.
-     * @param elementClass of each element in the array
-     * @param lengths of the array dimensions to create.
-     */
-    public static <T, S extends StructuredArray<T>> S newSubclassInstance(
-            final Class<S> arrayClass,
-            final Class<T> elementClass,
-            final long... lengths) {
-        try {
-            Constructor<S> ctor = arrayClass.getConstructor();
-            CtorAndArgs<S> arrayCtorAndArgs = new CtorAndArgs<S>(ctor, EMPTY_ARGS);
-            return newSubclassInstance(arrayCtorAndArgs, elementClass, lengths);
+            return instantiate(arrayCtorAndArgs, elementClass, ctorAndArgsProvider, length);
         } catch (NoSuchMethodException ex) {
             throw new RuntimeException(ex);
         }
     }
 
     /**
-     * Create a multi dimensional <code>arrayCtorAndArgs.getConstructor().getDeclaringClass()</code> array of elements
-     * of type <code>elementClass</code>. Each dimension of the array will be of a length designated in the
-     * <code>lengths[]</code> passed. Elements will be constructed Using the <code>elementClass</code>'s default
-     * constructor.
-     *
-     * @param arrayCtorAndArgs of the array to create.
-     * @param elementClass of each element in the array
-     * @param lengths of the array dimensions to create.
+     * Create a &ltS extends StructuredArray&ltT&gt&gt instance according to the details provided in the
+     * arrayBuilder.
+     * @param arrayBuilder describes the details of how to build the array.
+     * @param <T> The array element class
+     * @param <S> The array class
+     * @return A newly created &ltS extends StructuredArray&ltT&gt&gt instance
      */
-    public static <T, S extends StructuredArray<T>> S newSubclassInstance(
-            final CtorAndArgs<S> arrayCtorAndArgs,
-            final Class<T> elementClass, 
-            final long... lengths) {
-        try {
-            final AbstractCtorAndArgsProvider<T> ctorAndArgsProvider = new SingletonCtorAndArgsProvider<T>(elementClass);
-            return instantiate(arrayCtorAndArgs, elementClass, ctorAndArgsProvider, lengths);
-        } catch (NoSuchMethodException ex) {
-            throw new RuntimeException(ex);
-        }
-    }
-
-    /**
-     * Create a multi dimensional array of elements of type <code>elementClass</code>. Each dimension of the array
-     * will be of a length designated in the <code>lengths[]</code>  passed. Elements will be constructed using a
-     * fixed (same for all elements) constructor identified by the argument classes specified in
-     * <code>elementConstructorArgTypes</code> to construct and initialize each element, passing the
-     * <code>elementConstructorArgs</code> arguments to that constructor.
-     *
-     * @param elementClass of each element in the array
-     * @param lengths of the array dimensions to create.
-     * @param elementConstructorArgTypes for selecting the constructor to call for initialising each structure object.
-     * @param elementConstructorArgs to be passed to a constructor for initialising each structure object.
-     * @throws IllegalArgumentException if elementConstructorArgTypes and constructor arguments do not match in length
-     * @throws NoSuchMethodException if elementConstructorArgTypes does not match a public constructor signature in elementClass
-
-     */
-    @SuppressWarnings("rawtypes")
-    public static <T> StructuredArray<T> newInstance(final Class<T> elementClass,
-                                                     final long[] lengths,
-                                                     final Class[] elementConstructorArgTypes,
-                                                     final Object... elementConstructorArgs) throws NoSuchMethodException {
-        final AbstractCtorAndArgsProvider<T> ctorAndArgsProvider =
-                new SingletonCtorAndArgsProvider<T>(elementClass, elementConstructorArgTypes, elementConstructorArgs);
-        return instantiate(elementClass, ctorAndArgsProvider, lengths);
-    }
-
-    /**
-     * Create a multi dimensional <code>arrayClass</code> array of elements of type <code>elementClass</code> Each
-     * dimension of the array will be of a length designated in the <code>lengths[]</code>  passed. Elements will be
-     * constructed using a fixed (same for all elements) constructor identified by the argument classes specified
-     * in <code>elementConstructorArgTypes</code> to construct and initialize each element, passing the
-     * <code>elementConstructorArgs</code> arguments to that constructor.
-     *
-     * @param arrayClass of the array to create.
-     * @param elementClass of each element in the array
-     * @param lengths of the array dimensions to create.
-     * @param elementConstructorArgTypes for selecting the constructor to call for initialising each structure object.
-     * @param elementConstructorArgs to be passed to a constructor for initialising each structure object.
-     * @throws IllegalArgumentException if elementConstructorArgTypes and constructor arguments do not match in length
-
-     */
-    @SuppressWarnings("rawtypes")
-    public static <T, S extends StructuredArray<T>> S newSubclassInstance(
-            final Class<S> arrayClass,
-            final Class<T> elementClass,
-            final long[] lengths,
-            final Class[] elementConstructorArgTypes,
-            final Object... elementConstructorArgs) {
-        try {
-            Constructor<S> ctor = arrayClass.getConstructor();
-            CtorAndArgs<S> arrayCtorAndArgs = new CtorAndArgs<S>(ctor, EMPTY_ARGS);
-            return newSubclassInstance(arrayCtorAndArgs, elementClass, lengths,
-                    elementConstructorArgTypes, elementConstructorArgs);
-        } catch (NoSuchMethodException ex) {
-            throw new RuntimeException(ex);
-        }
-    }
-
-    /**
-     * Create a multi dimensional <code>(arrayCtorAndArgs.getConstructor().getDeclaringClass())</code> array of
-     * elements of type <code>elementClass</code>. Each dimension of the array will be of a length designated in
-     * the <code>lengths[]</code>  passed. Elements will be constructed using a fixed (same for all elements)
-     * constructor identified by the argument classes specified in  <code>elementConstructorArgTypes</code> to
-     * construct and initialize each element, passing the <code>elementConstructorArgs</code> arguments to that
-     * constructor.
-     *
-     * @param arrayCtorAndArgs of the array to create.
-     * @param elementClass of each element in the array
-     * @param lengths of the array dimensions to create.
-     * @param elementConstructorArgTypes for selecting the constructor to call for initialising each structure object.
-     * @param elementConstructorArgs to be passed to a constructor for initialising each structure object.
-     * @throws IllegalArgumentException if elementConstructorArgTypes and constructor arguments do not match in length
-
-     */
-    @SuppressWarnings("rawtypes")
-    public static <T, S extends StructuredArray<T>> S newSubclassInstance(
-            final CtorAndArgs<S> arrayCtorAndArgs,
-            final Class<T> elementClass, 
-            final long[] lengths,
-            final Class[] elementConstructorArgTypes,
-            final Object... elementConstructorArgs) {
-        try {
-            final AbstractCtorAndArgsProvider<T> ctorAndArgsProvider =
-                    new SingletonCtorAndArgsProvider<T>(elementClass, elementConstructorArgTypes, elementConstructorArgs);
-            return instantiate(arrayCtorAndArgs, elementClass, ctorAndArgsProvider, lengths);
-        } catch (NoSuchMethodException ex) {
-            throw new RuntimeException(ex);
-        }
-    }
-
-    /**
-     * Create a multi dimensional array of elements of type <code>elementClass</code>. Each dimension of the array
-     * will be of a length designated in the <code>lengths[]</code> passed. Elements will be constructed using the
-     * constructor and arguments supplied (on a potentially per element index basis) by the specified
-     * <code>ctorAndArgsProvider</code> to construct and initialize each element.
-     *
-     * @param elementClass of each element in the array
-     * @param ctorAndArgsProvider produces element constructors [potentially] on a per element basis.
-     * @param lengths of the array dimensions to create.
-     * @throws NoSuchMethodException if the element class does not not support a supplied constructor
-     */
-    public static <T> StructuredArray<T> newInstance(final Class<T> elementClass,
-                                                     final MultiDimensionalCtorAndArgsProvider<T> ctorAndArgsProvider,
-                                                     final long... lengths) throws NoSuchMethodException {
-        return instantiate(elementClass, ctorAndArgsProvider, lengths);
-    }
-
-    /**
-     * Create a multi dimensional <code>arrayClass</code> array of elements of type <code>elementClass</code>.
-     * Each dimension of the array will be of a length designated in the <code>lengths[]</code> passed. Elements
-     * will be constructed using the constructor and arguments supplied (on a potentially per element index basis)
-     * by the specified <code>ctorAndArgsProvider</code> to construct and initialize each element.
-     *
-     * @param arrayClass of the array to create.
-     * @param ctorAndArgsProvider produces element constructors [potentially] on a per element basis.
-     * @param lengths of the array dimensions to create.
-     */
-    public static <T, S extends StructuredArray<T>> S newSubclassInstance(
-            final Class<S> arrayClass,
-            final Class<T> elementClass,
-            final MultiDimensionalCtorAndArgsProvider<T> ctorAndArgsProvider,
-            final long... lengths) {
-        try {
-            Constructor<S> ctor = arrayClass.getConstructor();
-            CtorAndArgs<S> arrayCtorAndArgs = new CtorAndArgs<S>(ctor, EMPTY_ARGS);
-            return instantiate(arrayCtorAndArgs, elementClass, ctorAndArgsProvider, lengths);
-        } catch (NoSuchMethodException ex) {
-            throw new RuntimeException(ex);
-        }
-    }
-
-    /**
-     * Create a multi dimensional <code>(arrayCtorAndArgs.getConstructor().getDeclaringClass())</code> array of
-     * elements of type <code>elementClass</code>. Each dimension of the array will be of a length designated in
-     * the <code>lengths[]</code> passed. Elements will be constructed using the constructor and arguments supplied
-     * (on a potentially per element index basis) by the specified <code>ctorAndArgsProvider</code> to construct
-     * and initialize each element.
-     *
-     * @param arrayCtorAndArgs of the array to create.
-     * @param ctorAndArgsProvider produces element constructors [potentially] on a per element basis.
-     * @param lengths of the array dimensions to create.
-     */
-    public static <T, S extends StructuredArray<T>> S newSubclassInstance(
-            final CtorAndArgs<S> arrayCtorAndArgs,
-            final Class<T> elementClass,
-            final MultiDimensionalCtorAndArgsProvider<T> ctorAndArgsProvider,
-            final long... lengths) {
-        return instantiate(arrayCtorAndArgs, elementClass, ctorAndArgsProvider, lengths);
+    public static <S extends StructuredArray<T>, T> S newInstance(final StructuredArrayBuilder<S, T> arrayBuilder) {
+        return instantiate(arrayBuilder);
     }
 
     /**
@@ -479,7 +280,7 @@ public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T, Str
      * @throws NoSuchMethodException if the element class does not have a public copy constructor.
      */
     public static <T> StructuredArray<T> copyInstance(final StructuredArray<T> source) throws NoSuchMethodException {
-        return copyInstance(source, new long[source.getDimensionCount()], source.getLengths());
+        return copyInstance(source, 0, source.getLength());
     }
 
     /**
@@ -488,90 +289,157 @@ public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T, Str
      * the new array based on the corresponding elements of the <code>source</code> array.
      *
      * @param source The array to copy from.
-     * @param sourceOffsets offset indexes for each dimension, indicating where the source region to be copied begins.
-     * @param counts the number of elements in each dimension to copy.
+     * @param sourceOffset offset index, indicating where the source region to be copied begins.
+     * @param count the number of elements to copy.
      * @throws NoSuchMethodException if the element class does not have a public copy constructor.
      */
     @SuppressWarnings("unchecked")
-    public static <T> StructuredArray<T> copyInstance(final StructuredArray<T> source,
+    public static <A extends StructuredArray<T>, T> StructuredArray<T>
+    copyInstance(final A source,
+                 final long sourceOffset,
+                 final long count) throws NoSuchMethodException {
+        return copyInstance(source, new long[] {sourceOffset}, new long[] {count});
+    }
+
+    /**
+     * Copy a range from an array of elements to a newly created array. Copying of individual elements is done
+     * by using the <code>elementClass</code> copy constructor to construct the individual member elements of
+     * the new array based on the corresponding elements of the <code>source</code> array.
+     *
+     * @param source The array to copy from.
+     * @param sourceOffsets offset indexes, indicating where the source region to be copied begins at each
+     *                      StructuredArray nesting depth
+     * @param counts the number of elements to copy at each StructuredArray nesting depth
+     * @throws NoSuchMethodException if the element class does not have a public copy constructor.
+     */
+    @SuppressWarnings("unchecked")
+    public static <A extends StructuredArray<T>, T> StructuredArray<T> copyInstance(final A source,
                                                       final long[] sourceOffsets,
-                                                      final long... counts) throws NoSuchMethodException {
-        if (source.getDimensionCount() != sourceOffsets.length) {
-            throw new IllegalArgumentException("source.getDimensionCount() must match sourceOffsets.length");
-        }
-        if (counts.length != source.getDimensionCount()) {
-            throw new IllegalArgumentException("source.getDimensionCount() must match counts.length");
+                                                      final long[] counts) throws NoSuchMethodException {
+        if (sourceOffsets.length != counts.length) {
+            throw new IllegalArgumentException("sourceOffsets.length must match counts.length");
         }
 
-        for (int i = 0; i < counts.length; i++) {
-            if (source.getLengths()[i] < sourceOffsets[i] + counts[i]) {
+        // Verify source ranges fit in model:
+        int depth = 0;
+        StructuredArrayModel arrayModel = source.getArrayModel();
+        while((depth < counts.length) && (arrayModel != null)) {
+            if (arrayModel.getLength() < sourceOffsets[depth] + counts[depth]) {
                 throw new ArrayIndexOutOfBoundsException(
-                        "Dimension " + i + ": source " + source + " length of " + source.getLengths()[i] +
-                                " is smaller than sourceOffset (" + sourceOffsets[i] + ") + count (" + counts[i] + ")" );
+                        "At nesting depth " + depth + ", source length (" + arrayModel.getLength() +
+                                ") is smaller than sourceOffset (" + sourceOffsets[depth] +
+                                ") + count (" + counts[depth] + ")" );
             }
+            arrayModel = arrayModel.getSubArrayModel();
+            depth++;
         }
 
-        final AbstractCtorAndArgsProvider<T> ctorAndArgsProvider =
-                new CopyCtorAndArgsProvider<T>(source.getElementClass(), source, sourceOffsets, false);
-        CtorAndArgs<StructuredArray<T>> arrayCtorAndArgs =
-                new CtorAndArgs<StructuredArray<T>>(((Class<StructuredArray<T>>) source.getClass()).getConstructor(),
-                        EMPTY_ARGS);
-        return instantiate(arrayCtorAndArgs, source.getElementClass(), ctorAndArgsProvider, counts);
+        // If we run out of model depth before we run out of sourceOffsets and counts, throw:
+        if (depth < counts.length) {
+            throw new IllegalArgumentException("sourceOffsets.length and counts.length (" + counts.length +
+                    ") must not exceed StructuredArray nesting depth (" + depth + ")");
+        }
+
+        final StructuredArrayModel<A, T> sourceArrayModel = (StructuredArrayModel<A, T>) source.getArrayModel();
+        final Class<A> sourceArrayClass = sourceArrayModel.getArrayClass();
+        Constructor<A> arrayConstructor = sourceArrayClass.getConstructor(sourceArrayClass);
+
+        final StructuredArrayBuilder<A, T> arrayBuilder =
+                createCopyingArrayBuilder(sourceArrayModel, sourceOffsets, 0, counts, 0).
+                        arrayCtorAndArgs(arrayConstructor, source).
+                        contextCookie(source);
+
+        return instantiate(arrayBuilder);
     }
 
-    @SuppressWarnings({ "unchecked", "rawtypes" })
-    private static <T, S extends StructuredArray<T>> S instantiate(
+    private static <A extends StructuredArray<T>, T> StructuredArrayBuilder<A, T>
+    createCopyingArrayBuilder(final StructuredArrayModel<A, T> sourceArrayModel,
+                              final long[] sourceOffsets, final int offsetsIndex,
+                              final long[] counts, final int countsIndex) throws NoSuchMethodException {
+        final Class<A> sourceArrayClass = sourceArrayModel.getArrayClass();
+        final Class<T> elementClass = sourceArrayModel.getElementClass();
+
+        long sourceOffset = (offsetsIndex < sourceOffsets.length) ? sourceOffsets[offsetsIndex] : 0;
+        long count = (countsIndex < counts.length) ? counts[countsIndex] : sourceArrayModel.getLength();
+
+        final CtorAndArgsProvider<T> elementCopyCtorAndArgsProvider =
+                new CopyCtorAndArgsProvider<T>(elementClass, sourceOffset);
+
+        final StructuredArrayModel subArrayModel = sourceArrayModel.getSubArrayModel();
+
+        if (subArrayModel != null) {
+            // This array contains another array:
+            StructuredArrayBuilder subArrayBuilder =
+                    createCopyingArrayBuilder(subArrayModel,
+                            sourceOffsets, offsetsIndex + 1,
+                            counts, countsIndex + 1);
+            return new StructuredArrayBuilder<A, T>(sourceArrayClass, subArrayBuilder, count).
+                            elementCtorAndArgsProvider(elementCopyCtorAndArgsProvider).
+                            resolve();
+        } else {
+            // This is a leaf array
+            return new StructuredArrayBuilder<A,T>(sourceArrayClass, elementClass, count).
+                    elementCtorAndArgsProvider(elementCopyCtorAndArgsProvider).
+                    resolve();
+        }
+    }
+
+    private static <T> StructuredArray<T> instantiate(
             final Class<T> elementClass,
-            final AbstractCtorAndArgsProvider<T> ctorAndArgsProvider,
-            final long... lengths) throws NoSuchMethodException {
-        Class arrayClass = StructuredArray.class;
-        CtorAndArgs<S> arrayCtorAndArgs =
-                new CtorAndArgs<S>(arrayClass.getConstructor(), EMPTY_ARGS);
-        return instantiate(arrayCtorAndArgs, elementClass, ctorAndArgsProvider, lengths);
+            final CtorAndArgsProvider<T> ctorAndArgsProvider,
+            final long length) throws NoSuchMethodException {
+        @SuppressWarnings("unchecked")
+        StructuredArrayBuilder<StructuredArray<T>, T> arrayBuilder =
+                new StructuredArrayBuilder(StructuredArray.class, elementClass, length).
+                        elementCtorAndArgsProvider(ctorAndArgsProvider).resolve();
+        return instantiate(arrayBuilder);
     }
 
-    private static <T, S extends StructuredArray<T>> S instantiate(
+    private static <S extends StructuredArray<T>, T> S instantiate(
             final CtorAndArgs<S> arrayCtorAndArgs,
             final Class<T> elementClass,
-            final AbstractCtorAndArgsProvider<T> ctorAndArgsProvider,
-            final long[] lengths) {
-        if (!(((lengths.length == 1) && (ctorAndArgsProvider instanceof SingleDimensionalCtorAndArgsProvider)) ||
-                (ctorAndArgsProvider instanceof MultiDimensionalCtorAndArgsProvider))) {
-            throw new IllegalArgumentException("arrayCtorAndArgs must be and instance of" +
-                    ((lengths.length == 1) ? "either SingleDimensionalCtorAndArgsProvider or" : "") +
-                    "MultiDimensionalCtorAndArgsProvider");
-        }
+            final CtorAndArgsProvider<T> ctorAndArgsProvider,
+            final long length) throws NoSuchMethodException {
+        @SuppressWarnings("unchecked")
+        StructuredArrayBuilder<S, T> arrayBuilder =
+                new StructuredArrayBuilder(arrayCtorAndArgs.getConstructor().getDeclaringClass(), elementClass, length).
+                        arrayCtorAndArgs(arrayCtorAndArgs).
+                        elementCtorAndArgsProvider(ctorAndArgsProvider).
+                        resolve();
+        return instantiate(arrayBuilder);
+    }
+
+    private static <S extends StructuredArray<T>, T> S instantiate(
+            final StructuredArrayBuilder<S, T> arrayBuilder) {
+        ConstructionContext<T> context = new ConstructionContext<T>(arrayBuilder.getContextCookie());
         ConstructorMagic constructorMagic = getConstructorMagic();
-        constructorMagic.setConstructionArgs(arrayCtorAndArgs, ctorAndArgsProvider, null);
+        constructorMagic.setConstructionArgs(arrayBuilder, context);
         try {
             constructorMagic.setActive(true);
-            return StructuredArrayIntrinsifiableBase.instantiateStructuredArray(
-                    elementClass, arrayCtorAndArgs.getConstructor(), arrayCtorAndArgs.getArgs(), lengths);
+            StructuredArrayModel<S, T> arrayModel = arrayBuilder.getArrayModel();
+            Constructor<S> constructor = arrayBuilder.getArrayCtorAndArgs().getConstructor();
+            Object[] args = arrayBuilder.getArrayCtorAndArgs().getArgs();
+            return StructuredArrayIntrinsifiableBase.instantiateStructuredArray(arrayModel, constructor, args);
         } finally {
             constructorMagic.setActive(false);
         }
     }
 
-    @SuppressWarnings("rawtypes")
     public StructuredArray() {
         checkConstructorMagic();
         // Extract locally needed args from constructor magic:
         ConstructorMagic constructorMagic = getConstructorMagic();
         @SuppressWarnings("unchecked")
-        final CtorAndArgs<? extends StructuredArray<T>> arrayCtorAndArgs = constructorMagic.getArrayCtorAndArgs();
+        final ConstructionContext<T> context = constructorMagic.getContext();
         @SuppressWarnings("unchecked")
-        final AbstractCtorAndArgsProvider<T> ctorAndArgsProvider = constructorMagic.getCtorAndArgsProvider();
-        final long[] containingIndex = constructorMagic.getContainingIndex();
+        final StructuredArrayBuilder<StructuredArray<T>, T> arrayBuilder = constructorMagic.getArrayBuilder();
+        final CtorAndArgsProvider<T> ctorAndArgsProvider = arrayBuilder.getElementCtorAndArgsProvider();
 
         // Finish consuming constructMagic arguments:
         constructorMagic.setActive(false);
 
-        // Compute and cache total element count:
-        long totalCount = 1;
-        for (long length : getLengths()) {
-            totalCount *= length;
-        }
-        totalElementCount = totalCount;
+        context.setArray(this);
+        this.arrayModel = arrayBuilder.getArrayModel();
 
         final Field[] fields = removeStaticFields(getElementClass().getDeclaredFields());
         for (final Field field : fields) {
@@ -580,58 +448,25 @@ public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T, Str
         this.fields = fields;
         this.hasFinalFields = containsFinalQualifiedFields(fields);
 
-        long[] lengths = getLengths();
-        int dimensionCount = getDimensionCount();
-
-        try {
-            if (dimensionCount > 1) {
-                // This is an array of arrays. Pass the ctorAndArgsProvider through to
-                // a subArrayCtorAndArgsProvider that will be used to populate the sub-array:
-                final long[] subArrayLengths = new long[lengths.length - 1];
-                System.arraycopy(lengths, 1, subArrayLengths, 0, subArrayLengths.length);
-
-                final ArrayConstructionArgs subArrayArgs =
-                        new ArrayConstructionArgs<T>(arrayCtorAndArgs, getElementClass(),
-                                ctorAndArgsProvider, subArrayLengths, null);
-                @SuppressWarnings("unchecked")
-                final ArrayCtorAndArgsProvider<T, StructuredArray<T>> subArrayCtorAndArgsProvider =
-                        new ArrayCtorAndArgsProvider(arrayCtorAndArgs.getConstructor(), subArrayArgs);
-
-                populateSubArrays(subArrayCtorAndArgsProvider, containingIndex);
-            } else {
-                // This is a single dimension array. Populate it:
-                populateLeafElements(ctorAndArgsProvider, containingIndex);
-            }
-        } catch (NoSuchMethodException ex) {
-            throw new RuntimeException(ex);
+        StructuredArrayBuilder subArrayBuilder = arrayBuilder.getSubArrayBuilder();
+        if (subArrayBuilder != null) {
+            populateSubArrays(ctorAndArgsProvider, subArrayBuilder, context);
+        } else {
+            // This is a single dimension array. Populate it:
+            populateLeafElements(ctorAndArgsProvider, context);
         }
     }
 
-    /**
-     * Get the number of dimensions of the array.
-     *
-     * @return the number of dimensions of the array.
-     */
-    public int getDimensionCount() {
-        return super.getDimensionCount();
-    }
-
-    /**
-     * Get the lengths (number of elements per dimension) of the array.
-     *
-     * @return the number of elements in each dimension in the array.
-     */
-    public long[] getLengths() {
-        return super.getLengths();
-    }
-
-    /**
-     * Get the total number of elements (in all dimensions combined) in this multi-dimensional array.
-     *
-     * @return the total number of elements (in all dimensions combined) in the array.
-     */
-    public long getTotalElementCount() {
-        return totalElementCount;
+    public StructuredArray(StructuredArray<T> sourceArray) {
+        // Support copy constructor. Copying will actually be done by CtorAndArgsProvider and context
+        // in regular constructor, with top-most source array being passed as the cookie in the context,
+        // and copying proceeding using the context indecies and the model to figure out individual sources.
+        this();
+//
+//        // Verify models (size, type, hierarchy) match:
+//        if (arrayModel.getLength() != sourceArray.arrayModel.getLength()) {
+//            throw new IllegalArgumentException("Source and Target array models do not match");
+//        }
     }
 
     /**
@@ -643,32 +478,17 @@ public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T, Str
         return super.getLength();
     }
 
+    /**
+     * Get the array model
+     * @return a model of this array
+     */
+    public StructuredArrayModel<? extends StructuredArray<T>, T> getArrayModel() {
+        return arrayModel;
+    }
 
     // Variations on get():
 
-    /**
-     * Get a reference to an element in an N dimensional array, using N long indices (or a <code>long[N]</code> index array).
-     *
-     * @param indices The indices (at each dimension) of the element to retrieve.
-     * @return a reference to the indexed element.
-     * @throws IllegalArgumentException if number of indices does not match number of dimensions in the array
-     */
-    public T get(final long... indices) throws IllegalArgumentException {
-        return super.get(indices, 0);
-    }
-
-    /**
-     * Get a reference to an element in an N dimensional array, using N int indices (or a <code>int[N]</code> index array).
-     *
-     * @param indices The indices (at each dimension) of the element to retrieve.
-     * @return a reference to the indexed element.
-     * @throws IllegalArgumentException if number of indices does not match number of dimensions in the array
-     */
-    public T get(final int... indices) throws IllegalArgumentException {
-        return super.get(indices, 0);
-    }
-
-    // fast long index element get variants:
+    // fast long index element get variant:
 
     /**
      * Get a reference to an element in a single dimensional array, using a <code>long</code> index.
@@ -681,31 +501,7 @@ public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T, Str
         return super.get(index);
     }
 
-    /**
-     * Get a reference to an element in a two dimensional array, using 2 <code>long</code> indexes.
-     * @param index0 the first index (in the first array dimension) of the element to retrieve
-     * @param index1 the second index (in the second array dimension) of the element to retrieve
-     * @return the element at [index0, index1]
-     * @throws NullPointerException if number of indexes does not match number of dimensions in the array
-     */
-    public T get(final long index0, final long index1) throws IllegalArgumentException {
-        return super.get(index0, index1);
-    }
-
-    /**
-     * Get a reference to an element in a three dimensional array, using 3 <code>long</code> indexes.
-     * @param index0 the first index (in the first array dimension) of the element to retrieve
-     * @param index1 the second index (in the second array dimension) of the element to retrieve
-     * @param index2 the third index (in the third array dimension) of the element to retrieve
-     * @return the element at [index0, index1, index2]
-     * @throws NullPointerException if number of indexes does not match number of dimensions in the array
-     */
-    public T get(final long index0, final long index1, final long index2) throws IllegalArgumentException {
-        return super.get(index0, index1, index2);
-
-    }
-
-    // fast int index element get variants:
+    // fast int index element get variant:
 
     /**
      * Get a reference to an element in a single dimensional array, using an <code>int</code> index.
@@ -718,57 +514,13 @@ public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T, Str
         return super.get(index);
     }
 
-    /**
-     * Get a reference to an element in a two dimensional array, using 2 <code>int</code> indexes.
-     * @param index0 the first index (in the first array dimension) of the element to retrieve
-     * @param index1 the second index (in the second array dimension) of the element to retrieve
-     * @return the element at [index0, index1]
-     * @throws NullPointerException if number of indexes does not match number of dimensions in the array
-     */
-    public T get(final int index0, final int index1) throws IllegalArgumentException {
-        return super.get(index0, index1);
-    }
-
-    /**
-     * Get a reference to an element in a three dimensional array, using 3 <code>int</code> indexes.
-     * @param index0 the first index (in the first array dimension) of the element to retrieve
-     * @param index1 the second index (in the second array dimension) of the element to retrieve
-     * @param index2 the third index (in the third array dimension) of the element to retrieve
-     * @return the element at [index0, index1, index2]
-     * @throws NullPointerException if number of indexes does not match number of dimensions in the array
-     */
-    public T get(final int index0, final int index1, final int index2) throws IllegalArgumentException {
-        return super.get(index0, index1, index2);
-    }
-
     // Type specific public gets of first dimension subarray:
 
-    /**
-     * Get a reference to a StructuredArray element in this array, using a <code>long</code> index.
-     * @param index (in this array's first dimension) of the StructuredArray to retrieve
-     * @return a reference to the StructuredArray located at [index] in the first dimension of this array
-     * @throws IllegalArgumentException if array has less than two dimensions
-     */
-    public StructuredArray<T> getSubArray(final long index) throws IllegalArgumentException {
-        return super.getSubArray(index);
-    }
-
-    /**
-     * Get a reference to a StructuredArray element in this array, using a <code>int</code> index.
-     * @param index (in this array's first dimension) of the StructuredArray to retrieve
-     * @return a reference to the StructuredArray located at [index] in the first dimension of this array
-     * @throws IllegalArgumentException if array has less than two dimensions
-     */
-    public StructuredArray<T> getSubArray(final int index) throws IllegalArgumentException {
-        return super.getSubArray(index);
-    }
-
-    private void populateElement(final long index0,
-                                 final Constructor<T> constructor,
-                                 Object... args) {
+    private void populateElement(final long index,
+                                 CtorAndArgs<T> ctorAndArgs) {
         try {
             // Instantiate:
-            constructElementAtIndex(index0, constructor, args);
+            constructElementAtIndex(index, ctorAndArgs);
         } catch (InstantiationException ex) {
             throw new RuntimeException(ex);
         } catch (IllegalAccessException ex) {
@@ -778,16 +530,17 @@ public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T, Str
         }
     }
 
-    private void populateSubArray(final long index0,
-                                  final Constructor<StructuredArray<T>> constructor,
-                                  ArrayConstructionArgs<T> args) {
+    private void populateSubArray(final ConstructionContext<T> context,
+                                  StructuredArrayBuilder subArrayBuilder,
+                                  final CtorAndArgs<T> subArrayCtorAndArgs) {
+        ConstructionContext<T> subArrayContext = new ConstructionContext<T>(subArrayCtorAndArgs.getContextCookie());
+        subArrayContext.setContainingContext(context);
         ConstructorMagic constructorMagic = getConstructorMagic();
-        constructorMagic.setConstructionArgs(
-                args.getArrayCtorAndArgs(), args.getCtorAndArgsProvider(), args.getContainingIndex());
+        constructorMagic.setConstructionArgs(subArrayBuilder, subArrayContext);
         try {
             constructorMagic.setActive(true);
             // Instantiate:
-            constructSubArrayAtIndex(index0, constructor, args.getElementClass(), args.getLengths());
+            constructSubArrayAtIndex(context.getIndex(), subArrayBuilder.getArrayModel(), subArrayCtorAndArgs);
         } catch (InstantiationException ex) {
             throw new RuntimeException(ex);
         } catch (IllegalAccessException ex) {
@@ -799,41 +552,27 @@ public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T, Str
         }
     }
 
-    private void populateLeafElements(final AbstractCtorAndArgsProvider<T> ctorAndArgsProvider,
-                                      final long[] containingIndex) {
-        final int thisIndex;
-        final long[] index;
-        if (containingIndex != null) {
-            thisIndex = containingIndex.length;
-            index = new long[thisIndex + 1];
-            System.arraycopy(containingIndex, 0, index, 0, containingIndex.length);
-        } else {
-            thisIndex = 0;
-            index = null;
-        }
-
+    private void populateLeafElements(final CtorAndArgsProvider<T> ctorAndArgsProvider,
+                                      final ConstructionContext<T> context) {
         long length = getLength();
 
         try {
-            for (long index0 = 0; index0 < length; index0++) {
+            for (long index = 0; index < length; index++) {
                 final CtorAndArgs<T> ctorAndArgs;
-                if (index != null) {
-                    index[thisIndex] = index0;
-                    ctorAndArgs = ((MultiDimensionalCtorAndArgsProvider<T>) ctorAndArgsProvider).getForIndex(index);
-                } else {
-                    if (ctorAndArgsProvider instanceof SingleDimensionalCtorAndArgsProvider)
-                        ctorAndArgs = ((SingleDimensionalCtorAndArgsProvider<T>) ctorAndArgsProvider).getForIndex(index0);
-                    else
-                        ctorAndArgs = ((MultiDimensionalCtorAndArgsProvider<T>) ctorAndArgsProvider).getForIndex(index0);
-                }
+
+                context.setIndex(index);
+                ctorAndArgs = ctorAndArgsProvider.getForContext(context);
+
                 if (ctorAndArgs.getConstructor().getDeclaringClass() != getElementClass()) {
                     throw new IllegalArgumentException("ElementClass (" + getElementClass() +
                             ") does not match ctorAndArgs.getConstructor().getDeclaringClass() (" +
                             ctorAndArgs.getConstructor().getDeclaringClass() + ")");
                 }
-                populateElement(index0, ctorAndArgs.getConstructor(), ctorAndArgs.getArgs());
-                if (ctorAndArgsProvider instanceof CtorAndArgsProvider) {
-                    ((CtorAndArgsProvider<T>) ctorAndArgsProvider).recycle(ctorAndArgs);
+
+                populateElement(index, ctorAndArgs);
+
+                if (ctorAndArgsProvider instanceof AbstractCtorAndArgsProvider) {
+                    ((AbstractCtorAndArgsProvider<T>) ctorAndArgsProvider).recycle(ctorAndArgs);
                 }
             }
         } catch (NoSuchMethodException ex) {
@@ -842,32 +581,28 @@ public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T, Str
     }
 
     @SuppressWarnings("unchecked")
-    private void populateSubArrays(final ArrayCtorAndArgsProvider<T, StructuredArray<T>> arrayCtorAndArgsProvider,
-                                   final long[] containingIndex) {
-        final int thisIndex;
-        final long[] index;
-        if (containingIndex != null) {
-            thisIndex = containingIndex.length;
-            index = new long[thisIndex + 1];
-            System.arraycopy(containingIndex, 0, index, 0, containingIndex.length);
-        } else {
-            thisIndex = 0;
-            index = null;
-        }
-
+    private void populateSubArrays(final CtorAndArgsProvider<T> subArrayCtorAndArgsProvider,
+                                   final StructuredArrayBuilder subArrayBuilder,
+                                   final ConstructionContext<T> context) {
         long length = getLength();
 
         try {
-            for (long index0 = 0; index0 < length; index0++) {
-                final CtorAndArgs<StructuredArray<T>> ctorAndArgs;
-                if (index != null) {
-                    index[thisIndex] = index0;
-                    ctorAndArgs = arrayCtorAndArgsProvider.getForIndex(index);
-                } else {
-                    ctorAndArgs = arrayCtorAndArgsProvider.getForIndex(index0);
+            for (long index = 0; index < length; index++) {
+                final CtorAndArgs<T> ctorAndArgs;
+
+                context.setIndex(index);
+                ctorAndArgs = subArrayCtorAndArgsProvider.getForContext(context);
+
+                if (ctorAndArgs.getConstructor().getDeclaringClass() != getElementClass()) {
+                    throw new IllegalArgumentException("ElementClass (" + getElementClass() +
+                            ") does not match ctorAndArgs.getConstructor().getDeclaringClass() (" +
+                            ctorAndArgs.getConstructor().getDeclaringClass() + ")");
                 }
-                populateSubArray(index0, ctorAndArgs.getConstructor(), (ArrayConstructionArgs<T>) ctorAndArgs.getArgs()[0]);
-                arrayCtorAndArgsProvider.recycle(ctorAndArgs);
+
+                populateSubArray(context, subArrayBuilder, ctorAndArgs);
+
+                if (subArrayCtorAndArgsProvider instanceof AbstractCtorAndArgsProvider) {
+                    ((AbstractCtorAndArgsProvider<T>) subArrayCtorAndArgsProvider).recycle(ctorAndArgs);                }
             }
         } catch (NoSuchMethodException ex) {
             throw new RuntimeException(ex);
@@ -895,38 +630,26 @@ public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T, Str
      */
     public class ElementIterator implements Iterator<T> {
 
-        private final long[] cursors = new long[getDimensionCount()];
-        private long elementCountToCursor = 0;
+        private long cursor = 0;
 
         /**
          * {@inheritDoc}
          */
         public boolean hasNext() {
-            return elementCountToCursor < totalElementCount;
+            return cursor < getLength();
         }
 
         /**
          * {@inheritDoc}
          */
         public T next() {
-            if (elementCountToCursor >= totalElementCount) {
+            if (cursor >= getLength()) {
                 throw new NoSuchElementException();
             }
 
-            final T element = get(cursors);
+            final T element = get(cursor);
 
-            long lengths[] = getLengths();
-
-            // Increment cursors from inner-most dimension out:
-            for (int cursorDimension = cursors.length - 1; cursorDimension >= 0; cursorDimension--) {
-                if ((++cursors[cursorDimension]) < lengths[cursorDimension]) {
-                    break;
-                }
-
-                // This dimension wrapped. Reset to zero and continue to one dimension higher
-                cursors[cursorDimension] = 0;
-            }
-            elementCountToCursor++;
+            cursor++;
 
             return element;
         }
@@ -944,14 +667,11 @@ public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T, Str
          * Reset to the beginning of the collection enabling reuse of the iterator.
          */
         public void reset() {
-            for (int i = 0; i < cursors.length; i++) {
-                cursors[i] = 0;
-            }
-            elementCountToCursor = 0;
+            cursor = 0;
         }
 
-        public long[] getCursors() {
-            return Arrays.copyOf(cursors, cursors.length);
+        public long getCursor() {
+            return cursor;
         }
     }
 
@@ -1056,8 +776,10 @@ public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T, Str
                     src.getClass(), dst.getClass());
             throw new ArrayStoreException(msg);
         }
-        if ((src.getDimensionCount() > 1) || (dst.getDimensionCount() > 1)) {
-            throw new IllegalArgumentException("shallowCopy only supported for single dimension arrays");
+
+        if ((StructuredArray.class.isAssignableFrom(src.getElementClass()) ||
+                (StructuredArray.class.isAssignableFrom(dst.getElementClass())))) {
+            throw new IllegalArgumentException("shallowCopy only supported for single dimension arrays (with no nested StructuredArrays)");
         }
 
         final Field[] fields = src.fields;
@@ -1102,11 +824,6 @@ public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T, Str
     //
     //
 
-    /**
-     * OPTIMIZATION NOTE: The ConstructorMagic will likely not need to be modified in any way even for
-     * optimized JDK implementations. It resides in this class for scoping reasons.
-     */
-
     private static class ConstructorMagic {
         private boolean isActive() {
             return active;
@@ -1116,31 +833,23 @@ public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T, Str
             this.active = active;
         }
 
-        public void setConstructionArgs(CtorAndArgs arrayCtorAndArgs,
-                                        AbstractCtorAndArgsProvider ctorAndArgsProvider,
-                                        long[] containingIndex) {
-            this.arrayCtorAndArgs = arrayCtorAndArgs;
-            this.ctorAndArgsProvider = ctorAndArgsProvider;
-            this.containingIndex = containingIndex;
+        public void setConstructionArgs(final StructuredArrayBuilder arrayBuilder, final ConstructionContext context) {
+            this.arrayBuilder = arrayBuilder;
+            this.context = context;
         }
 
-        public CtorAndArgs getArrayCtorAndArgs() {
-            return arrayCtorAndArgs;
+        public StructuredArrayBuilder getArrayBuilder() {
+            return arrayBuilder;
         }
 
-        public AbstractCtorAndArgsProvider getCtorAndArgsProvider() {
-            return ctorAndArgsProvider;
-        }
-
-        public long[] getContainingIndex() {
-            return containingIndex;
+        public ConstructionContext getContext() {
+            return context;
         }
 
         private boolean active = false;
 
-        private CtorAndArgs arrayCtorAndArgs = null;
-        private AbstractCtorAndArgsProvider ctorAndArgsProvider = null;
-        private long[] containingIndex = null;
+        private StructuredArrayBuilder arrayBuilder;
+        private ConstructionContext context;
     }
 
     private static final ThreadLocal<ConstructorMagic> threadLocalConstructorMagic =
@@ -1156,7 +865,9 @@ public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T, Str
 
     private static void checkConstructorMagic() {
         if (!getConstructorMagic().isActive()) {
-            throw new IllegalArgumentException("StructuredArray<> must not be directly instantiated with a constructor. Use newInstance(...) instead.");
+            throw new IllegalArgumentException(
+                    "StructuredArray<> must not be directly instantiated with a constructor." +
+                            " Use newInstance(...) or a builder instead.");
         }
     }
 }

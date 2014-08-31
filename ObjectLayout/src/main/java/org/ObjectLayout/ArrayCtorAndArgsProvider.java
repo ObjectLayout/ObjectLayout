@@ -15,7 +15,7 @@ import java.lang.reflect.Constructor;
  *
  * @param <A> type of the element occupying each array slot
  */
-class ArrayCtorAndArgsProvider<T, A extends StructuredArray<T>> extends CtorAndArgsProvider<A> {
+class ArrayCtorAndArgsProvider<T, A extends StructuredArray<T>> extends AbstractCtorAndArgsProvider<A> {
 
     private final Constructor<A> constructor;
     private final ArrayConstructionArgs originalArgs;
@@ -42,12 +42,12 @@ class ArrayCtorAndArgsProvider<T, A extends StructuredArray<T>> extends CtorAndA
      * Get a {@link CtorAndArgs} instance to be used in constructing a given sub-array at a given element index in
      * a {@link StructuredArray}
      *
-     * @param index The indices of the element to be constructed in the target array
+     * @param context The construction context (index, containing array, etc.) of the element to be constructed
      * @return {@link CtorAndArgs} instance to used in element construction
      * @throws NoSuchMethodException
      */
     @Override
-    public CtorAndArgs<A> getForIndex(final long index) throws NoSuchMethodException {
+    public CtorAndArgs<A> getForContext(final ConstructionContext context) throws NoSuchMethodException {
         CtorAndArgs<A> ctorAndArgs;
         ArrayConstructionArgs arrayConstructionArgs;
         long[] containingIndex;
@@ -63,7 +63,7 @@ class ArrayCtorAndArgsProvider<T, A extends StructuredArray<T>> extends CtorAndA
         if ((containingIndex == null) || (containingIndex.length != 1))  {
             containingIndex = new long[1];
         }
-        containingIndex[0] = index;
+        containingIndex[0] = context.getIndex();
 
         if (arrayConstructionArgs == null) {
             arrayConstructionArgs = new ArrayConstructionArgs(originalArgs);
@@ -79,56 +79,12 @@ class ArrayCtorAndArgsProvider<T, A extends StructuredArray<T>> extends CtorAndA
 
         return ctorAndArgs;
     }
-
-    /**
-     * Get a {@link CtorAndArgs} instance to be used in constructing a given sub-array at a given index in
-     * a {@link StructuredArray}
-     *
-     * @param index The indices of the element to be constructed in the target array (one value per dimension).
-     * @return {@link CtorAndArgs} instance to used in element construction
-     * @throws NoSuchMethodException
-     */
-    @Override
-    public CtorAndArgs<A> getForIndex(final long... index) throws NoSuchMethodException {
-        CtorAndArgs<A> ctorAndArgs;
-        ArrayConstructionArgs arrayConstructionArgs;
-        long[] containingIndex;
-
-        // Try (but not too hard) to use a cached, previously allocated ctorAndArgs object:
-        ctorAndArgs = cachedCtorAndArgs;
-        cachedCtorAndArgs = null;
-        arrayConstructionArgs = cachedArrayConstructionArgs;
-        cachedArrayConstructionArgs = null;
-        containingIndex = cachedContainingIndex;
-        cachedContainingIndex = null;
-
-
-        if ((containingIndex == null) || (containingIndex.length != index.length))  {
-            containingIndex = new long[index.length];
-        }
-        System.arraycopy(index, 0, containingIndex, 0, index.length);
-
-        if (arrayConstructionArgs == null) {
-            arrayConstructionArgs = new ArrayConstructionArgs(originalArgs);
-        }
-
-        arrayConstructionArgs.setContainingIndex(containingIndex);
-
-        if (ctorAndArgs == null) {
-            // We have nothing cached that's not being used. A bit of allocation in contended cases won't kill us:
-            ctorAndArgs = new CtorAndArgs<A>(constructor, arrayConstructionArgs);
-        }
-        ctorAndArgs.setArgs(arrayConstructionArgs);
-
-        return ctorAndArgs;
-    }
-
 
     /**
      * Recycle an {@link CtorAndArgs} instance (place it back in the internal cache if desired). This is [very]
      * useful for avoiding a re-allocation of a new {@link CtorAndArgs} and an associated args array for
-     * {@link #getForIndex(long...)} invocation in cases such as this (where the returned {@link CtorAndArgs}
-     * is not constant across indices).
+     * {@link #getForContext(ConstructionContext)} invocation in cases such as this (where the returned
+     * {@link CtorAndArgs} is not constant across indices).
      * Recycling is optional, and is not guaranteed to occur.
      *
      * @param ctorAndArgs the {@link CtorAndArgs} instance to recycle

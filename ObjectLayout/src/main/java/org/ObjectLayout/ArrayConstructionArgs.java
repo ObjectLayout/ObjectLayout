@@ -9,13 +9,13 @@ public class ArrayConstructionArgs<T> {
 
     private final CtorAndArgs arrayCtorAndArgs;
     private final Class<T> elementClass;
-    private final AbstractCtorAndArgsProvider<T> ctorAndArgsProvider;
+    private final CtorAndArgsProvider<T> ctorAndArgsProvider;
     private final long[] lengths;
     private long[] containingIndex;
 
     ArrayConstructionArgs(final CtorAndArgs arrayCtorAndArgs,
                           final Class<T> elementClass,
-                          final AbstractCtorAndArgsProvider<T> ctorAndArgsProvider,
+                          final CtorAndArgsProvider<T> ctorAndArgsProvider,
                           final long[] lengths,
                           final long[] containingIndex) {
         this.arrayCtorAndArgs = arrayCtorAndArgs;
@@ -37,7 +37,7 @@ public class ArrayConstructionArgs<T> {
         return elementClass;
     }
 
-    public AbstractCtorAndArgsProvider<T> getCtorAndArgsProvider() {
+    public CtorAndArgsProvider<T> getCtorAndArgsProvider() {
         return ctorAndArgsProvider;
     }
 

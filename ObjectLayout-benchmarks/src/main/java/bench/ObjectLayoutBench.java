@@ -40,14 +40,16 @@ public class ObjectLayoutBench {
     public void setup() throws NoSuchMethodException {
         final int length = 1000000;
 
-        final SingleDimensionalCtorAndArgsProvider<MockStructure> ctorAndArgsProvider =
+        final CtorAndArgsProvider<MockStructure> ctorAndArgsProvider =
                 new DefaultMockCtorAndArgsProvider();
 
         array = StructuredArray.newInstance(MockStructure.class, ctorAndArgsProvider, length);
         subclassedArray = StructuredArrayOfMockStructure.newInstance(ctorAndArgsProvider, length);
         encapsulatedArray = new EncapsulatedArray(length);
         encapsulatedRandomizedArray = new EncapsulatedRandomizedArray(length);
-        genericEncapsulatedArray = new GenericEncapsulatedArray<MockStructure>(ctorAndArgsProvider, length);
+        genericEncapsulatedArray =
+                new GenericEncapsulatedArray<MockStructure>(
+                        MockStructure.class.getConstructor(DefaultMockCtorAndArgsProvider.argsTypes), length);
     }
 
     // TODO: We should probably sink the values into Blackhole.consume,
@@ -160,17 +162,14 @@ public class ObjectLayoutBench {
         private final int value = 888;
     }
 
-    private static class DefaultMockCtorAndArgsProvider extends CtorAndArgsProvider<MockStructure>
+    private static class DefaultMockCtorAndArgsProvider extends AbstractCtorAndArgsProvider<MockStructure>
     {
 
-        private final Class[] argsTypes = {Long.TYPE, Long.TYPE};
+        static final Class[] argsTypes = {Long.TYPE, Long.TYPE};
 
         @Override
-        public CtorAndArgs<MockStructure> getForIndex(long... indices) throws NoSuchMethodException {
-            long indexSum = 0;
-            for (long index : indices) {
-                indexSum += index;
-            }
+        public CtorAndArgs<MockStructure> getForContext(final ConstructionContext context) throws NoSuchMethodException {
+            long indexSum = context.getIndex();
             Object[] args = {indexSum, indexSum * 2};
             // We could do this much more efficiently with atomic caching of a single allocated CtorAndArgs,
             // as CopyCtorAndArgsProvider does, but no need to put in the effort in a test...
@@ -181,7 +180,7 @@ public class ObjectLayoutBench {
 
     public static class StructuredArrayOfMockStructure extends StructuredArray<MockStructure> {
         public static StructuredArrayOfMockStructure newInstance(
-                final SingleDimensionalCtorAndArgsProvider<MockStructure> ctorAndArgsProvider,final long length) {
+                final CtorAndArgsProvider<MockStructure> ctorAndArgsProvider,final long length) {
             return StructuredArray.newSubclassInstance(
                     StructuredArrayOfMockStructure.class, MockStructure.class, ctorAndArgsProvider, length);
         }
@@ -237,14 +236,12 @@ public class ObjectLayoutBench {
     static class GenericEncapsulatedArray<E> {
         final E[] array;
 
-        GenericEncapsulatedArray(SingleDimensionalCtorAndArgsProvider<E> ctorAndArgsProvider, int length)
+        GenericEncapsulatedArray(Constructor<E> constructor, int length)
                 throws NoSuchMethodException {
             array = (E[]) new Object[length];
             try {
                 for (int i = 0; i < array.length; i++) {
-                    final CtorAndArgs<E> ctorAndArgs = ctorAndArgsProvider.getForIndex(i);
-                    final Constructor<E> constructor = ctorAndArgs.getConstructor();
-                    array[i] = constructor.newInstance(ctorAndArgs.getArgs());
+                    array[i] = constructor.newInstance(i, i * 2);
                 }
             } catch (final Exception ex) {
                 throw new RuntimeException(ex);

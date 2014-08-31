@@ -52,7 +52,7 @@ public class StructuredArrayOfAtomicLongTest {
             elementCount2++;
         }
 
-        assertThat(valueOf(elementCount), is(valueOf(array.getTotalElementCount())));
+        assertThat(valueOf(elementCount), is(valueOf(array.getLength())));
         assertThat(valueOf(sum), is(valueOf(sum2)));
         assertThat(valueOf(elementCount), is(valueOf(elementCount2)));
     }
@@ -92,21 +92,6 @@ public class StructuredArrayOfAtomicLongTest {
                 StructuredArrayOfAtomicLong.newInstance(length);
 
         array.get(length);
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void shouldThrowIncompatibleTypeExceptionForGetOfAnElementInsteadOfArray() throws NoSuchMethodException {
-        final StructuredArrayOfAtomicLong array =
-                StructuredArrayOfAtomicLong.newInstance(111);
-        // A 2D get in a 1D array is expected to throw an IllegalArgumentException:
-        array.get(2, 2);
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void shouldThrowIncompatibleTypeExceptionForGetOfAnArrayInsteadOfElement() throws NoSuchMethodException {
-        final StructuredArrayOfAtomicLong array =
-                StructuredArrayOfAtomicLong.newInstance(111);
-        array.getSubArray(2);
     }
 
 

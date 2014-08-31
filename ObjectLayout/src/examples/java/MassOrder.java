@@ -5,8 +5,9 @@
 
 import java.util.Iterator;
 
+import org.ObjectLayout.ConstructionContext;
 import org.ObjectLayout.CtorAndArgs;
-import org.ObjectLayout.CtorAndArgsProvider;
+import org.ObjectLayout.AbstractCtorAndArgsProvider;
 import org.ObjectLayout.StructuredArray;
 
 public class MassOrder extends
@@ -105,7 +106,7 @@ public class MassOrder extends
     }
 
     public static final class Builder extends
-            CtorAndArgsProvider<SimpleOrder> {
+            AbstractCtorAndArgsProvider<SimpleOrder> {
 
         private static CtorAndArgs<MassOrder> massOrderCtorAndArgs() {
             try {
@@ -194,9 +195,9 @@ public class MassOrder extends
         }
 
         @Override
-        public CtorAndArgs<SimpleOrder> getForIndex(
-                long index) throws NoSuchMethodException {
-
+        public CtorAndArgs<SimpleOrder> getForContext(
+                ConstructionContext<SimpleOrder> context) throws NoSuchMethodException {
+            long index = context.getIndex();
             CtorAndArgs<SimpleOrder> ctorAndArgs =
                     simpleOrderCtorAndArgs != null ? simpleOrderCtorAndArgs : simpleOrderCtorAndArgs();
 

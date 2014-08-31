@@ -1,7 +1,7 @@
 /*
- * Written by Gil Tene and Martin Thompson, and released to the public domain,
- * as explained at http://creativecommons.org/publicdomain/zero/1.0/
- */
+* Written by Gil Tene and Martin Thompson, and released to the public domain,
+* as explained at http://creativecommons.org/publicdomain/zero/1.0/
+*/
 
 package org.ObjectLayout;
 
@@ -71,13 +71,11 @@ public class StructuredArrayPerfTest {
     class GenericEncapsulatedArray<E> {
         final E[] array;
 
-        GenericEncapsulatedArray(SingleDimensionalCtorAndArgsProvider<E> ctorAndArgsProvider, int length)  throws NoSuchMethodException {
+        GenericEncapsulatedArray(Constructor<E> constructor, int length) {
             array = (E[]) new Object[length];
             try {
                 for (int i = 0; i < array.length; i++) {
-                    final CtorAndArgs<E> ctorAndArgs = ctorAndArgsProvider.getForIndex(i);
-                    final Constructor<E> constructor = ctorAndArgs.getConstructor();
-                    array[i] = constructor.newInstance(ctorAndArgs.getArgs());
+                    array[i] = constructor.newInstance(i, i * 2);
                 }
             } catch (final Exception ex) {
                 throw new RuntimeException(ex);
@@ -171,7 +169,7 @@ public class StructuredArrayPerfTest {
     public void testLoopingSpeeds() throws NoSuchMethodException {
         final int length = 1000000;
 
-        final SingleDimensionalCtorAndArgsProvider<MockStructure> ctorAndArgsProvider =
+        final CtorAndArgsProvider<MockStructure> ctorAndArgsProvider =
                 new DefaultMockCtorAndArgsProvider();
 
 
@@ -179,8 +177,9 @@ public class StructuredArrayPerfTest {
         subclassedArray = StructuredArrayOfMockStructure.newInstance(ctorAndArgsProvider, length);
         encapsulatedArray = new EncapsulatedArray(length);
         encapsulatedRandomizedArray = new EncapsulatedRandomizedArray(length);
-        genericEncapsulatedArray = new GenericEncapsulatedArray<MockStructure>(ctorAndArgsProvider, length);
-
+        genericEncapsulatedArray =
+                new GenericEncapsulatedArray<MockStructure>(
+                        MockStructure.class.getConstructor(DefaultMockCtorAndArgsProvider.argsTypes), length);
         for (int i = 0; i < 10; i++) {
             testLoop(length);
             try {
@@ -205,100 +204,6 @@ public class StructuredArrayPerfTest {
     ///////////////////////////////////////////////////////////////////////////////////////////////
     // Test support below
     ///////////////////////////////////////////////////////////////////////////////////////////////
-
-    private void assertCorrectFixedInitialisation(final long expectedIndex, final long expectedValue, final long[] lengths,
-                                                  final StructuredArray<MockStructure> array) {
-        for (int i = 0; i < lengths.length; i++) {
-            assertThat(valueOf(array.getLengths()[i]), is(valueOf(lengths[i])));
-        }
-        assertTrue(array.getElementClass() == MockStructure.class);
-
-        final long[] cursors = new long[lengths.length];
-        final long totalElementCount = array.getTotalElementCount();
-        long elementCountToCursor = 0;
-
-        while (elementCountToCursor < totalElementCount) {
-            // Check element at cursors:
-            MockStructure mockStructure = array.get(cursors);
-            assertThat(valueOf(mockStructure.getIndex()), is(valueOf(expectedIndex)));
-            assertThat(valueOf(mockStructure.getTestValue()), is(valueOf(expectedValue)));
-
-            // Increment cursors from inner-most dimension out:
-            for (int cursorDimension = cursors.length - 1; cursorDimension >= 0; cursorDimension--) {
-                if ((++cursors[cursorDimension]) < lengths[cursorDimension])
-                    break;
-                // This dimension wrapped. Reset to zero and continue to one dimension higher
-                cursors[cursorDimension] = 0;
-            }
-            elementCountToCursor++;
-        }
-    }
-
-    private void assertCorrectVariableInitialisation(final long[] lengths,
-                                             final StructuredArray<MockStructure> array) {
-        for (int i = 0; i < lengths.length; i++) {
-            assertThat(valueOf(array.getLengths()[i]), is(valueOf(lengths[i])));
-        }
-        assertTrue(array.getElementClass() == MockStructure.class);
-
-        final long[] cursors = new long[lengths.length];
-        final long totalElementCount = array.getTotalElementCount();
-        long elementCountToCursor = 0;
-
-        while (elementCountToCursor < totalElementCount) {
-            // Check element at cursors:
-            MockStructure mockStructure = array.get(cursors);
-
-            long indexSum = 0;
-            String cursorsString = "";
-            for (long index : cursors) {
-                indexSum += index;
-                cursorsString += index + ",";
-            }
-
-            assertThat("elementCountToCursor: " + elementCountToCursor + " cursors: " + cursorsString,
-                    valueOf(mockStructure.getIndex()), is(valueOf(indexSum)));
-            assertThat("elementCountToCursor: " + elementCountToCursor + " cursors: " + cursorsString,
-                    valueOf(mockStructure.getTestValue()), is(valueOf(indexSum * 2)));
-
-            // Increment cursors from inner-most dimension out:
-            for (int cursorDimension = cursors.length - 1; cursorDimension >= 0; cursorDimension--) {
-                if ((++cursors[cursorDimension]) < lengths[cursorDimension])
-                    break;
-                // This dimension wrapped. Reset to zero and continue to one dimension higher
-                cursors[cursorDimension] = 0;
-            }
-            elementCountToCursor++;
-        }
-    }
-
-    private void initValues(final long[] lengths, final StructuredArray<MockStructure> array) {
-        final long[] cursors = new long[lengths.length];
-        final long totalElementCount = array.getTotalElementCount();
-        long elementCountToCursor = 0;
-
-        while (elementCountToCursor < totalElementCount) {
-            // Check element at cursors:
-            MockStructure mockStructure = array.get(cursors);
-
-            long indexSum = 0;
-            for (long index : cursors) {
-                indexSum += index;
-            }
-
-            mockStructure.setIndex(indexSum);
-            mockStructure.setTestValue(indexSum * 2);
-
-            // Increment cursors from inner-most dimension out:
-            for (int cursorDimension = cursors.length - 1; cursorDimension >= 0; cursorDimension--) {
-                if ((++cursors[cursorDimension]) < lengths[cursorDimension])
-                    break;
-                // This dimension wrapped. Reset to zero and continue to one dimension higher
-                cursors[cursorDimension] = 0;
-            }
-            elementCountToCursor++;
-        }
-    }
 
     public static class MockStructure {
 
@@ -358,32 +263,26 @@ public class StructuredArrayPerfTest {
     }
 
     public static class MockStructureWithFinalField {
-
         private final int value = 888;
     }
 
-    private static class DefaultMockCtorAndArgsProvider extends CtorAndArgsProvider<MockStructure>
+    private static class DefaultMockCtorAndArgsProvider extends AbstractCtorAndArgsProvider<MockStructure>
     {
-
-        private final Class[] argsTypes = {Long.TYPE, Long.TYPE};
+        static final Class[] argsTypes = {Long.TYPE, Long.TYPE};
 
         @Override
-        public CtorAndArgs<MockStructure> getForIndex(long... indices) throws NoSuchMethodException {
-            long indexSum = 0;
-            for (long index : indices) {
-                indexSum += index;
-            }
+        public CtorAndArgs<MockStructure> getForContext(final ConstructionContext context) throws NoSuchMethodException {
+            long indexSum = context.getIndex();
             Object[] args = {indexSum, indexSum * 2};
             // We could do this much more efficiently with atomic caching of a single allocated CtorAndArgs,
             // as CopyCtorAndArgsProvider does, but no need to put in the effort in a test...
             return new CtorAndArgs<MockStructure>(MockStructure.class.getConstructor(argsTypes), args);
         }
-
     }
 
     public static class StructuredArrayOfMockStructure extends StructuredArray<MockStructure> {
         public static StructuredArrayOfMockStructure newInstance(
-                final SingleDimensionalCtorAndArgsProvider<MockStructure> ctorAndArgsProvider,final long length) {
+                final CtorAndArgsProvider<MockStructure> ctorAndArgsProvider,final long length) {
             return StructuredArray.newSubclassInstance(
                     StructuredArrayOfMockStructure.class, MockStructure.class, ctorAndArgsProvider, length);
         }

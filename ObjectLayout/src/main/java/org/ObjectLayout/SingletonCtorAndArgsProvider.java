@@ -13,7 +13,7 @@ import java.lang.reflect.Constructor;
  *
  * @param <T> type of the element occupying each array slot
  */
-public class SingletonCtorAndArgsProvider<T> extends CtorAndArgsProvider<T> {
+public class SingletonCtorAndArgsProvider<T> extends AbstractCtorAndArgsProvider<T> {
 
     private static final Class[] EMPTY_ARG_TYPES = new Class[0];
     private static final Object[] EMPTY_ARGS = new Object[0];
@@ -54,15 +54,15 @@ public class SingletonCtorAndArgsProvider<T> extends CtorAndArgsProvider<T> {
      * @throws IllegalArgumentException if argTypes and args conflict
      */
     public SingletonCtorAndArgsProvider(final Constructor<T> constructor,
-                                        final Object... args) throws NoSuchMethodException {
+                                        final Object... args) {
         ctorAndArgs = new CtorAndArgs<T>(constructor, args);
     }
 
     /**
      * Set the constructor arguments to be indicated in this CtorAndArgsProvider. Enables recycling of
-     * {@link AbstractCtorAndArgsProvider} objects to avoid re-allocation. E.g. in copy construction loops.
+     * {@link CtorAndArgsProvider} objects to avoid re-allocation. E.g. in copy construction loops.
      *
-     * @param args constructor arguments to be indicated in this {@link AbstractCtorAndArgsProvider}
+     * @param args constructor arguments to be indicated in this {@link CtorAndArgsProvider}
      */
     public final void setArgs(final Object... args) {
         ctorAndArgs.setArgs(args);
@@ -72,25 +72,12 @@ public class SingletonCtorAndArgsProvider<T> extends CtorAndArgsProvider<T> {
      * Get a {@link CtorAndArgs} instance to be used in constructing a given element index in
      * a {@link StructuredArray}.
      *
-     * @param index of the element to be constructed in the target array
+     * @param context The construction context (index, containing array, etc.) of the element to be constructed
      * @return {@link CtorAndArgs} instance to used in element construction
      * @throws NoSuchMethodException if expected constructor is not found in element class
      */
     @Override
-    public CtorAndArgs<T> getForIndex(final long index) throws NoSuchMethodException {
-        return ctorAndArgs;
-    }
-
-    /**
-     * Get a {@link CtorAndArgs} instance to be used in constructing a given element index in
-     * a {@link StructuredArray}.
-     *
-     * @param index of the element to be constructed in the target array (one per dimension)
-     * @return {@link CtorAndArgs} instance to used in element construction
-     * @throws NoSuchMethodException if expected constructor is not found in element class
-     */
-    @Override
-    public CtorAndArgs<T> getForIndex(final long... index) throws NoSuchMethodException {
+    public CtorAndArgs<T> getForContext(final ConstructionContext context) throws NoSuchMethodException {
         return ctorAndArgs;
     }
 }

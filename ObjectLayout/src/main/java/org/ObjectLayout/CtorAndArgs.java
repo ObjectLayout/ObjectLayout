@@ -18,6 +18,7 @@ public class CtorAndArgs<T> {
 
     private Constructor<T> constructor;
     private Object[] args;
+    private Object contextCookie;
 
     /**
      * Create a {@link CtorAndArgs} instance. The presumption is that types in args
@@ -94,5 +95,21 @@ public class CtorAndArgs<T> {
             throw new NullPointerException("args cannot be null");
         }
         this.args = args;
+    }
+
+    /**
+     * Get the value of the opaque contextCookie object
+     * @return opaque contextCookie object (may be null)
+     */
+    public Object getContextCookie() {
+        return contextCookie;
+    }
+
+    /**
+     * Set the value of the opaque contextCookie object
+     * @param contextCookie carries an opaque object
+     */
+    public void setContextCookie(Object contextCookie) {
+        this.contextCookie = contextCookie;
     }
 }
