@@ -13,7 +13,7 @@ import java.lang.reflect.Constructor;
  *
  * @param <T> type of the element occupying each array slot
  */
-public class SingletonCtorAndArgsProvider<T> extends AbstractCtorAndArgsProvider<T> {
+public class ConstantCtorAndArgsProvider<T> extends AbstractCtorAndArgsProvider<T> {
 
     private static final Class[] EMPTY_ARG_TYPES = new Class[0];
     private static final Object[] EMPTY_ARGS = new Object[0];
@@ -26,7 +26,7 @@ public class SingletonCtorAndArgsProvider<T> extends AbstractCtorAndArgsProvider
      * @param elementClass The element class
      * @throws NoSuchMethodException if no default constructor is found for elementClass
      */
-    public SingletonCtorAndArgsProvider(final Class<T> elementClass) throws NoSuchMethodException {
+    public ConstantCtorAndArgsProvider(final Class<T> elementClass) throws NoSuchMethodException {
         this(elementClass, EMPTY_ARG_TYPES, EMPTY_ARGS);
     }
 
@@ -39,9 +39,9 @@ public class SingletonCtorAndArgsProvider<T> extends AbstractCtorAndArgsProvider
      * @throws NoSuchMethodException if a constructor matching constructorArgTypes
      * @throws IllegalArgumentException if constructorArgTypes and args conflict
      */
-    public SingletonCtorAndArgsProvider(final Class<T> elementClass,
-                                        final Class[] constructorArgTypes,
-                                        final Object... args) throws NoSuchMethodException {
+    public ConstantCtorAndArgsProvider(final Class<T> elementClass,
+                                       final Class[] constructorArgTypes,
+                                       final Object... args) throws NoSuchMethodException {
         ctorAndArgs = new CtorAndArgs<T>(elementClass, constructorArgTypes, args);
     }
 
@@ -53,8 +53,8 @@ public class SingletonCtorAndArgsProvider<T> extends AbstractCtorAndArgsProvider
      * @throws NoSuchMethodException if a constructor matching argTypes
      * @throws IllegalArgumentException if argTypes and args conflict
      */
-    public SingletonCtorAndArgsProvider(final Constructor<T> constructor,
-                                        final Object... args) {
+    public ConstantCtorAndArgsProvider(final Constructor<T> constructor,
+                                       final Object... args) {
         ctorAndArgs = new CtorAndArgs<T>(constructor, args);
     }
 

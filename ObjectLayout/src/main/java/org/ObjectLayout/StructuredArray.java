@@ -5,7 +5,6 @@
 
 package org.ObjectLayout;
 
-import com.sun.tools.internal.xjc.util.StringCutter;
 import org.ObjectLayout.intrinsifiable.StructuredArrayIntrinsifiableBase;
 
 import java.lang.reflect.Constructor;
@@ -20,7 +19,7 @@ import static java.lang.reflect.Modifier.*;
  *     An array of (potentially) mutable but non-replaceable objects.
  * <p>
  *     A structured array contains array element objects of a fixed (at creation time, per array instance) class,
- *     and can support elements of any class that provides public constructors. The elements in a StructuredArray
+ *     and can support elements of any class that provides accessible constructors. The elements in a StructuredArray
  *     are all allocated and constructed at array creation time, and individual elements cannot be removed or
  *     replaced after array creation. Array elements can be accessed using an index-based accessor methods in
  *     the form of {@link StructuredArray#get}() using either int or
@@ -30,22 +29,25 @@ import static java.lang.reflect.Modifier.*;
  *     While simple creation of default-constructed elements and fixed constructor parameters are available through
  *     the newInstance factory methods, supporting arbitrary member types requires a wider range of construction
  *     options. The CtorAndArgsProvider API provides for array creation with arbitrary, user-supplied
- *     constructors and arguments, either of which can take the element index into account.
+ *     constructors and arguments, the selection of which can take the element index and construction context
+ *     into account.
  * <p>
- *     StructuredArray is designed with semantics specifically restricted to be consistent with layouts of an
- *     array of structures in C-like languages. While fully functional on all JVM implementation (of Java SE 6
- *     and above), the semantics are such that a JVM may transparently optimise the implementation to provide a
- *     compact contiguous layout that facilitates consistent stride based memory access and dead-reckoning
- *     (as opposed to de-referenced) access to elements
+ *     StructuredArray is designed with semantics specifically chosen and restricted such that a "flat" memory
+ *     layout of the implemented data structure would be possible on optimizing JVMs. Doing so provides for the
+ *     possibility of matching access speed benefits that exist in data structures with similar semantics that
+ *     are supported in other languages (e.g. an array of structs in C-like languages). While fully functional
+ *     on all JVM implementation (of Java SE 6 and above), the semantics are such that a JVM may transparently
+ *     optimise the implementation to provide a compact contiguous layout that facilitates consistent stride
+ *     based memory access and dead-reckoning (as opposed to de-referenced) access to elements
  *
- * @param <T> type of the element occupying each array slot.
+ * @param <T> The class of the array elements
  */
 public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T> implements Iterable<T> {
 
     private static final Object[] EMPTY_ARGS = new Object[0];
 
-    private final Field[] fields;
-    private final boolean hasFinalFields;
+    final Field[] fields;
+    final boolean hasFinalFields;
 
     private final StructuredArrayModel<? extends StructuredArray<T>, T> arrayModel;
 
@@ -55,34 +57,41 @@ public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T> imp
      * Create an array of <code>length</code> elements, each containing an element object of
      * type <code>elementClass</code>. Using the <code>elementClass</code>'s default constructor.
      *
-     * @param length of the array to create.
      * @param elementClass of each element in the array
-     * @throws NoSuchMethodException if the element class does not have a public default constructor
+     * @param length of the array to create
+     * @param <T> The class of the array elements
+     * @return The newly created array
      */
-
     public static <T> StructuredArray<T> newInstance(
             final Class<T> elementClass,
-            final long length) throws NoSuchMethodException {
-        final CtorAndArgsProvider<T> ctorAndArgsProvider = new SingletonCtorAndArgsProvider<T>(elementClass);
-        return instantiate(elementClass, ctorAndArgsProvider, length);
+            final long length) {
+        try {
+            final CtorAndArgsProvider<T> ctorAndArgsProvider = new ConstantCtorAndArgsProvider<T>(elementClass);
+            return instantiate(elementClass, ctorAndArgsProvider, length);
+        } catch (NoSuchMethodException ex) {
+            throw new RuntimeException(ex);
+        }
     }
 
     /**
      * Create an <code>arrayClass</code> array of <code>length</code> elements of
      * type <code>elementClass</code>. Using the <code>elementClass</code>'s default constructor.
      *
-     * @param arrayClass of the array to create.
-     * @param length of the array to create.
+     * @param arrayClass of the array to create
      * @param elementClass of each element in the array
+     * @param length of the array to create
+     * @param <S> The class of the array to be created
+     * @param <T> The class of the array elements
+     * @return The newly created array
      */
-    public static <T, S extends StructuredArray<T>> S newSubclassInstance(
+    public static <S extends StructuredArray<T>, T> S newInstance(
             final Class<S> arrayClass,
             final Class<T> elementClass,
             final long length) {
         try {
             Constructor<S> ctor = arrayClass.getConstructor();
             CtorAndArgs<S> arrayCtorAndArgs = new CtorAndArgs<S>(ctor, EMPTY_ARGS);
-            return newSubclassInstance(arrayCtorAndArgs, elementClass, length);
+            return newInstance(arrayCtorAndArgs, elementClass, length);
         } catch (NoSuchMethodException ex) {
             throw new RuntimeException(ex);
         }
@@ -92,12 +101,14 @@ public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T> imp
      * Create an <code>arrayCtorAndArgs.getConstructor().getDeclaringClass()</code> array of <code>length</code>
      * elements of type <code>elementClass</code>. Use <code>elementClass</code>'s default constructor.
      *
-     * @param arrayCtorAndArgs of the array to create.
-     * @param length of the array to create.
+     * @param arrayCtorAndArgs for creating the array
      * @param elementClass of each element in the array
+     * @param length of the array to create
+     * @param <S> The class of the array to be created
+     * @param <T> The class of the array elements
+     * @return The newly created array
      */
-
-    public static <T, S extends StructuredArray<T>> S newSubclassInstance(
+    public static <S extends StructuredArray<T>, T> S newInstance(
             final CtorAndArgs<S> arrayCtorAndArgs,
             final Class<T> elementClass,
             final long length) {
@@ -120,14 +131,20 @@ public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T> imp
      * <code>ctorAndArgsProvider</code> to construct and initialize each element.
      *
      * @param elementClass of each element in the array
-     * @param length of the array to create.
-     * @param ctorAndArgsProvider produces element constructors [potentially] on a per element basis.
-     * @throws NoSuchMethodException if the element class does not not support a supplied constructor
+     * @param ctorAndArgsProvider produces element constructors [potentially] on a per element basis
+     * @param length of the array to create
+     * @param <T> The class of the array elements
+     * @return The newly created array
      */
-    public static <T> StructuredArray<T> newInstance(final Class<T> elementClass,
-                                                     final CtorAndArgsProvider<T> ctorAndArgsProvider,
-                                                     final long length) throws NoSuchMethodException {
-        return instantiate(elementClass, ctorAndArgsProvider, length);
+    public static <T> StructuredArray<T> newInstance(
+            final Class<T> elementClass,
+            final CtorAndArgsProvider<T> ctorAndArgsProvider,
+            final long length) {
+        try {
+            return instantiate(elementClass, ctorAndArgsProvider, length);
+        } catch (NoSuchMethodException ex) {
+            throw new RuntimeException(ex);
+        }
     }
 
     /**
@@ -137,10 +154,14 @@ public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T> imp
      * each element.
      *
      * @param arrayClass of the array to create.
-     * @param length of the array to create.
-     * @param ctorAndArgsProvider produces element constructors [potentially] on a per element basis.
+     * @param elementClass of each element in the array
+     * @param ctorAndArgsProvider produces element constructors [potentially] on a per element basis
+     * @param length of the array to create
+     * @param <S> The class of the array to be created
+     * @param <T> The class of the array elements
+     * @return The newly created array
      */
-    public static <T, S extends StructuredArray<T>> S newSubclassInstance(
+    public static <S extends StructuredArray<T>, T> S newInstance(
             final Class<S> arrayClass,
             final Class<T> elementClass,
             final CtorAndArgsProvider<T> ctorAndArgsProvider,
@@ -161,16 +182,20 @@ public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T> imp
      * supplied (on a potentially per element index basis) by the specified <code>ctorAndArgsProvider</code>
      * to construct and initialize each element.
      *
-     * @param arrayCtorAndArgs of the array to create.
-     * @param length of the array to create.
-     * @param ctorAndArgsProvider produces element constructors [potentially] on a per element basis.
+     * @param arrayCtorAndArgs of the array to create
+     * @param elementClass of each element in the array
+     * @param ctorAndArgsProvider produces element constructors [potentially] on a per element basis
+     * @param length of the array to create
+     * @param <S> The class of the array to be created
+     * @param <T> The class of the array elements
+     * @return The newly created array
      */
-    public static <T, S extends StructuredArray<T>> S newSubclassInstance(
+    public static <S extends StructuredArray<T>, T> S newInstance(
             final CtorAndArgs<S> arrayCtorAndArgs,
             final Class<T> elementClass,
             final CtorAndArgsProvider<T> ctorAndArgsProvider,
             final long length) {
-        try{
+        try {
             return instantiate(arrayCtorAndArgs, elementClass, ctorAndArgsProvider, length);
         } catch (NoSuchMethodException ex) {
             throw new RuntimeException(ex);
@@ -178,108 +203,31 @@ public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T> imp
     }
 
     /**
-     * Create an array of <code>length</code> elements, each containing an element object of type
-     * <code>elementClass</code>. Use a fixed (same for all elements) constructor identified by the argument
-     * classes specified in  <code>elementConstructorArgs</code> to construct and initialize each element,
-     * passing the remaining arguments to that constructor.
-     *
-     * @param length of the array to create.
-     * @param elementClass of each element in the array
-     * @param elementConstructorArgTypes for selecting the constructor to call for initialising each structure object.
-     * @param elementConstructorArgs to be passed to a constructor for initialising each structure object.
-     * @throws IllegalArgumentException if elementConstructorArgTypes and constructor arguments do not match in length
-     * @throws NoSuchMethodException if elementConstructorArgTypes does not match a public constructor signature in elementClass
-
-     */
-    @SuppressWarnings("rawtypes")
-    public static <T> StructuredArray<T> newInstance(
-            final Class<T> elementClass,
-            final long length,
-            final Class[] elementConstructorArgTypes,
-            final Object... elementConstructorArgs) throws NoSuchMethodException {
-        final CtorAndArgsProvider<T> ctorAndArgsProvider =
-                new SingletonCtorAndArgsProvider<T>(elementClass, elementConstructorArgTypes, elementConstructorArgs);
-        return instantiate(elementClass, ctorAndArgsProvider, length);
-    }
-
-    /**
-     * Create an <code>arrayClass</code> array of <code>length</code> elements of type <code>elementClass</code>.
-     * Use a fixed (same for all elements) constructor identified by the argument classes specified in
-     * <code>elementConstructorArgs</code> to construct and initialize each element, passing the remaining
-     * arguments to that constructor.
-     *
-     * @param arrayClass of the array to create.
-     * @param length of the array to create.
-     * @param elementClass of each element in the array
-     * @param elementConstructorArgTypes for selecting the constructor to call for initialising each structure object.
-     * @param elementConstructorArgs to be passed to a constructor for initialising each structure object.
-     */
-    @SuppressWarnings("rawtypes")
-    public static <T, S extends StructuredArray<T>> S newSubclassInstance(
-            final Class<S> arrayClass,
-            final Class<T> elementClass,
-            final long length,
-            final Class[] elementConstructorArgTypes,
-            final Object... elementConstructorArgs) {
-        try {
-            Constructor<S> ctor = arrayClass.getConstructor();
-            CtorAndArgs<S> arrayCtorAndArgs = new CtorAndArgs<S>(ctor, EMPTY_ARGS);
-            return newSubclassInstance(arrayCtorAndArgs,
-                    elementClass, length, elementConstructorArgTypes, elementConstructorArgs);
-        } catch (NoSuchMethodException ex) {
-            throw new RuntimeException(ex);
-        }
-    }
-
-    /**
-     * Create an <code>arrayCtorAndArgs.getConstructor().getDeclaringClass()</code> array of <code>length</code>
-     * elements of type <code>elementClass</code>. Use a fixed (same for all elements) constructor identified by
-     * the argument classes specified in  <code>elementConstructorArgs</code> to construct and initialize each
-     * element, passing the remaining arguments to that constructor.
-     *
-     * @param arrayCtorAndArgs of the array to create.
-     * @param length of the array to create.
-     * @param elementClass of each element in the array
-     * @param elementConstructorArgTypes for selecting the constructor to call for initialising each structure object.
-     * @param elementConstructorArgs to be passed to a constructor for initialising each structure object.
-     */
-    @SuppressWarnings("rawtypes")
-    public static <T, S extends StructuredArray<T>> S newSubclassInstance(
-            final CtorAndArgs<S> arrayCtorAndArgs,
-            final Class<T> elementClass,
-            final long length,
-            final Class[] elementConstructorArgTypes,
-            final Object... elementConstructorArgs) {
-        try {
-            final CtorAndArgsProvider<T> ctorAndArgsProvider =
-                    new SingletonCtorAndArgsProvider<T>(elementClass, elementConstructorArgTypes, elementConstructorArgs);
-            return instantiate(arrayCtorAndArgs, elementClass, ctorAndArgsProvider, length);
-        } catch (NoSuchMethodException ex) {
-            throw new RuntimeException(ex);
-        }
-    }
-
-    /**
-     * Create a &ltS extends StructuredArray&ltT&gt&gt instance according to the details provided in the
+     * Create a &ltS extends StructuredArray&ltT&gt&gt array instance according to the details provided in the
      * arrayBuilder.
-     * @param arrayBuilder describes the details of how to build the array.
-     * @param <T> The array element class
-     * @param <S> The array class
-     * @return A newly created &ltS extends StructuredArray&ltT&gt&gt instance
+     * @param arrayBuilder provides details for building the array
+     * @param <S> The class of the array to be created
+     * @param <T> The class of the array elements
+     * @return The newly created array
      */
-    public static <S extends StructuredArray<T>, T> S newInstance(final StructuredArrayBuilder<S, T> arrayBuilder) {
+    public static <S extends StructuredArray<T>, T> S newInstance(
+            final StructuredArrayBuilder<S, T> arrayBuilder) {
         return instantiate(arrayBuilder);
     }
 
     /**
-     * Copy an array of elements to a newly created array. Copying of individual elements is done by using
+     * Copy a given array of elements to a newly created array. Copying of individual elements is done by using
      * the <code>elementClass</code> copy constructor to construct the individual member elements of the new
      * array based on the corresponding elements of the <code>source</code> array.
      *
-     * @param source The array to duplicate.
-     * @throws NoSuchMethodException if the element class does not have a public copy constructor.
+     * @param source The array to duplicate
+     * @param <S> The class of the array to be created
+     * @param <T> The class of the array elements
+     * @return The newly created array
+     * @throws NoSuchMethodException if any contained element class does not support a copy constructor
      */
-    public static <T> StructuredArray<T> copyInstance(final StructuredArray<T> source) throws NoSuchMethodException {
+    public static <S extends StructuredArray<T>, T> S copyInstance(
+            final S source) throws NoSuchMethodException {
         return copyInstance(source, 0, source.getLength());
     }
 
@@ -288,16 +236,19 @@ public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T> imp
      * by using the <code>elementClass</code> copy constructor to construct the individual member elements of
      * the new array based on the corresponding elements of the <code>source</code> array.
      *
-     * @param source The array to copy from.
-     * @param sourceOffset offset index, indicating where the source region to be copied begins.
-     * @param count the number of elements to copy.
-     * @throws NoSuchMethodException if the element class does not have a public copy constructor.
+     * @param source The array to copy from
+     * @param sourceOffset offset index, indicating where the source region to be copied begins
+     * @param count the number of elements to copy
+     * @param <S> The class of the array to be created
+     * @param <T> The class of the array elements
+     * @return The newly created array
+     * @throws NoSuchMethodException if any contained element class does not support a copy constructor
      */
     @SuppressWarnings("unchecked")
-    public static <A extends StructuredArray<T>, T> StructuredArray<T>
-    copyInstance(final A source,
-                 final long sourceOffset,
-                 final long count) throws NoSuchMethodException {
+    public static <S extends StructuredArray<T>, T> S copyInstance(
+            final S source,
+            final long sourceOffset,
+            final long count) throws NoSuchMethodException {
         return copyInstance(source, new long[] {sourceOffset}, new long[] {count});
     }
 
@@ -305,17 +256,23 @@ public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T> imp
      * Copy a range from an array of elements to a newly created array. Copying of individual elements is done
      * by using the <code>elementClass</code> copy constructor to construct the individual member elements of
      * the new array based on the corresponding elements of the <code>source</code> array.
-     *
-     * @param source The array to copy from.
+     * <p>
+     * This form is useful [only] for copying partial ranges from nested StructuredArrays.
+     * </p>
+     * @param source The array to copy from
      * @param sourceOffsets offset indexes, indicating where the source region to be copied begins at each
      *                      StructuredArray nesting depth
      * @param counts the number of elements to copy at each StructuredArray nesting depth
-     * @throws NoSuchMethodException if the element class does not have a public copy constructor.
+     * @param <S> The class of the array to be created
+     * @param <T> The class of the array elements
+     * @return The newly created array
+     * @throws NoSuchMethodException if any contained element class does not support a copy constructor
      */
     @SuppressWarnings("unchecked")
-    public static <A extends StructuredArray<T>, T> StructuredArray<T> copyInstance(final A source,
-                                                      final long[] sourceOffsets,
-                                                      final long[] counts) throws NoSuchMethodException {
+    public static <S extends StructuredArray<T>, T> S copyInstance(
+            final S source,
+            final long[] sourceOffsets,
+            final long[] counts) throws NoSuchMethodException {
         if (sourceOffsets.length != counts.length) {
             throw new IllegalArgumentException("sourceOffsets.length must match counts.length");
         }
@@ -340,11 +297,11 @@ public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T> imp
                     ") must not exceed StructuredArray nesting depth (" + depth + ")");
         }
 
-        final StructuredArrayModel<A, T> sourceArrayModel = (StructuredArrayModel<A, T>) source.getArrayModel();
-        final Class<A> sourceArrayClass = sourceArrayModel.getArrayClass();
-        Constructor<A> arrayConstructor = sourceArrayClass.getConstructor(sourceArrayClass);
+        final StructuredArrayModel<S, T> sourceArrayModel = (StructuredArrayModel<S, T>) source.getArrayModel();
+        final Class<S> sourceArrayClass = sourceArrayModel.getArrayClass();
+        Constructor<S> arrayConstructor = sourceArrayClass.getConstructor(sourceArrayClass);
 
-        final StructuredArrayBuilder<A, T> arrayBuilder =
+        final StructuredArrayBuilder<S, T> arrayBuilder =
                 createCopyingArrayBuilder(sourceArrayModel, sourceOffsets, 0, counts, 0).
                         arrayCtorAndArgs(arrayConstructor, source).
                         contextCookie(source);
@@ -352,11 +309,11 @@ public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T> imp
         return instantiate(arrayBuilder);
     }
 
-    private static <A extends StructuredArray<T>, T> StructuredArrayBuilder<A, T>
-    createCopyingArrayBuilder(final StructuredArrayModel<A, T> sourceArrayModel,
-                              final long[] sourceOffsets, final int offsetsIndex,
-                              final long[] counts, final int countsIndex) throws NoSuchMethodException {
-        final Class<A> sourceArrayClass = sourceArrayModel.getArrayClass();
+    private static <S extends StructuredArray<T>, T> StructuredArrayBuilder<S, T> createCopyingArrayBuilder(
+            final StructuredArrayModel<S, T> sourceArrayModel,
+            final long[] sourceOffsets, final int offsetsIndex,
+            final long[] counts, final int countsIndex) throws NoSuchMethodException {
+        final Class<S> sourceArrayClass = sourceArrayModel.getArrayClass();
         final Class<T> elementClass = sourceArrayModel.getElementClass();
 
         long sourceOffset = (offsetsIndex < sourceOffsets.length) ? sourceOffsets[offsetsIndex] : 0;
@@ -373,12 +330,12 @@ public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T> imp
                     createCopyingArrayBuilder(subArrayModel,
                             sourceOffsets, offsetsIndex + 1,
                             counts, countsIndex + 1);
-            return new StructuredArrayBuilder<A, T>(sourceArrayClass, subArrayBuilder, count).
+            return new StructuredArrayBuilder<S, T>(sourceArrayClass, subArrayBuilder, count).
                             elementCtorAndArgsProvider(elementCopyCtorAndArgsProvider).
                             resolve();
         } else {
             // This is a leaf array
-            return new StructuredArrayBuilder<A,T>(sourceArrayClass, elementClass, count).
+            return new StructuredArrayBuilder<S, T>(sourceArrayClass, elementClass, count).
                     elementCtorAndArgsProvider(elementCopyCtorAndArgsProvider).
                     resolve();
         }
@@ -458,15 +415,13 @@ public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T> imp
     }
 
     public StructuredArray(StructuredArray<T> sourceArray) {
-        // Support copy constructor. Copying will actually be done by CtorAndArgsProvider and context
-        // in regular constructor, with top-most source array being passed as the cookie in the context,
-        // and copying proceeding using the context indecies and the model to figure out individual sources.
+        // Support copy constructor. When we get here, everything is already set up for the regular
+        // (default) construction path to perform the required copy.
+        // Copying will actually be done according to the CtorAndArgsProvider and context already supplied,
+        // with top-most source array being (already) passed as the contextCookie in the builder's
+        // construction context, and copying proceeding using the context indices and the supplied
+        // contextCookie provided by each CtorAndArgsProvider to figure out individual sources.
         this();
-//
-//        // Verify models (size, type, hierarchy) match:
-//        if (arrayModel.getLength() != sourceArray.arrayModel.getLength()) {
-//            throw new IllegalArgumentException("Source and Target array models do not match");
-//        }
     }
 
     /**
@@ -486,35 +441,26 @@ public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T> imp
         return arrayModel;
     }
 
-    // Variations on get():
-
-    // fast long index element get variant:
-
     /**
      * Get a reference to an element in a single dimensional array, using a <code>long</code> index.
      *
      * @param index of the element to retrieve.
      * @return a reference to the indexed element.
-     * @throws IllegalArgumentException if array has more than one dimensions
      */
     public T get(final long index) throws IllegalArgumentException {
         return super.get(index);
     }
-
-    // fast int index element get variant:
 
     /**
      * Get a reference to an element in a single dimensional array, using an <code>int</code> index.
      *
      * @param index of the element to retrieve.
      * @return a reference to the indexed element.
-     * @throws NullPointerException if array has more than one dimensions
      */
     public T get(final int index) throws IllegalArgumentException {
         return super.get(index);
     }
 
-    // Type specific public gets of first dimension subarray:
 
     private void populateElement(final long index,
                                  CtorAndArgs<T> ctorAndArgs) {
@@ -732,18 +678,24 @@ public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T> imp
      * of the corresponding destination elements. If the same array is both the src and dst then the copy will
      * happen as if a temporary intermediate array was used.
      *
-     * @param src array to copy.
-     * @param srcOffset offset index in src where the region begins.
-     * @param dst array into which the copy should occur.
-     * @param dstOffset offset index in the dst where the region begins.
-     * @param count of structure elements to copy.
-     * @throws IllegalStateException if final fields are discovered.
-     * @throws ArrayStoreException if the element classes in src and dst are not identical.
+     * @param src array to copy
+     * @param srcOffset offset index in src where the region begins
+     * @param dst array into which the copy should occur
+     * @param dstOffset offset index in the dst where the region begins
+     * @param count of structure elements to copy
+     * @param <S> The class of the arrays
+     * @param <T> The class of the array elements
+     * @throws IllegalArgumentException if the source and destination array element types are not identical, or if
+     * the source or destination arrays have nested StructuredArrays within them, or if final fields are discovered
+     * and all allowFinalFieldOverwrite is not true.
      */
     @SuppressWarnings("rawtypes")
-    public static void shallowCopy(final StructuredArray src, final long srcOffset,
-                                   final StructuredArray dst, final long dstOffset,
-                                   final long count) {
+    public static <S extends StructuredArray<T>, T> void shallowCopy(
+            final S src,
+            final long srcOffset,
+            final S dst,
+            final long dstOffset,
+            final long count) {
         shallowCopy(src, srcOffset, dst, dstOffset, count, false);
     }
 
@@ -756,25 +708,30 @@ public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T> imp
      *
      * If <code>allowFinalFieldOverwrite</code> is specified as <code>true</code>, even final fields will be copied.
      *
-     * @param src array to copy.
-     * @param srcOffset offset index in src where the region begins.
-     * @param dst array into which the copy should occur.
-     * @param dstOffset offset index in the dst where the region begins.
+     * @param src array to copy
+     * @param srcOffset offset index in src where the region begins
+     * @param dst array into which the copy should occur
+     * @param dstOffset offset index in the dst where the region begins
      * @param count of structure elements to copy.
      * @param allowFinalFieldOverwrite allow final fields to be overwritten during a copy operation.
-     * @throws IllegalArgumentException if source or destination arrays have more than one dimension, or
-     * if final fields are discovered and all allowFinalFieldOverwrite is not true.
-     * @throws ArrayStoreException if the element classes in src and dst are not identical.
+     * @param <S> The class of the arrays
+     * @param <T> The class of the array elements
+     * @throws IllegalArgumentException if the source and destination array element types are not identical, or if
+     * the source or destination arrays have nested StructuredArrays within them, or if final fields are discovered
+     * and all allowFinalFieldOverwrite is not true.
      */
     @SuppressWarnings("rawtypes")
-    public static void shallowCopy(final StructuredArray src, final long srcOffset,
-                                   final StructuredArray dst, final long dstOffset,
-                                   final long count,
-                                   final boolean allowFinalFieldOverwrite) {
+    public static <S extends StructuredArray<T>, T> void shallowCopy(
+            final S src,
+            final long srcOffset,
+            final S dst,
+            final long dstOffset,
+            final long count,
+            final boolean allowFinalFieldOverwrite) {
         if (src.getElementClass() != dst.getElementClass()) {
             String msg = String.format("Only objects of the same class can be copied: %s != %s",
                     src.getClass(), dst.getClass());
-            throw new ArrayStoreException(msg);
+            throw new IllegalArgumentException(msg);
         }
 
         if ((StructuredArray.class.isAssignableFrom(src.getElementClass()) ||

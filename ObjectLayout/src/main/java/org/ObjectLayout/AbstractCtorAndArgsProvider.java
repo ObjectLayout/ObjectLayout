@@ -12,7 +12,7 @@ package org.ObjectLayout;
  * array elements during array creation. Also provides a recycle method.
  * <p>
  * Subclasses can be created that would provide a fixed constructor
- * (as in {@link org.ObjectLayout.SingletonCtorAndArgsProvider}), or to provide
+ * (as in {@link ConstantCtorAndArgsProvider}), or to provide
  * arguments and constructor values that would take the array index of the constructed
  * element into account. An example of this latter pattern can be found in the
  * implementation of a {@link org.ObjectLayout.CopyCtorAndArgsProvider}.

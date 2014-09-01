@@ -7,8 +7,6 @@ package org.ObjectLayout;
 
 import org.junit.Test;
 
-import java.lang.reflect.Constructor;
-
 import static java.lang.Long.valueOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
@@ -70,14 +68,17 @@ public class StructuredArrayTest {
     }
 
     @Test
-    public void shouldConstructArrayOfGivenLengthAndInitValues() throws NoSuchMethodException {
+    public void shouldConstructArrayElementsViaConstantCtorAndArgsProvider() throws NoSuchMethodException {
         final Class[] initArgTypes = {long.class, long.class};
         final long expectedIndex = 4L;
         final long expectedValue = 777L;
         long length = 9L;
 
+        final CtorAndArgsProvider<MockStructure> ctorAndArgsProvider =
+                new ConstantCtorAndArgsProvider<MockStructure>(MockStructure.class, initArgTypes, expectedIndex, expectedValue);
+
         final StructuredArray<MockStructure> array =
-                StructuredArray.newInstance(MockStructure.class, length, initArgTypes, expectedIndex, expectedValue);
+                StructuredArray.newInstance(MockStructure.class, ctorAndArgsProvider, length);
 
         assertCorrectFixedInitialisation(expectedIndex, expectedValue, new long[] {length}, array);
     }

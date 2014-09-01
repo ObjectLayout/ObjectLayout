@@ -336,7 +336,7 @@ public class BPlusTree<K, V> implements Iterable<Map.Entry<K, V>> {
         }
 
         public static Leaf newInstance(int nodeSize) {
-            return newSubclassInstance(Leaf.class, Entry.class, nodeSize);
+            return newInstance(Leaf.class, Entry.class, nodeSize);
         }
     }
     

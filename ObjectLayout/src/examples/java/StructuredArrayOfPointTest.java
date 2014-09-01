@@ -70,14 +70,30 @@ public class StructuredArrayOfPointTest {
 
     @Test
     public void shouldConstructArrayOfGivenLengthAndInitValues() throws NoSuchMethodException {
-        final Class[] initArgTypes = {int.class, int.class};
         final int initialX = 4;
         final int initialY = 777;
 
         long length = 9L;
 
         final StructuredArrayOfPoint array =
-                StructuredArrayOfPoint.newInstance(length, initArgTypes, initialX, initialY);
+                StructuredArrayOfPoint.newInstance(length, initialX, initialY);
+
+        assertCorrectFixedInitialisation(initialX, initialY, new long[] {length}, array);
+    }
+
+    @Test
+    public void shouldConstructArrayElementsViaConstantCtorAndArgsProvider() throws NoSuchMethodException {
+        final Class[] initArgTypes = {int.class, int.class};
+        final int initialX = 4;
+        final int initialY = 777;
+
+        long length = 9L;
+
+        final CtorAndArgsProvider<Point> ctorAndArgsProvider =
+                new ConstantCtorAndArgsProvider<Point>(Point.class, initArgTypes, initialX, initialY);
+        final StructuredArrayOfPoint array =
+                StructuredArrayOfPoint.newInstance(
+                        StructuredArrayOfPoint.class, Point.class, ctorAndArgsProvider, length);
 
         assertCorrectFixedInitialisation(initialX, initialY, new long[] {length}, array);
     }

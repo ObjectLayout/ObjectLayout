@@ -3,11 +3,13 @@
  * as explained at http://creativecommons.org/publicdomain/zero/1.0/
  */
 
+import org.ObjectLayout.ConstantCtorAndArgsProvider;
 import org.ObjectLayout.CtorAndArgsProvider;
 import org.ObjectLayout.StructuredArray;
-import org.ObjectLayout.StructuredArrayBuilder;
 
-import java.awt.*;
+// TODO: Make our own Point class.
+import java.awt.Point;
+import java.lang.reflect.Constructor;
 
 public class StructuredArrayOfPoint extends StructuredArray<Point> {
 
@@ -19,25 +21,36 @@ public class StructuredArrayOfPoint extends StructuredArray<Point> {
     }
 
     public static StructuredArrayOfPoint newInstance(final long length) {
-        return StructuredArray.newSubclassInstance(StructuredArrayOfPoint.class, Point.class, length);
-    }
-
-    public static StructuredArrayOfPoint newInstance(final long length, long initialElementValue) {
-        final Class[] elementConstructorArgTypes = {Long.class};
-        return StructuredArray.newSubclassInstance(StructuredArrayOfPoint.class, Point.class, length,
-                        elementConstructorArgTypes, initialElementValue);
+        return StructuredArray.newInstance(StructuredArrayOfPoint.class, Point.class, length);
     }
 
     public static StructuredArrayOfPoint newInstance(final CtorAndArgsProvider<Point> ctorAndArgsProvider,
                                                      final long length) {
-        return StructuredArray.newSubclassInstance(
+        return StructuredArray.newInstance(
                 StructuredArrayOfPoint.class, Point.class, ctorAndArgsProvider, length);
     }
 
-    public static StructuredArrayOfPoint newInstance(final long length,
-                                                     final Class[] elementConstructorArgTypes,
-                                                     final Object... elementConstructorArgs) {
-        return StructuredArray.newSubclassInstance(StructuredArrayOfPoint.class, Point.class, length,
-                elementConstructorArgTypes, elementConstructorArgs);
+    // If you want to support direct construction parameters for elements, with with parameter types you know
+    // (statically) have a good constructor associated with the, here is an example:
+
+    public static StructuredArrayOfPoint newInstance(final long length, final int x, final int y) {
+        return StructuredArray.newInstance(
+                StructuredArrayOfPoint.class,
+                Point.class,
+                new ConstantCtorAndArgsProvider<Point>(
+                        xy_constructor, x, y),
+                length);
+    }
+
+    static final Class[] argsTypes = new Class[] {int.class, int.class};
+
+    static final Constructor<Point> xy_constructor;
+
+    static {
+        try {
+            xy_constructor = Point.class.getConstructor(argsTypes);
+        } catch (NoSuchMethodException ex) {
+            throw new RuntimeException(ex);
+        }
     }
 }

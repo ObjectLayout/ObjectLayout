@@ -226,7 +226,7 @@ public class MassOrder extends
             // TODO: Order validation and sorting by price.
 
             long length = bidIndex + askIndex;
-            return (MassOrder) StructuredArray.newSubclassInstance(
+            return (MassOrder) StructuredArray.newInstance(
                     massOrderCtorAndArgs, SimpleOrder.class, this, length);
         }
     }

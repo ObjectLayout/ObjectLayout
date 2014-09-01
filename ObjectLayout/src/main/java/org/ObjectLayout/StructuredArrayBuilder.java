@@ -3,73 +3,76 @@ package org.ObjectLayout;
 import java.lang.reflect.Constructor;
 
 /**
- * A model for instantiating a structured array.
+ * A builder used for instantiating a StructuredArray&ltT&gt.
+ *
+ * @param <S> The class of the StructuredArray that is to be instantiated by the builder
+ * @param <T> The class of the elements in the StructuredArray that is to be instantiated the builder
  */
-public class StructuredArrayBuilder<A extends StructuredArray<T>, T> {
+public class StructuredArrayBuilder<S extends StructuredArray<T>, T> {
     private static final Class[] EMPTY_ARG_TYPES = new Class[0];
     private static final Object[] EMPTY_ARGS = new Object[0];
 
-    private final StructuredArrayModel<A, T> arrayModel;
+    private final StructuredArrayModel<S, T> arrayModel;
 
     private final StructuredArrayBuilder subArrayBuilder;
 
-    private CtorAndArgs<A> arrayCtorAndArgs;
+    private CtorAndArgs<S> arrayCtorAndArgs;
     private CtorAndArgsProvider<T> elementCtorAndArgsProvider;
     private Object contextCookie;
 
-    public StructuredArrayBuilder(final Class<A> arrayClass,
+    public StructuredArrayBuilder(final Class<S> arrayClass,
                                   final Class<T> elementClass,
                                   final long length) {
-        this.arrayModel = new StructuredArrayModel<A, T>(arrayClass, elementClass, length);
+        this.arrayModel = new StructuredArrayModel<S, T>(arrayClass, elementClass, length);
         this.subArrayBuilder = null;
     }
 
 
     @SuppressWarnings("unchecked")
     public <A2 extends StructuredArray<T2>, T2>
-    StructuredArrayBuilder(final Class<A> arrayClass,
+    StructuredArrayBuilder(final Class<S> arrayClass,
                            final StructuredArrayBuilder<A2, T2> subArrayBuilder,
                            final long length) {
-        this.arrayModel = new StructuredArrayModel<A, T>(arrayClass, subArrayBuilder.getArrayModel(), length);
+        this.arrayModel = new StructuredArrayModel<S, T>(arrayClass, subArrayBuilder.getArrayModel(), length);
         this.subArrayBuilder = subArrayBuilder;
     }
 
-    public StructuredArrayBuilder<A, T> elementCtorAndArgsProvider(final CtorAndArgsProvider<T> ctorAndArgsProvider) {
+    public StructuredArrayBuilder<S, T> elementCtorAndArgsProvider(final CtorAndArgsProvider<T> ctorAndArgsProvider) {
         this.elementCtorAndArgsProvider = ctorAndArgsProvider;
         return this;
     }
 
-    public StructuredArrayBuilder<A, T> elementCtorAndArgs(final CtorAndArgs<T> ctorAndArgs) {
+    public StructuredArrayBuilder<S, T> elementCtorAndArgs(final CtorAndArgs<T> ctorAndArgs) {
         if (subArrayBuilder != null) {
             throw new IllegalArgumentException(
                     "ctoAndArgs for constructing subArray elements should be supplied in subArrayBuilder");
         }
         return elementCtorAndArgsProvider(
-                new SingletonCtorAndArgsProvider<T>(ctorAndArgs.getConstructor(), ctorAndArgs.getArgs()));
+                new ConstantCtorAndArgsProvider<T>(ctorAndArgs.getConstructor(), ctorAndArgs.getArgs()));
     }
 
-    public StructuredArrayBuilder<A, T> elementCtorAndArgs(final Constructor<T> constructor, final Object... args) {
+    public StructuredArrayBuilder<S, T> elementCtorAndArgs(final Constructor<T> constructor, final Object... args) {
         return elementCtorAndArgs(new CtorAndArgs<T>(constructor, args));
     }
 
-    public StructuredArrayBuilder<A, T> arrayCtorAndArgs(final CtorAndArgs<A> arrayCtorAndArgs) {
+    public StructuredArrayBuilder<S, T> arrayCtorAndArgs(final CtorAndArgs<S> arrayCtorAndArgs) {
         this.arrayCtorAndArgs = arrayCtorAndArgs;
         return this;
     }
 
-    public StructuredArrayBuilder<A, T> arrayCtorAndArgs(final Constructor<A> constructor, final Object... args) {
-        this.arrayCtorAndArgs = new CtorAndArgs<A>(constructor, args);
+    public StructuredArrayBuilder<S, T> arrayCtorAndArgs(final Constructor<S> constructor, final Object... args) {
+        this.arrayCtorAndArgs = new CtorAndArgs<S>(constructor, args);
         return this;
     }
 
-    public StructuredArrayBuilder<A, T> contextCookie(final Object contextCookie) {
+    public StructuredArrayBuilder<S, T> contextCookie(final Object contextCookie) {
         this.contextCookie = contextCookie;
         return this;
     }
 
-    public StructuredArrayBuilder<A, T> resolve(boolean resolveArrayCtorAndArgs) throws NoSuchMethodException {
+    public StructuredArrayBuilder<S, T> resolve(boolean resolveArrayCtorAndArgs) throws NoSuchMethodException {
         if (arrayCtorAndArgs == null) {
-            arrayCtorAndArgs = new CtorAndArgs<A>(arrayModel.getArrayClass(), EMPTY_ARG_TYPES, EMPTY_ARGS);
+            arrayCtorAndArgs = new CtorAndArgs<S>(arrayModel.getArrayClass(), EMPTY_ARG_TYPES, EMPTY_ARGS);
         }
 
         if (elementCtorAndArgsProvider == null) {
@@ -77,13 +80,13 @@ public class StructuredArrayBuilder<A extends StructuredArray<T>, T> {
                 // Use the CtorAndArgs provided for subArray elements:
                 @SuppressWarnings("unchecked")
                 AbstractCtorAndArgsProvider<T> subArrayCtorAndArgsProvider =
-                        new SingletonCtorAndArgsProvider<T>(
+                        new ConstantCtorAndArgsProvider<T>(
                                 (Constructor<T>)subArrayBuilder.arrayCtorAndArgs.getConstructor(),
                                 subArrayBuilder.arrayCtorAndArgs.getArgs());
                 elementCtorAndArgsProvider = subArrayCtorAndArgsProvider;
             } else {
                 // Use the default constructor:
-                elementCtorAndArgsProvider = new SingletonCtorAndArgsProvider<T>(arrayModel.getElementClass());
+                elementCtorAndArgsProvider = new ConstantCtorAndArgsProvider<T>(arrayModel.getElementClass());
             }
         }
 
@@ -95,17 +98,17 @@ public class StructuredArrayBuilder<A extends StructuredArray<T>, T> {
         return this;
     }
 
-    public StructuredArrayBuilder<A, T> resolve() throws NoSuchMethodException {
+    public StructuredArrayBuilder<S, T> resolve() throws NoSuchMethodException {
         return resolve(true);
     }
 
-    public A build() throws NoSuchMethodException {
+    public S build() throws NoSuchMethodException {
         resolve();
         return StructuredArray.newInstance(this);
     }
 
 
-    public StructuredArrayModel<A, T> getArrayModel() {
+    public StructuredArrayModel<S, T> getArrayModel() {
         return arrayModel;
     }
 
@@ -113,7 +116,7 @@ public class StructuredArrayBuilder<A extends StructuredArray<T>, T> {
         return subArrayBuilder;
     }
 
-    public CtorAndArgs<A> getArrayCtorAndArgs() {
+    public CtorAndArgs<S> getArrayCtorAndArgs() {
         return arrayCtorAndArgs;
     }
 

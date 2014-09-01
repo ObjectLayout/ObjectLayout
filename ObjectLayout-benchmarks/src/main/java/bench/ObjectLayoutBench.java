@@ -181,7 +181,7 @@ public class ObjectLayoutBench {
     public static class StructuredArrayOfMockStructure extends StructuredArray<MockStructure> {
         public static StructuredArrayOfMockStructure newInstance(
                 final CtorAndArgsProvider<MockStructure> ctorAndArgsProvider,final long length) {
-            return StructuredArray.newSubclassInstance(
+            return StructuredArray.newInstance(
                     StructuredArrayOfMockStructure.class, MockStructure.class, ctorAndArgsProvider, length);
         }
 
