@@ -7,6 +7,8 @@ package org.ObjectLayout;
 
 import org.junit.Test;
 
+import java.lang.reflect.Constructor;
+
 import static java.lang.Long.valueOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
@@ -60,11 +62,79 @@ public class StructuredArrayTest {
                 new StructuredArrayBuilder(
                         StructuredArray.class,
                         MockStructure.class,
-                        length
-                ).build();
+                        length).
+                        build();
 
         assertThat(valueOf(array.getLength()), is(valueOf(length)));
         assertTrue(array.getElementClass() == MockStructure.class);
+    }
+
+    @Test
+    public void shouldConstructArrayOfGivenLengthWithBuilderAndCtorAndArgs() throws NoSuchMethodException {
+        final Class[] initArgTypes = {long.class, long.class};
+        final long expectedIndex = 4L;
+        final long expectedValue = 777L;
+        long length = 9L;
+
+        final CtorAndArgs<MockStructure> ctorAndArgs =
+                new CtorAndArgs<MockStructure>(MockStructure.class, initArgTypes, expectedIndex, expectedValue);
+
+        @SuppressWarnings("unchecked")
+        StructuredArray<MockStructure> array =
+                new StructuredArrayBuilder(
+                        StructuredArray.class,
+                        MockStructure.class,
+                        length).
+                        elementCtorAndArgs(ctorAndArgs).
+                        build();
+
+        assertCorrectFixedInitialisation(expectedIndex, expectedValue, new long[] {length}, array);
+    }
+
+    @Test
+    public void shouldConstructArrayOfGivenLengthWithBuilderAndCtorAndArgs2() throws NoSuchMethodException {
+        final long expectedIndex = 4L;
+        final long expectedValue = 777L;
+        long length = 9L;
+
+        final Constructor<MockStructure> constructor = MockStructure.class.getConstructor(long.class, long.class);
+
+        @SuppressWarnings("unchecked")
+        StructuredArray<MockStructure> array =
+                new StructuredArrayBuilder(
+                        StructuredArray.class,
+                        MockStructure.class,
+                        length).
+                        elementCtorAndArgs(constructor, expectedIndex, expectedValue).
+                        build();
+
+        assertCorrectFixedInitialisation(expectedIndex, expectedValue, new long[] {length}, array);
+    }
+
+    @Test
+    public void shouldConstructArrayOfGivenLengthWithBuilderAndCtorAndArgsProvider() throws NoSuchMethodException {
+        long length = 9L;
+
+        final Constructor<MockStructure> constructor = MockStructure.class.getConstructor(long.class, long.class);
+
+        @SuppressWarnings("unchecked")
+        StructuredArray<MockStructure> array =
+                new StructuredArrayBuilder(
+                        StructuredArray.class,
+                        MockStructure.class,
+                        length).
+                        elementCtorAndArgsProvider(
+                                new CtorAndArgsProvider() {
+                                    @Override
+                                    public CtorAndArgs getForContext(
+                                            ConstructionContext context) throws NoSuchMethodException {
+                                        return new CtorAndArgs(constructor, context.getIndex(), context.getIndex() * 2);
+                                    }
+                                }
+                        ).
+                        build();
+
+        assertCorrectVariableInitialisation(new long[] {length}, array);
     }
 
     @Test
