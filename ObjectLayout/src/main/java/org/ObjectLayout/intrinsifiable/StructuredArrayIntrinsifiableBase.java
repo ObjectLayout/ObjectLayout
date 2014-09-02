@@ -55,15 +55,14 @@ public abstract class StructuredArrayIntrinsifiableBase<T> {
     }
 
     /**
-     * Instantiate a StructuredArray of arrayClass with member elements of elementClass, and the
-     * set of lengths (one length per dimension in the lengths[] array), using the given constructor
-     * and arguments.
+     * Instantiate a StructuredArray of arrayClass with the given array model, and the supplied
+     * array constructor and arguments.
      *
      * OPTIMIZATION NOTE: Optimized JDK implementations may replace this implementation with one that
      * allocates room for the entire StructuredArray and all it's elements.
      */
-    protected static <A extends StructuredArray<T>, T> A instantiateStructuredArray(
-            StructuredArrayModel<A, T> arrayModel, Constructor<A> arrayConstructor, Object... args) {
+    protected static <S extends StructuredArray<T>, T> S instantiateStructuredArray(
+            StructuredArrayModel<S, T> arrayModel, Constructor<S> arrayConstructor, Object... args) {
 
         // For implementations that need the array class and the element class,
         // this is how
