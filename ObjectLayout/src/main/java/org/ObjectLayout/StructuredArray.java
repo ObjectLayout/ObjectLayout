@@ -466,7 +466,7 @@ public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T> imp
                                  CtorAndArgs<T> ctorAndArgs) {
         try {
             // Instantiate:
-            constructElementAtIndex(index, ctorAndArgs);
+            constructElementAtIndex(index, ctorAndArgs.getConstructor(), ctorAndArgs.getArgs());
         } catch (InstantiationException ex) {
             throw new RuntimeException(ex);
         } catch (IllegalAccessException ex) {
@@ -486,7 +486,11 @@ public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T> imp
         try {
             constructorMagic.setActive(true);
             // Instantiate:
-            constructSubArrayAtIndex(context.getIndex(), subArrayBuilder.getArrayModel(), subArrayCtorAndArgs);
+            constructSubArrayAtIndex(
+                    context.getIndex(),
+                    subArrayBuilder.getArrayModel(),
+                    subArrayCtorAndArgs.getConstructor(),
+                    subArrayCtorAndArgs.getArgs());
         } catch (InstantiationException ex) {
             throw new RuntimeException(ex);
         } catch (IllegalAccessException ex) {

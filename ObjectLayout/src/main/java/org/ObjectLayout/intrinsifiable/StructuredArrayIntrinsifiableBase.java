@@ -5,8 +5,6 @@
 
 package org.ObjectLayout.intrinsifiable;
 
-import org.ObjectLayout.*;
-
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 
@@ -36,10 +34,10 @@ public abstract class StructuredArrayIntrinsifiableBase<T> {
         ConstructorMagic constructorMagic = getConstructorMagic();
 
         @SuppressWarnings("unchecked")
-        final StructuredArrayModel<StructuredArray<T>, T> arrayModel =
+        final StructuredArrayIntrinsifiableModelBase<StructuredArrayIntrinsifiableBase<T>, T> arrayModel =
                 constructorMagic.getArrayModel();
-        final Class<T> elementClass = arrayModel.getElementClass();
-        final long length = arrayModel.getLength();
+        final Class<T> elementClass = arrayModel._getElementClass();
+        final long length = arrayModel._getLength();
 
         // Finish consuming constructMagic arguments:
         constructorMagic.setActive(false);
@@ -61,8 +59,8 @@ public abstract class StructuredArrayIntrinsifiableBase<T> {
      * OPTIMIZATION NOTE: Optimized JDK implementations may replace this implementation with one that
      * allocates room for the entire StructuredArray and all it's elements.
      */
-    protected static <S extends StructuredArray<T>, T> S instantiateStructuredArray(
-            StructuredArrayModel<S, T> arrayModel, Constructor<S> arrayConstructor, Object... args) {
+    protected static <S extends StructuredArrayIntrinsifiableBase<T>, T> S instantiateStructuredArray(
+            StructuredArrayIntrinsifiableModelBase<S, T> arrayModel, Constructor<S> arrayConstructor, Object... args) {
 
         // For implementations that need the array class and the element class,
         // this is how
@@ -97,9 +95,12 @@ public abstract class StructuredArrayIntrinsifiableBase<T> {
      * OPTIMIZATION NOTE: Optimized JDK implementations may replace this implementation with a
      * construction-in-place call on a previously allocated memory location associated with the given index.
      */
-    protected void constructElementAtIndex(final long index0, final CtorAndArgs<T> ctorAndArgs)
+    protected void constructElementAtIndex(
+            final long index0,
+            final Constructor<T> constructor,
+            final Object... args)
             throws InstantiationException, IllegalAccessException, InvocationTargetException {
-        T element = ctorAndArgs.getConstructor().newInstance(ctorAndArgs.getArgs());
+        T element = constructor.newInstance(args);
         storeElementInLocalStorageAtIndex(element, index0);
     }
 
@@ -110,16 +111,17 @@ public abstract class StructuredArrayIntrinsifiableBase<T> {
      * OPTIMIZATION NOTE: Optimized JDK implementations may replace this implementation with a
      * construction-in-place call on a previously allocated memory location associated with the given index.
      */
-    protected void constructSubArrayAtIndex(long index,
-                                            StructuredArrayModel subArrayModel,
-                                            CtorAndArgs<T> subArrayCtorAndArgs)
+    protected void constructSubArrayAtIndex(
+            long index,
+            StructuredArrayIntrinsifiableModelBase subArrayModel,
+            final Constructor<T> subArrayConstructor,
+            final Object... args)
             throws InstantiationException, IllegalAccessException, InvocationTargetException {
         ConstructorMagic constructorMagic = getConstructorMagic();
         constructorMagic.setConstructionArgs(subArrayModel);
         try {
             constructorMagic.setActive(true);
-            Constructor<T> constructor = subArrayCtorAndArgs.getConstructor();
-            T subArray = constructor.newInstance(subArrayCtorAndArgs.getArgs());
+            T subArray = subArrayConstructor.newInstance(args);
             storeElementInLocalStorageAtIndex(subArray, index);
         } finally {
             constructorMagic.setActive(false);
@@ -264,16 +266,16 @@ public abstract class StructuredArrayIntrinsifiableBase<T> {
             this.active = active;
         }
 
-        public void setConstructionArgs(StructuredArrayModel arrayModel) {
+        public void setConstructionArgs(StructuredArrayIntrinsifiableModelBase arrayModel) {
             this.arrayModel = arrayModel;
         }
 
-        public StructuredArrayModel getArrayModel() {
+        public StructuredArrayIntrinsifiableModelBase getArrayModel() {
             return arrayModel;
         }
 
         private boolean active = false;
-        StructuredArrayModel arrayModel;
+        StructuredArrayIntrinsifiableModelBase arrayModel;
     }
 
     private static final ThreadLocal<ConstructorMagic> threadLocalConstructorMagic =

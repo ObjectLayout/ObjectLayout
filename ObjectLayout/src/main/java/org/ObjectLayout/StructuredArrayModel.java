@@ -1,8 +1,6 @@
 package org.ObjectLayout;
 
-import org.ObjectLayout.intrinsifiable.StructuredArrayIntrinsifiableBase;
-
-import java.lang.reflect.Constructor;
+import org.ObjectLayout.intrinsifiable.StructuredArrayIntrinsifiableModelBase;
 
 /**
  * A model that describes the structure of a StructuredArray
@@ -10,11 +8,8 @@ import java.lang.reflect.Constructor;
  * @param <S> The class of the StructuredArray modeled by the model
  * @param <T> The class of the elements in the StructuredArray modeled by the model
  */
-public class StructuredArrayModel<S extends StructuredArray<T>, T> {
-    private final Class<S> arrayClass;
-    private final Class<T> elementClass;
-    private final StructuredArrayModel subArrayModel;
-    private final long length;
+public class StructuredArrayModel<S extends StructuredArray<T>, T> extends
+        StructuredArrayIntrinsifiableModelBase<S, T> {
 
     /**
      * Create a model of a StructuredArray instance with terminal (non StructuredArray) elements
@@ -26,10 +21,7 @@ public class StructuredArrayModel<S extends StructuredArray<T>, T> {
     public StructuredArrayModel(final Class<S> arrayClass,
                                 final Class<T> elementClass,
                                 final long length) {
-        this.arrayClass = arrayClass;
-        this.elementClass = elementClass;
-        this.subArrayModel = null;
-        this.length = length;
+        super(arrayClass, elementClass, length);
     }
 
     /**
@@ -46,10 +38,7 @@ public class StructuredArrayModel<S extends StructuredArray<T>, T> {
     StructuredArrayModel(final Class<S> arrayClass,
                          final StructuredArrayModel<A2, T2> subArrayModel,
                          final long length) {
-        this.arrayClass = arrayClass;
-        this.elementClass = (Class<T>) subArrayModel.arrayClass;
-        this.subArrayModel = subArrayModel;
-        this.length = length;
+        super(arrayClass, subArrayModel, length);
     }
 
     /**
@@ -62,54 +51,54 @@ public class StructuredArrayModel<S extends StructuredArray<T>, T> {
      */
     @Override
     public boolean equals(Object other) {
-        if (!(other instanceof StructuredArrayModel)) {
+        if (!(other instanceof StructuredArrayIntrinsifiableModelBase)) {
             return false;
         }
         @SuppressWarnings("unchecked")
         StructuredArrayModel<S, T> otherArray = (StructuredArrayModel<S, T>) other;
-        if ((arrayClass != otherArray.arrayClass) ||
-                (elementClass != otherArray.elementClass) ||
-                (length != otherArray.length)) {
+        if ((getArrayClass() != otherArray.getArrayClass()) ||
+                (getElementClass() != otherArray.getElementClass()) ||
+                (getLength() != otherArray.getLength())) {
             return false;
         }
-        if ((subArrayModel == null) && (otherArray.subArrayModel == null)) {
+        if ((getSubArrayModel() == null) && (otherArray.getSubArrayModel() == null)) {
             return true;
         }
         // if either subArrayModel is null, they are not equal. Otherwise, compare subArrays:
-        return (subArrayModel != null) &&
-                (otherArray.subArrayModel != null) &&
-                subArrayModel.equals(otherArray.subArrayModel);
+        return (getSubArrayModel() != null) &&
+                (otherArray.getSubArrayModel() != null) &&
+                getSubArrayModel().equals(otherArray.getSubArrayModel());
     }
 
     /**
      * Get the class of the StructuredArray modeled by this model
      * @return the class of the StructuredArray modeled by this model
      */
-    public Class<S> getArrayClass() {
-        return arrayClass;
+    public final Class<S> getArrayClass() {
+        return super._getArrayClass();
     }
 
     /**
      * Get the class of the elements in the StructuredArray modeled by the model
      * @return the class of the elements in the StructuredArray modeled by the model
      */
-    public Class<T> getElementClass() {
-        return elementClass;
+    public final  Class<T> getElementClass() {
+        return super._getElementClass();
     }
 
     /**
      * Get the model describing the structure of the elements of the array being modeled
      * @return the model describing the structure of the elements of the array being modeled
      */
-    public StructuredArrayModel getSubArrayModel() {
-        return subArrayModel;
+    public final  StructuredArrayModel getSubArrayModel() {
+        return (StructuredArrayModel) super._getSubArrayModel();
     }
 
     /**
      * Get the length of the StructuredArray modeled by the model
      * @return The length of the StructuredArray modeled by the model
      */
-    public long getLength() {
-        return length;
+    public final  long getLength() {
+        return super._getLength();
     }
 }
