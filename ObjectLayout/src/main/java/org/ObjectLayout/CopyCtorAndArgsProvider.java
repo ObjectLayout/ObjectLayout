@@ -9,8 +9,21 @@ import java.lang.reflect.Constructor;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
- * Supports the construction of a new array's individual elements using a copy constructor to copy a source
- * array's corresponding elements.
+ * Supports the construction of a {@link org.ObjectLayout.StructuredArray}'s individual elements using a
+ * copy constructor, copying a source array's individual elements.
+ * <p>
+ * Expects the source {@link org.ObjectLayout.StructuredArray} to be provided as an opaque (Object) cookie
+ * in the {@link ConstructionContext} parameter passed to the
+ * {@link org.ObjectLayout.CopyCtorAndArgsProvider#getForContext(ConstructionContext)} method.
+ * <p>
+ * If the source element being copied is itself an instance of {@link org.ObjectLayout.StructuredArray}, the
+ * source element will be passed through as a contextCookie in the outgoing {@link org.ObjectLayout.CtorAndArgs},
+ * and will become the source array (the context cookie) in the next {@link org.ObjectLayout.StructuredArray}
+ * nesting level and it's calls to {@link CopyCtorAndArgsProvider#getForContext(ConstructionContext)}.
+ * <p>
+ * {@link CopyCtorAndArgsProvider} will attempt to efficiently recycle {@link org.ObjectLayout.CtorAndArgs}
+ * instances and to avoid per-element allocation of new {@link org.ObjectLayout.CtorAndArgs} instances by caching
+ * and recycling discarded instances.
  *
  * @param <T> type of the element occupying each array slot
  */
@@ -80,18 +93,18 @@ public class CopyCtorAndArgsProvider<T> extends AbstractCtorAndArgsProvider<T> {
     }
 
     /**
-     * Recycle an {@link CtorAndArgs} instance (place it back in the internal cache if
-     * desired). This is [very] useful for avoiding a re-allocation of a new {@link CtorAndArgs}
-     * and an associated args array for {@link #getForContext(ConstructionContext)} invocation in
-     * cases such as this (where the returned {@link CtorAndArgs} is not constant across indices).
-     * Recycling is optional, and is not guaranteed to occur.
+     * Recycle a {@link CtorAndArgs} instance (place it back in the internal cache if
+     * it's model is appropriate). This is [very] useful for avoiding a re-allocation of a
+     * new {@link CtorAndArgs} and an associated args array for each {@link #getForContext(ConstructionContext)}
+     * invocation in cases such as this, where the returned {@link CtorAndArgs} is not constant across indices,
+     * but where a cached instance can be mutated to fit the purpose. Recycling is not guaranteed to occur.
      *
      * @param ctorAndArgs the {@link CtorAndArgs} instance to recycle
      */
     @Override
     public void recycle(final CtorAndArgs<T> ctorAndArgs) {
         // Only recycle ctorAndArgs if ctorAndArgs is compatible with our state:
-        if (ctorAndArgs.getArgs().length != 1) {
+        if ((ctorAndArgs.getConstructor() != copyConstructor) || (ctorAndArgs.getArgs().length != 1)) {
             return;
         }
 

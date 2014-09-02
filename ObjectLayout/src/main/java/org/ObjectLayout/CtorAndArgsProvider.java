@@ -8,6 +8,16 @@ package org.ObjectLayout;
 /**
  * A functional interface for providing a constructor and arguments given an index.
  * Used for providing element construction information in StructuredArrays.
+ * <p>
+ * Implementations that wish to recycle the {@link org.ObjectLayout.CtorAndArgs} values they
+ * provide in an effort to avoid allocating per-element instances of {@link org.ObjectLayout.CtorAndArgs}
+ * should extend {@link org.ObjectLayout.AbstractCtorAndArgsProvider} rather than directly implement
+ * this interface. {@link org.ObjectLayout.AbstractCtorAndArgsProvider} implementations can override
+ * the {@link org.ObjectLayout.AbstractCtorAndArgsProvider#recycle(CtorAndArgs)} method, which would be
+ * called on each {@link org.ObjectLayout.CtorAndArgs} after it is used for construction and is
+ * not longer needed. An example of this recycling pattern can be found in the implementation of
+ * {@link org.ObjectLayout.CopyCtorAndArgsProvider}.
+ * </p>
  *
  * @param <T> type of the element occupying each array slot.
  */

@@ -12,10 +12,21 @@ package org.ObjectLayout;
  * array elements during array creation. Also provides a recycle method.
  * <p>
  * Subclasses can be created that would provide a fixed constructor
- * (as in {@link ConstantCtorAndArgsProvider}), or to provide
- * arguments and constructor values that would take the array index of the constructed
- * element into account. An example of this latter pattern can be found in the
- * implementation of a {@link org.ObjectLayout.CopyCtorAndArgsProvider}.
+ * (as in {@link ConstantCtorAndArgsProvider}), or that would take the construction context
+ * (including such thing as the array index, the containing array, and arbitrary contextCookie parameters)
+ * into account in selecting the element's constructor and arguments. An example of this latter pattern
+ * can be found in the implementation of a {@link org.ObjectLayout.CopyCtorAndArgsProvider}.
+ * </p>
+ * <p>
+ * {@link AbstractCtorAndArgsProvider} implementations can provide a
+ * {@link AbstractCtorAndArgsProvider#recycle(CtorAndArgs)} method that can be used to avoid per-element
+ * construction of new {@link org.ObjectLayout.CtorAndArgs} objects to be provided by the
+ * {@link AbstractCtorAndArgsProvider#getForContext(ConstructionContext)} method. The
+ * {@link org.ObjectLayout.StructuredArray} construction will call the {@link AbstractCtorAndArgsProvider#recycle}
+ * method after completing the construction of each element, with the no-longer-needed
+ * {@link org.ObjectLayout.CtorAndArgs} instance. An example of this recycling pattern can be found
+ * in the implementation of a {@link org.ObjectLayout.CopyCtorAndArgsProvider}.
+ * </p>
  *
  * @param <T> type of the element occupying each array slot.
  */
