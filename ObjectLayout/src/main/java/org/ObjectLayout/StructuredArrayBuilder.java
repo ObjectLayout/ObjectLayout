@@ -82,11 +82,12 @@ public class StructuredArrayBuilder<S extends StructuredArray<T>, T> {
     private static final Class[] EMPTY_ARG_TYPES = new Class[0];
     private static final Object[] EMPTY_ARGS = new Object[0];
 
+    private CtorAndArgs<S> arrayCtorAndArgs;
     private final StructuredArrayModel<S, T> arrayModel;
 
-    private final StructuredArrayBuilder subArrayBuilder;
+    private final StructuredArrayBuilder structuredSubArrayBuilder;
+    private final PrimitiveArrayBuilder primitiveSubArrayBuilder;
 
-    private CtorAndArgs<S> arrayCtorAndArgs;
     private CtorAndArgsProvider<T> elementCtorAndArgsProvider;
     private Object contextCookie;
 
@@ -110,7 +111,8 @@ public class StructuredArrayBuilder<S extends StructuredArray<T>, T> {
                     "Use the StructuredArrayBuilder(arrayClass, subArrayBuilder, length) form instead.");
         }
         this.arrayModel = new StructuredArrayModel<S, T>(arrayClass, elementClass, length);
-        this.subArrayBuilder = null;
+        this.structuredSubArrayBuilder = null;
+        this.primitiveSubArrayBuilder = null;
     }
 
     /**
@@ -128,7 +130,28 @@ public class StructuredArrayBuilder<S extends StructuredArray<T>, T> {
                            final StructuredArrayBuilder subArrayBuilder,
                            final long length) {
         this.arrayModel = new StructuredArrayModel<S, T>(arrayClass, subArrayBuilder.getArrayModel(), length);
-        this.subArrayBuilder = subArrayBuilder;
+        this.structuredSubArrayBuilder = subArrayBuilder;
+        this.primitiveSubArrayBuilder = null;
+    }
+
+    /**
+     * Constructs a new {@link StructuredArrayBuilder} object for creating an array of type S with
+     * elements of type T, and the given length. Used when T extends PrimitiveArray, such that the
+     * arrays instantiated by this builder would include elements that are PrimitiveArrays.
+     *
+     * @param arrayClass The class of the array to be built by this builder
+     * @param subArrayBuilder The builder used for creating individual array elements (which are themselves
+     *                        subclassable PrimitiveArrays)
+     * @param length The length of the array to be build by this builder
+     */
+    @SuppressWarnings("unchecked")
+    public StructuredArrayBuilder(final Class<S> arrayClass,
+                                  final PrimitiveArrayBuilder subArrayBuilder,
+                                  final long length) {
+        this.arrayModel = new StructuredArrayModel<S, T>(
+                arrayClass, subArrayBuilder.getArrayModel(), length);
+        this.structuredSubArrayBuilder = null;
+        this.primitiveSubArrayBuilder = subArrayBuilder;
     }
 
     /**
@@ -161,7 +184,7 @@ public class StructuredArrayBuilder<S extends StructuredArray<T>, T> {
      * @return The builder
      */
     public StructuredArrayBuilder<S, T> elementCtorAndArgs(final CtorAndArgs<T> ctorAndArgs) {
-        if (subArrayBuilder != null) {
+        if ((structuredSubArrayBuilder != null) || (primitiveSubArrayBuilder != null)) {
             throw new IllegalArgumentException(
                     "ctoAndArgs for constructing subArray elements should be supplied in subArrayBuilder");
         }
@@ -225,19 +248,29 @@ public class StructuredArrayBuilder<S extends StructuredArray<T>, T> {
         return this;
     }
 
-    private StructuredArrayBuilder<S, T> resolve(boolean resolveArrayCtorAndArgs) throws NoSuchMethodException {
+    private void resolve(boolean resolveArrayCtorAndArgs) throws NoSuchMethodException {
         if ((arrayCtorAndArgs == null) && resolveArrayCtorAndArgs) {
-            arrayCtorAndArgs = new CtorAndArgs<S>(arrayModel.getArrayClass(), EMPTY_ARG_TYPES, EMPTY_ARGS);
+            this.arrayCtorAndArgs = new CtorAndArgs<S>(arrayModel.getArrayClass(), EMPTY_ARG_TYPES, EMPTY_ARGS);
         }
 
         if (elementCtorAndArgsProvider == null) {
-            if ((subArrayBuilder != null) && (subArrayBuilder.arrayCtorAndArgs != null)) {
+            if ((structuredSubArrayBuilder != null) &&
+                    (structuredSubArrayBuilder.arrayCtorAndArgs != null)) {
                 // Use the CtorAndArgs provided for subArray elements:
                 @SuppressWarnings("unchecked")
                 AbstractCtorAndArgsProvider<T> subArrayCtorAndArgsProvider =
                         new ConstantCtorAndArgsProvider<T>(
-                                (Constructor<T>)subArrayBuilder.arrayCtorAndArgs.getConstructor(),
-                                subArrayBuilder.arrayCtorAndArgs.getArgs());
+                                (Constructor<T>)structuredSubArrayBuilder.arrayCtorAndArgs.getConstructor(),
+                                structuredSubArrayBuilder.arrayCtorAndArgs.getArgs());
+                elementCtorAndArgsProvider = subArrayCtorAndArgsProvider;
+            } else if ((primitiveSubArrayBuilder != null) &&
+                    (primitiveSubArrayBuilder.getArrayCtorAndArgs() != null)) {
+                // Use the CtorAndArgs provided for subArray elements:
+                @SuppressWarnings("unchecked")
+                AbstractCtorAndArgsProvider<T> subArrayCtorAndArgsProvider =
+                        new ConstantCtorAndArgsProvider<T>(
+                                (Constructor<T>)primitiveSubArrayBuilder.getArrayCtorAndArgs().getConstructor(),
+                                primitiveSubArrayBuilder.getArrayCtorAndArgs().getArgs());
                 elementCtorAndArgsProvider = subArrayCtorAndArgsProvider;
             } else {
                 // Use the default constructor:
@@ -245,12 +278,10 @@ public class StructuredArrayBuilder<S extends StructuredArray<T>, T> {
             }
         }
 
-        if (subArrayBuilder != null) {
+        if (structuredSubArrayBuilder != null) {
             // recurse through subArray builders and resolve them too:
-            subArrayBuilder.resolve(false);
+            structuredSubArrayBuilder.resolve(false);
         }
-
-        return this;
     }
 
     /**
@@ -263,7 +294,8 @@ public class StructuredArrayBuilder<S extends StructuredArray<T>, T> {
      * the current information in the builder
      */
     public StructuredArrayBuilder<S, T> resolve() throws NoSuchMethodException {
-        return resolve(true);
+        resolve(true);
+        return this;
     }
 
     /**
@@ -294,8 +326,19 @@ public class StructuredArrayBuilder<S extends StructuredArray<T>, T> {
      * @return The {@link org.ObjectLayout.StructuredArrayBuilder} for the elements of the arrays built by
      * this builder. Null if the array element type T does not extend {@link org.ObjectLayout.StructuredArray}.
      */
-    public StructuredArrayBuilder getSubArrayBuilder() {
-        return subArrayBuilder;
+    public StructuredArrayBuilder getStructuredSubArrayBuilder() {
+        return structuredSubArrayBuilder;
+    }
+
+    /**
+     * Get the {@link org.ObjectLayout.StructuredArrayBuilder} for the elements of the arrays built by
+     * this builder. Null
+     *
+     * @return The {@link org.ObjectLayout.StructuredArrayBuilder} for the elements of the arrays built by
+     * this builder. Null if the array element type T does not extend {@link org.ObjectLayout.StructuredArray}.
+     */
+    public PrimitiveArrayBuilder getPrimitiveSubArrayBuilder() {
+        return primitiveSubArrayBuilder;
     }
 
     /**

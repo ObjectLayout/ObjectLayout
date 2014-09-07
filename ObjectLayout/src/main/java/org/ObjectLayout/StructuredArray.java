@@ -5,7 +5,8 @@
 
 package org.ObjectLayout;
 
-import org.ObjectLayout.intrinsifiable.StructuredArrayIntrinsifiableBase;
+import org.ObjectLayout.intrinsifiable.AbstractArrayModel;
+import org.ObjectLayout.intrinsifiable.AbstractStructuredArray;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -16,19 +17,18 @@ import java.util.NoSuchElementException;
 import static java.lang.reflect.Modifier.*;
 
 /**
- *     An array of (potentially) mutable but non-replaceable objects.
+ *     An array of non-replaceable objects.
  * <p>
  *     A structured array contains array element objects of a fixed (at creation time, per array instance) class,
  *     and can support elements of any class that provides accessible constructors. The elements in a StructuredArray
  *     are all allocated and constructed at array creation time, and individual elements cannot be removed or
  *     replaced after array creation. Array elements can be accessed using an index-based accessor methods in
- *     the form of {@link StructuredArray#get}() using either int or
- *     long indices. Individual element contents can then be accessed and manipulated using any and all
- *     operations supported by the member element's class.
+ *     the form of {@link StructuredArray#get}() using either int or long indices. Individual element contents
+ *     can then be accessed and manipulated using any and all operations supported by the member element's class.
  * <p>
  *     While simple creation of default-constructed elements and fixed constructor parameters are available through
  *     the newInstance factory methods, supporting arbitrary member types requires a wider range of construction
- *     options. The CtorAndArgsProvider API provides for array creation with arbitrary, user-supplied
+ *     options. The {@link CtorAndArgsProvider} API provides for array creation with arbitrary, user-supplied
  *     constructors and arguments, the selection of which can take the element index and construction context
  *     into account.
  * <p>
@@ -42,7 +42,7 @@ import static java.lang.reflect.Modifier.*;
  *
  * @param <T> The class of the array elements
  */
-public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T> implements Iterable<T> {
+public class StructuredArray<T> extends AbstractStructuredArray<T> implements Iterable<T> {
 
     private static final Object[] EMPTY_ARGS = new Object[0];
 
@@ -89,7 +89,7 @@ public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T> imp
             final Class<T> elementClass,
             final long length) {
         try {
-            Constructor<S> ctor = arrayClass.getConstructor();
+            Constructor<S> ctor = arrayClass.getDeclaredConstructor();
             CtorAndArgs<S> arrayCtorAndArgs = new CtorAndArgs<S>(ctor, EMPTY_ARGS);
             return newInstance(arrayCtorAndArgs, elementClass, length);
         } catch (NoSuchMethodException ex) {
@@ -167,7 +167,7 @@ public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T> imp
             final CtorAndArgsProvider<T> ctorAndArgsProvider,
             final long length) {
         try {
-            Constructor<S> ctor = arrayClass.getConstructor();
+            Constructor<S> ctor = arrayClass.getDeclaredConstructor();
             CtorAndArgs<S> arrayCtorAndArgs = new CtorAndArgs<S>(ctor, EMPTY_ARGS);
             return instantiate(arrayCtorAndArgs, elementClass, ctorAndArgsProvider, length);
         } catch (NoSuchMethodException ex) {
@@ -280,14 +280,19 @@ public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T> imp
         // Verify source ranges fit in model:
         int depth = 0;
         StructuredArrayModel arrayModel = source.getArrayModel();
-        while((depth < counts.length) && (arrayModel != null)) {
+        while((depth < counts.length) && (arrayModel != null) && StructuredArrayModel.class.isInstance(arrayModel)) {
             if (arrayModel.getLength() < sourceOffsets[depth] + counts[depth]) {
                 throw new ArrayIndexOutOfBoundsException(
                         "At nesting depth " + depth + ", source length (" + arrayModel.getLength() +
                                 ") is smaller than sourceOffset (" + sourceOffsets[depth] +
                                 ") + count (" + counts[depth] + ")" );
             }
-            arrayModel = arrayModel.getSubArrayModel();
+            AbstractArrayModel subArrayModel = arrayModel.getSubArrayModel();
+            if ((subArrayModel != null) && StructuredArrayModel.class.isInstance(subArrayModel)) {
+                arrayModel = (StructuredArrayModel) subArrayModel;
+            } else {
+                arrayModel = null;
+            }
             depth++;
         }
 
@@ -299,7 +304,7 @@ public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T> imp
 
         final StructuredArrayModel<S, T> sourceArrayModel = (StructuredArrayModel<S, T>) source.getArrayModel();
         final Class<S> sourceArrayClass = sourceArrayModel.getArrayClass();
-        Constructor<S> arrayConstructor = sourceArrayClass.getConstructor(sourceArrayClass);
+        Constructor<S> arrayConstructor = sourceArrayClass.getDeclaredConstructor(sourceArrayClass);
 
         final StructuredArrayBuilder<S, T> arrayBuilder =
                 createCopyingArrayBuilder(sourceArrayModel, sourceOffsets, 0, counts, 0).
@@ -322,19 +327,27 @@ public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T> imp
         final CtorAndArgsProvider<T> elementCopyCtorAndArgsProvider =
                 new CopyCtorAndArgsProvider<T>(elementClass, sourceOffset);
 
-        final StructuredArrayModel subArrayModel = sourceArrayModel.getSubArrayModel();
+        final AbstractArrayModel subArrayModel = sourceArrayModel.getSubArrayModel();
 
-        if (subArrayModel != null) {
+        if ((subArrayModel != null) && StructuredArrayModel.class.isInstance(subArrayModel)) {
             // This array contains another array:
             StructuredArrayBuilder subArrayBuilder =
-                    createCopyingArrayBuilder(subArrayModel,
+                    createCopyingArrayBuilder((StructuredArrayModel) subArrayModel,
                             sourceOffsets, offsetsIndex + 1,
                             counts, countsIndex + 1);
             return new StructuredArrayBuilder<S, T>(sourceArrayClass, subArrayBuilder, count).
                             elementCtorAndArgsProvider(elementCopyCtorAndArgsProvider).
                             resolve();
+        } else if ((subArrayModel != null) && PrimitiveArrayModel.class.isInstance(subArrayModel)) {
+            // This array contains elements that are PrimitiveArrays:
+            PrimitiveArrayModel model = (PrimitiveArrayModel) subArrayModel;
+            @SuppressWarnings("unchecked")
+            PrimitiveArrayBuilder subArrayBuilder = new PrimitiveArrayBuilder(model.getArrayClass(), model.getLength());
+            return new StructuredArrayBuilder<S, T>(sourceArrayClass, subArrayBuilder, count).
+                    elementCtorAndArgsProvider(elementCopyCtorAndArgsProvider).
+                    resolve();
         } else {
-            // This is a leaf array
+            // This is a leaf array (it's elements are regular objects):
             return new StructuredArrayBuilder<S, T>(sourceArrayClass, elementClass, count).
                     elementCtorAndArgsProvider(elementCopyCtorAndArgsProvider).
                     resolve();
@@ -376,13 +389,13 @@ public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T> imp
             StructuredArrayModel<S, T> arrayModel = arrayBuilder.getArrayModel();
             Constructor<S> constructor = arrayBuilder.getArrayCtorAndArgs().getConstructor();
             Object[] args = arrayBuilder.getArrayCtorAndArgs().getArgs();
-            return StructuredArrayIntrinsifiableBase.instantiateStructuredArray(arrayModel, constructor, args);
+            return AbstractStructuredArray.instantiateStructuredArray(arrayModel, constructor, args);
         } finally {
             constructorMagic.setActive(false);
         }
     }
 
-    public StructuredArray() {
+    protected StructuredArray() {
         checkConstructorMagic();
         // Extract locally needed args from constructor magic:
         ConstructorMagic constructorMagic = getConstructorMagic();
@@ -405,16 +418,20 @@ public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T> imp
         this.fields = fields;
         this.hasFinalFields = containsFinalQualifiedFields(fields);
 
-        StructuredArrayBuilder subArrayBuilder = arrayBuilder.getSubArrayBuilder();
-        if (subArrayBuilder != null) {
-            populateSubArrays(ctorAndArgsProvider, subArrayBuilder, context);
+        StructuredArrayBuilder structuredSubArrayBuilder = arrayBuilder.getStructuredSubArrayBuilder();
+        PrimitiveArrayBuilder primitiveSubArrayBuilder = arrayBuilder.getPrimitiveSubArrayBuilder();
+
+        if (structuredSubArrayBuilder != null) {
+            populateStructuredSubArrays(ctorAndArgsProvider, structuredSubArrayBuilder, context);
+        } else if (primitiveSubArrayBuilder != null) {
+            populatePrimitiveSubArrays(ctorAndArgsProvider, primitiveSubArrayBuilder, context);
         } else {
             // This is a single dimension array. Populate it:
             populateLeafElements(ctorAndArgsProvider, context);
         }
     }
 
-    public StructuredArray(StructuredArray<T> sourceArray) {
+    protected StructuredArray(StructuredArray<T> sourceArray) {
         // Support copy constructor. When we get here, everything is already set up for the regular
         // (default) construction path to perform the required copy.
         // Copying will actually be done according to the CtorAndArgsProvider and context already supplied,
@@ -462,7 +479,7 @@ public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T> imp
     }
 
 
-    private void populateElement(final long index,
+    private void populateLeafElement(final long index,
                                  CtorAndArgs<T> ctorAndArgs) {
         try {
             // Instantiate:
@@ -476,9 +493,28 @@ public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T> imp
         }
     }
 
-    private void populateSubArray(final ConstructionContext<T> context,
-                                  StructuredArrayBuilder subArrayBuilder,
-                                  final CtorAndArgs<T> subArrayCtorAndArgs) {
+    private void populatePrimitiveSubArray(final long index,
+                                           PrimitiveArrayBuilder subArrayBuilder,
+                                           final CtorAndArgs<T> subArrayCtorAndArgs) {
+        try {
+            // Instantiate:
+            constructPrimitiveSubArrayAtIndex(
+                    index,
+                    subArrayBuilder.getArrayModel(),
+                    subArrayCtorAndArgs.getConstructor(),
+                    subArrayCtorAndArgs.getArgs());
+        } catch (InstantiationException ex) {
+            throw new RuntimeException(ex);
+        } catch (IllegalAccessException ex) {
+            throw new RuntimeException(ex);
+        } catch (InvocationTargetException ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
+    private void populateStructuredSubArray(final ConstructionContext<T> context,
+                                            StructuredArrayBuilder subArrayBuilder,
+                                            final CtorAndArgs<T> subArrayCtorAndArgs) {
         ConstructionContext<T> subArrayContext = new ConstructionContext<T>(subArrayCtorAndArgs.getContextCookie());
         subArrayContext.setContainingContext(context);
         ConstructorMagic constructorMagic = getConstructorMagic();
@@ -519,7 +555,7 @@ public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T> imp
                             ctorAndArgs.getConstructor().getDeclaringClass() + ")");
                 }
 
-                populateElement(index, ctorAndArgs);
+                populateLeafElement(index, ctorAndArgs);
 
                 if (ctorAndArgsProvider instanceof AbstractCtorAndArgsProvider) {
                     ((AbstractCtorAndArgsProvider<T>) ctorAndArgsProvider).recycle(ctorAndArgs);
@@ -530,8 +566,35 @@ public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T> imp
         }
     }
 
-    @SuppressWarnings("unchecked")
-    private void populateSubArrays(final CtorAndArgsProvider<T> subArrayCtorAndArgsProvider,
+    private void populatePrimitiveSubArrays(final CtorAndArgsProvider<T> subArrayCtorAndArgsProvider,
+                                             final PrimitiveArrayBuilder subArrayBuilder,
+                                             final ConstructionContext<T> context) {
+        long length = getLength();
+
+        try {
+            for (long index = 0; index < length; index++) {
+                final CtorAndArgs<T> ctorAndArgs;
+
+                context.setIndex(index);
+                ctorAndArgs = subArrayCtorAndArgsProvider.getForContext(context);
+
+                if (ctorAndArgs.getConstructor().getDeclaringClass() != getElementClass()) {
+                    throw new IllegalArgumentException("ElementClass (" + getElementClass() +
+                            ") does not match ctorAndArgs.getConstructor().getDeclaringClass() (" +
+                            ctorAndArgs.getConstructor().getDeclaringClass() + ")");
+                }
+
+                populatePrimitiveSubArray(index, subArrayBuilder, ctorAndArgs);
+
+                if (subArrayCtorAndArgsProvider instanceof AbstractCtorAndArgsProvider) {
+                    ((AbstractCtorAndArgsProvider<T>) subArrayCtorAndArgsProvider).recycle(ctorAndArgs);                }
+            }
+        } catch (NoSuchMethodException ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
+    private void populateStructuredSubArrays(final CtorAndArgsProvider<T> subArrayCtorAndArgsProvider,
                                    final StructuredArrayBuilder subArrayBuilder,
                                    final ConstructionContext<T> context) {
         long length = getLength();
@@ -549,7 +612,7 @@ public class StructuredArray<T> extends StructuredArrayIntrinsifiableBase<T> imp
                             ctorAndArgs.getConstructor().getDeclaringClass() + ")");
                 }
 
-                populateSubArray(context, subArrayBuilder, ctorAndArgs);
+                populateStructuredSubArray(context, subArrayBuilder, ctorAndArgs);
 
                 if (subArrayCtorAndArgsProvider instanceof AbstractCtorAndArgsProvider) {
                     ((AbstractCtorAndArgsProvider<T>) subArrayCtorAndArgsProvider).recycle(ctorAndArgs);                }

@@ -171,7 +171,9 @@ public class StructuredArrayTest {
 
         final StructuredArrayBuilder<StructuredArray<StructuredArray<StructuredArray<MockStructure>>>,
                 StructuredArray<StructuredArray<MockStructure>>> builder = get3dBuilder(lengths);
-        builder.getSubArrayBuilder().getSubArrayBuilder().elementCtorAndArgsProvider(ctorAndArgsProvider);
+        builder.getStructuredSubArrayBuilder().
+                getStructuredSubArrayBuilder().
+                elementCtorAndArgsProvider(ctorAndArgsProvider);
 
         final StructuredArray<StructuredArray<StructuredArray<MockStructure>>> array = builder.build();
 
@@ -313,7 +315,9 @@ public class StructuredArrayTest {
 
         final StructuredArrayBuilder<StructuredArray<StructuredArray<StructuredArray<MockStructure>>>,
                 StructuredArray<StructuredArray<MockStructure>>> builder = get3dBuilder(lengths);
-        builder.getSubArrayBuilder().getSubArrayBuilder().elementCtorAndArgsProvider(ctorAndArgsProvider);
+        builder.getStructuredSubArrayBuilder().
+                getStructuredSubArrayBuilder().
+                elementCtorAndArgsProvider(ctorAndArgsProvider);
 
         final StructuredArray<StructuredArray<StructuredArray<MockStructure>>> sourceArray = builder.build();
 
@@ -340,7 +344,9 @@ public class StructuredArrayTest {
 
         final StructuredArrayBuilder<StructuredArray<StructuredArray<StructuredArray<MockStructure>>>,
                 StructuredArray<StructuredArray<MockStructure>>> builder = get3dBuilder(lengths);
-        builder.getSubArrayBuilder().getSubArrayBuilder().elementCtorAndArgsProvider(ctorAndArgsProvider);
+        builder.getStructuredSubArrayBuilder().
+                getStructuredSubArrayBuilder().
+                elementCtorAndArgsProvider(ctorAndArgsProvider);
 
         final StructuredArray<StructuredArray<StructuredArray<MockStructure>>> sourceArray = builder.build();
 

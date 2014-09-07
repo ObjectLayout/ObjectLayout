@@ -12,7 +12,7 @@ public class ReferenceArrayTest {
         private final int capacity;
 
         public static Stack newInstance(final int length) {
-            return ReferenceArray.newSubclassInstance(Stack.class, length);
+            return newInstance(Stack.class, length);
         }
 
         public Stack() {
@@ -44,8 +44,9 @@ public class ReferenceArrayTest {
     
     @Test
     public void pushesAndPops() throws Exception {
+        Stack s0 = Stack.newInstance(Stack.class, 10); // Just to test the base form of instantiation
         Stack s = Stack.newInstance(10);
-        
+
         String foo = "foo";
         
         s.push(foo);

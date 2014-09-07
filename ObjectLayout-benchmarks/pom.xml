@@ -11,7 +11,7 @@
     </parent>
 
     <artifactId>ObjectLayout-benchmarks</artifactId>
-    <name>ObjectLayout</name>
+    <name>ObjectLayoutBenchmarks</name>
     <packaging>jar</packaging>
 
     <properties>

@@ -6,38 +6,78 @@
 package org.ObjectLayout;
 
 
+import org.ObjectLayout.intrinsifiable.AbstractReferenceArray;
+
+
 /**
  * A subclassable array of object references.
+ *
+ * ReferenceArray is designed with semantics specifically chosen and restricted such that a "flat" memory
+ * layout of the implemented data structure would be possible on optimizing JVMs. While fully functional
+ * on all JVM implementation (of Java SE 6 and above), the semantics are such that a JVM may transparently
+ * optimise the implementation to provide a compact contiguous layout that facilitates dead-reckoning (as
+ * opposed to de-referenced) access to elements
+ *
+ * @param <T> The reference type
  */
 
-public class ReferenceArray<T> extends PrimitiveArray {
+public class ReferenceArray<T> extends AbstractReferenceArray<T> {
 
-    private T[] array;
-
+    /**
+     * Get a reference to the internal array of references.
+     *
+     * @return The T[] array of references
+     */
     public T[] getArray() {
-        return array;
+        return _getArray();
     }
 
+    /**
+     * Get the reference element at the given index in the array.
+     *
+     * @param index the index in the array
+     * @return the reference element at the given index in the array
+     */
     public T get(final int index) {
-        return array[index];
+        return _getArray()[index];
     }
 
+    /**
+     * Set reference element at the given index in the array to the given value.
+     *
+     * @param index the index in the array
+     * @param value the value to set the element to
+     */
     public void set(final int index, final T value) {
-        array[index] = value;
+        _getArray()[index] = value;
     }
 
-    @SuppressWarnings("unchecked")
+    /**
+     * Create a new instance of ReferenceArray<T> with a given length.
+     *
+     * @param length the length of the array
+     * @param <T> the reference type
+     * @return A newly created ReferenceArray<T>
+     */
     public static <T> ReferenceArray<T> newInstance(final int length) {
-        return PrimitiveArray.newSubclassInstance(ReferenceArray.class, length);
+        @SuppressWarnings("unchecked")
+        ReferenceArray<T> referenceArray = newInstance(ReferenceArray.class, length);
+        return referenceArray;
     }
 
-    @Override
-    final void initializePrimitiveArray(final int length) {
-        if (length > Integer.MAX_VALUE) {
-            throw new IllegalArgumentException("Cannot instantiate array with more than Integer.MAX_VALUE elements");
-        }
-        @SuppressWarnings("unchecked")
-        T[] myArray = (T[]) new Object[(int) length];
-        array = myArray;
+    /**
+     * Default constructor
+     */
+    public ReferenceArray() {
+        super();
+    }
+
+    /**
+     * Copy constructor
+     *
+     * @param sourceArray the array to copy
+     */
+    public ReferenceArray(ReferenceArray<T> sourceArray) {
+        super(sourceArray);
     }
 }

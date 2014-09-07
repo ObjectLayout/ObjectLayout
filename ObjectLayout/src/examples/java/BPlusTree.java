@@ -751,7 +751,7 @@ public class BPlusTree<K, V> implements Iterable<Map.Entry<K, V>> {
 
         private static Branch create(int nodeSize) {
             int length = (nodeSize * 2) + 1;
-            return ReferenceArray.newSubclassInstance(Branch.class, length);
+            return ReferenceArray.newInstance(Branch.class, length);
         }
     }
 

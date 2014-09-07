@@ -238,7 +238,9 @@ public class ObjectLayoutBench {
 
         GenericEncapsulatedArray(Constructor<E> constructor, int length)
                 throws NoSuchMethodException {
-            array = (E[]) new Object[length];
+            @SuppressWarnings("unchecked")
+            final E[] a = (E[]) new Object[length];
+            array = a;
             try {
                 for (int i = 0; i < array.length; i++) {
                     array[i] = constructor.newInstance(i, i * 2);

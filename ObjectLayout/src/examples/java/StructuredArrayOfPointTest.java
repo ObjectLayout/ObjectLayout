@@ -116,7 +116,9 @@ public class StructuredArrayOfPointTest {
 
         final StructuredArrayBuilder<StructuredArray<StructuredArray<StructuredArrayOfPoint>>,
                 StructuredArray<StructuredArrayOfPoint>> builder = get3dBuilder(lengths);
-        builder.getSubArrayBuilder().getSubArrayBuilder().elementCtorAndArgsProvider(ctorAndArgsProvider);
+        builder.getStructuredSubArrayBuilder().
+                getStructuredSubArrayBuilder().
+                elementCtorAndArgsProvider(ctorAndArgsProvider);
 
         final StructuredArray<StructuredArray<StructuredArrayOfPoint>> array = builder.build();
 
@@ -222,7 +224,9 @@ public class StructuredArrayOfPointTest {
 
         final StructuredArrayBuilder<StructuredArray<StructuredArray<StructuredArrayOfPoint>>,
                 StructuredArray<StructuredArrayOfPoint>> builder = get3dBuilder(lengths);
-        builder.getSubArrayBuilder().getSubArrayBuilder().elementCtorAndArgsProvider(ctorAndArgsProvider);
+        builder.getStructuredSubArrayBuilder().
+                getStructuredSubArrayBuilder().
+                elementCtorAndArgsProvider(ctorAndArgsProvider);
 
         final StructuredArray<StructuredArray<StructuredArrayOfPoint>> sourceArray = builder.build();
 
@@ -249,7 +253,9 @@ public class StructuredArrayOfPointTest {
 
         final StructuredArrayBuilder<StructuredArray<StructuredArray<StructuredArrayOfPoint>>,
                 StructuredArray<StructuredArrayOfPoint>> builder = get3dBuilder(lengths);
-        builder.getSubArrayBuilder().getSubArrayBuilder().elementCtorAndArgsProvider(ctorAndArgsProvider);
+        builder.getStructuredSubArrayBuilder().
+                getStructuredSubArrayBuilder().
+                elementCtorAndArgsProvider(ctorAndArgsProvider);
 
         final StructuredArray<StructuredArray<StructuredArrayOfPoint>> sourceArray = builder.build();
 

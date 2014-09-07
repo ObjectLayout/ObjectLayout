@@ -1,6 +1,8 @@
 package org.ObjectLayout;
 
-import org.ObjectLayout.intrinsifiable.StructuredArrayIntrinsifiableModelBase;
+import org.ObjectLayout.intrinsifiable.AbstractArrayModel;
+import org.ObjectLayout.intrinsifiable.PrimitiveArray;
+import org.ObjectLayout.intrinsifiable.AbstractStructuredArrayModel;
 
 /**
  * A model that describes the structure of a StructuredArray
@@ -9,7 +11,7 @@ import org.ObjectLayout.intrinsifiable.StructuredArrayIntrinsifiableModelBase;
  * @param <T> The class of the elements in the StructuredArray modeled by the model
  */
 public class StructuredArrayModel<S extends StructuredArray<T>, T> extends
-        StructuredArrayIntrinsifiableModelBase<S, T> {
+        AbstractStructuredArrayModel<S, T> {
 
     /**
      * Create a model of a StructuredArray instance with terminal (non StructuredArray) elements
@@ -42,6 +44,22 @@ public class StructuredArrayModel<S extends StructuredArray<T>, T> extends
     }
 
     /**
+     * Create a model of a StructuredArray instance with elements that are themselves subclassable PrimitiveArrays
+     *
+     * @param arrayClass The class of the StructuredArray modeled by the model
+     * @param subArrayModel The model describing the structure of the elements of the array being modeled
+     * @param length The length of the StructuredArray modeled by the model
+     * @param <A2> The class of the PrimitiveArray modeled by the subArrayModel
+     */
+    @SuppressWarnings("unchecked")
+    public <A2 extends PrimitiveArray>
+    StructuredArrayModel(final Class<S> arrayClass,
+                         final PrimitiveArrayModel<A2> subArrayModel,
+                         final long length) {
+        super(arrayClass, subArrayModel, length);
+    }
+
+    /**
      * Determine if this model is equal to another object. If the other object is not a model, they are
      * not equal. If the other object is a model, the two are equal if all details, (arrayClass, elementClass,
      * length, and any subArrayModel hierarchy details) are identical.
@@ -51,7 +69,7 @@ public class StructuredArrayModel<S extends StructuredArray<T>, T> extends
      */
     @Override
     public boolean equals(Object other) {
-        if (!(other instanceof StructuredArrayIntrinsifiableModelBase)) {
+        if (!(other instanceof StructuredArrayModel)) {
             return false;
         }
         @SuppressWarnings("unchecked")
@@ -90,8 +108,8 @@ public class StructuredArrayModel<S extends StructuredArray<T>, T> extends
      * Get the model describing the structure of the elements of the array being modeled
      * @return the model describing the structure of the elements of the array being modeled
      */
-    public final  StructuredArrayModel getSubArrayModel() {
-        return (StructuredArrayModel) super._getSubArrayModel();
+    public final AbstractArrayModel getSubArrayModel() {
+        return super._getSubArrayModel();
     }
 
     /**

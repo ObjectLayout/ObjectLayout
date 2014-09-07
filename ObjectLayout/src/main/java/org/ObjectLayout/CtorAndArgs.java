@@ -91,9 +91,6 @@ public class CtorAndArgs<T> {
      * @param args constructor arguments to be indicated in this {@link CtorAndArgs}
      */
     public final void setArgs(final Object... args) {
-        if (null == args) {
-            throw new NullPointerException("args cannot be null");
-        }
         this.args = args;
     }
 

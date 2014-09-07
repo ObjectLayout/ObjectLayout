@@ -52,7 +52,7 @@ public class CopyCtorAndArgsProvider<T> extends AbstractCtorAndArgsProvider<T> {
      */
     public CopyCtorAndArgsProvider(final Class<T> elementClass, final long sourceOffset) throws NoSuchMethodException {
         this.sourceOffset = sourceOffset;
-        this.copyConstructor = elementClass.getConstructor(elementClass);
+        this.copyConstructor = elementClass.getDeclaredConstructor(elementClass);
     }
 
     /**
@@ -68,7 +68,7 @@ public class CopyCtorAndArgsProvider<T> extends AbstractCtorAndArgsProvider<T> {
 
         // Find source array for this context:
         @SuppressWarnings("unchecked")
-        StructuredArray<T> sourceArray = (StructuredArray<T>) context.getCookie();
+        StructuredArray<T> sourceArray = (StructuredArray<T>) context.getContextCookie();
 
         long index = context.getIndex() + sourceOffset;
 
@@ -104,7 +104,8 @@ public class CopyCtorAndArgsProvider<T> extends AbstractCtorAndArgsProvider<T> {
     @Override
     public void recycle(final CtorAndArgs<T> ctorAndArgs) {
         // Only recycle ctorAndArgs if ctorAndArgs is compatible with our state:
-        if ((ctorAndArgs.getConstructor() != copyConstructor) || (ctorAndArgs.getArgs().length != 1)) {
+        Object[] args = ctorAndArgs.getArgs();
+        if ((ctorAndArgs.getConstructor() != copyConstructor) || (args == null) || (args.length != 1)) {
             return;
         }
 

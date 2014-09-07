@@ -13,9 +13,9 @@ import java.lang.reflect.InvocationTargetException;
  * that choose to intrinsify StructuredArray are expected to replace the implementation of this
  * base class.
  *
- * @param <T>
+ * @param <T> the element type in the array
  */
-public abstract class StructuredArrayIntrinsifiableBase<T> {
+public abstract class AbstractStructuredArray<T> extends AbstractArray {
 
     //
     //
@@ -29,12 +29,12 @@ public abstract class StructuredArrayIntrinsifiableBase<T> {
      * in "Internal fields" section farther below.
      */
 
-    protected StructuredArrayIntrinsifiableBase() {
+    protected AbstractStructuredArray() {
         checkConstructorMagic();
         ConstructorMagic constructorMagic = getConstructorMagic();
 
         @SuppressWarnings("unchecked")
-        final StructuredArrayIntrinsifiableModelBase<StructuredArrayIntrinsifiableBase<T>, T> arrayModel =
+        final AbstractStructuredArrayModel<AbstractStructuredArray<T>, T> arrayModel =
                 constructorMagic.getArrayModel();
         final Class<T> elementClass = arrayModel._getElementClass();
         final long length = arrayModel._getLength();
@@ -59,8 +59,8 @@ public abstract class StructuredArrayIntrinsifiableBase<T> {
      * OPTIMIZATION NOTE: Optimized JDK implementations may replace this implementation with one that
      * allocates room for the entire StructuredArray and all it's elements.
      */
-    protected static <S extends StructuredArrayIntrinsifiableBase<T>, T> S instantiateStructuredArray(
-            StructuredArrayIntrinsifiableModelBase<S, T> arrayModel, Constructor<S> arrayConstructor, Object... args) {
+    protected static <S extends AbstractStructuredArray<T>, T> S instantiateStructuredArray(
+            AbstractStructuredArrayModel<S, T> arrayModel, Constructor<S> arrayConstructor, Object... args) {
 
         // For implementations that need the array class and the element class,
         // this is how
@@ -96,12 +96,33 @@ public abstract class StructuredArrayIntrinsifiableBase<T> {
      * construction-in-place call on a previously allocated memory location associated with the given index.
      */
     protected void constructElementAtIndex(
-            final long index0,
+            final long index,
             final Constructor<T> constructor,
             final Object... args)
             throws InstantiationException, IllegalAccessException, InvocationTargetException {
         T element = constructor.newInstance(args);
-        storeElementInLocalStorageAtIndex(element, index0);
+        storeElementInLocalStorageAtIndex(element, index);
+    }
+
+    /**
+     * Construct a fresh primitive sub-array intended to occupy a given index in the given array, using the
+     * supplied constructor and arguments.
+     *
+     * OPTIMIZATION NOTE: Optimized JDK implementations may replace this implementation with a
+     * construction-in-place call on a previously allocated memory location associated with the given index.
+     */
+    protected void constructPrimitiveSubArrayAtIndex(
+            final long index,
+            AbstractArrayModel primitiveSubArrayModel,
+            final Constructor<T> constructor,
+            final Object... args)
+            throws InstantiationException, IllegalAccessException, InvocationTargetException {
+        int length = (int) primitiveSubArrayModel._getLength();
+        @SuppressWarnings("unchecked")
+        Constructor<? extends PrimitiveArray> c = (Constructor<? extends PrimitiveArray>) constructor;
+        @SuppressWarnings("unchecked")
+        T element = (T) PrimitiveArray.newInstance(length, c, args);
+        storeElementInLocalStorageAtIndex(element, index);
     }
 
     /**
@@ -113,7 +134,7 @@ public abstract class StructuredArrayIntrinsifiableBase<T> {
      */
     protected void constructSubArrayAtIndex(
             long index,
-            StructuredArrayIntrinsifiableModelBase subArrayModel,
+            AbstractStructuredArrayModel subArrayModel,
             final Constructor<T> subArrayConstructor,
             final Object... args)
             throws InstantiationException, IllegalAccessException, InvocationTargetException {
@@ -121,6 +142,7 @@ public abstract class StructuredArrayIntrinsifiableBase<T> {
         constructorMagic.setConstructionArgs(subArrayModel);
         try {
             constructorMagic.setActive(true);
+            subArrayConstructor.setAccessible(true);
             T subArray = subArrayConstructor.newInstance(args);
             storeElementInLocalStorageAtIndex(subArray, index);
         } finally {
@@ -266,16 +288,16 @@ public abstract class StructuredArrayIntrinsifiableBase<T> {
             this.active = active;
         }
 
-        public void setConstructionArgs(StructuredArrayIntrinsifiableModelBase arrayModel) {
+        public void setConstructionArgs(AbstractStructuredArrayModel arrayModel) {
             this.arrayModel = arrayModel;
         }
 
-        public StructuredArrayIntrinsifiableModelBase getArrayModel() {
+        public AbstractStructuredArrayModel getArrayModel() {
             return arrayModel;
         }
 
         private boolean active = false;
-        StructuredArrayIntrinsifiableModelBase arrayModel;
+        AbstractStructuredArrayModel arrayModel;
     }
 
     private static final ThreadLocal<ConstructorMagic> threadLocalConstructorMagic =
