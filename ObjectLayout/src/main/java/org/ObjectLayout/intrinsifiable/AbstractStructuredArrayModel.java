@@ -1,9 +1,9 @@
 package org.ObjectLayout.intrinsifiable;
 
 /**
- * A model that describes the structure of a StructuredArrayIntrinsifiableBase
+ * A model that describes the structure of a AbstractStructuredArray
  *
- * @param <S> The class of the StructuredArrayIntrinsifiableBase modeled by the model
+ * @param <S> The class of the AbstractStructuredArray modeled by the model
  * @param <T> The class of the elements in the StructuredArray modeled by the model
  */
 public class AbstractStructuredArrayModel<S extends AbstractStructuredArray<T>, T>  extends
