@@ -134,11 +134,12 @@ public class PrimitiveLongArrayTest {
                 new StructuredArrayBuilder(StructuredArray.class,
                         new PrimitiveArrayBuilder(ColoredLongArray.class, 20),
                         50).
-                        elementCtorAndArgsProvider(new CtorAndArgsProvider() {
-                            @Override
-                            public CtorAndArgs getForContext(ConstructionContext context) throws NoSuchMethodException {
-                                return new CtorAndArgs(ColoredLongArray.constructor, "Color-" + context.getIndex());
-                            }
+                        elementCtorAndArgsProvider(
+                                new CtorAndArgsProvider() {
+                                    @Override
+                                    public CtorAndArgs getForContext(ConstructionContext context) throws NoSuchMethodException {
+                                        return new CtorAndArgs(ColoredLongArray.constructor, "Color-" + context.getIndex());
+                                    }
                         }).
                         build();
         assertThat(a.getLength(), is(50L));
