@@ -642,21 +642,32 @@ public class StructuredArray<T> extends AbstractStructuredArray<T> implements It
      * Specialised {@link java.util.Iterator} with the ability to be {@link #reset()} enabling reuse.
      */
     public class ElementIterator implements Iterator<T> {
-
         private long cursor = 0;
+        private final long initialOffset;
+        private final long end;
+
+        public ElementIterator() {
+            this(0, getLength());
+        }
+
+        public ElementIterator(long offset, long length) {
+            this.initialOffset = offset;
+            this.cursor = offset;
+            this.end = offset + length;
+        }
 
         /**
          * {@inheritDoc}
          */
         public boolean hasNext() {
-            return cursor < getLength();
+            return cursor < end;
         }
 
         /**
          * {@inheritDoc}
          */
         public T next() {
-            if (cursor >= getLength()) {
+            if (cursor >= end) {
                 throw new NoSuchElementException();
             }
 
@@ -680,7 +691,7 @@ public class StructuredArray<T> extends AbstractStructuredArray<T> implements It
          * Reset to the beginning of the collection enabling reuse of the iterator.
          */
         public void reset() {
-            cursor = 0;
+            cursor = initialOffset;
         }
 
         public long getCursor() {

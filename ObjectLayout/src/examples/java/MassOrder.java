@@ -51,11 +51,11 @@ public class MassOrder extends
         return askOrderIndex;
     }
 
-    private final Iterable<SimpleOrder> bidIterable = new Iterable<SimpleOrder>() {
+    private final Iterable bidIterable = new
+            Iterable<SimpleOrder>() {
         @Override
         public Iterator<SimpleOrder> iterator() {
-            return new StructuredIterator<SimpleOrder>(
-                    MassOrder.this, getBidOrderIndex(), getBidOrderCount());
+            return new ElementIterator(getBidOrderIndex(), getBidOrderCount());
         }
     };
 
@@ -74,8 +74,7 @@ public class MassOrder extends
     private final Iterable<SimpleOrder> askIterable = new Iterable<SimpleOrder>() {
         @Override
         public Iterator<SimpleOrder> iterator() {
-            return new StructuredIterator<SimpleOrder>(
-                    MassOrder.this, getAskOrderIndex(), getAskOrderCount());
+            return new ElementIterator(getAskOrderIndex(), getAskOrderCount());
         }
     };
 
