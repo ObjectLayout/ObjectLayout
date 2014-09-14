@@ -7,8 +7,6 @@ import org.ObjectLayout.ConstantCtorAndArgsProvider;
 import org.ObjectLayout.CtorAndArgsProvider;
 import org.ObjectLayout.StructuredArray;
 
-// TODO: Make our own Point class.
-import java.awt.Point;
 import java.lang.reflect.Constructor;
 
 public class StructuredArrayOfPoint extends StructuredArray<Point> {
@@ -33,7 +31,7 @@ public class StructuredArrayOfPoint extends StructuredArray<Point> {
     // If you want to support direct construction parameters for elements, with with parameter types you know
     // (statically) have a good constructor associated with the, here is an example:
 
-    public static StructuredArrayOfPoint newInstance(final long length, final int x, final int y) {
+    public static StructuredArrayOfPoint newInstance(final long length, final long x, final long y) {
         return StructuredArray.newInstance(
                 StructuredArrayOfPoint.class,
                 Point.class,
@@ -42,7 +40,7 @@ public class StructuredArrayOfPoint extends StructuredArray<Point> {
                 length);
     }
 
-    static final Class[] argsTypes = new Class[] {int.class, int.class};
+    static final Class[] argsTypes = new Class[] {long.class, long.class};
 
     static final Constructor<Point> xy_constructor;
 

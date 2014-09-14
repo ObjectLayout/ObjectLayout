@@ -1,14 +1,11 @@
 /*
- * Written by Gil Tene and Martin Thompson, and released to the public domain,
+ * Written by Gil Tene, and released to the public domain,
  * as explained at http://creativecommons.org/publicdomain/zero/1.0/
  */
 
 import org.ObjectLayout.*;
 import org.junit.Test;
 
-import java.awt.*;
-
-import static java.lang.Long.compare;
 import static java.lang.Long.valueOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
@@ -70,8 +67,8 @@ public class StructuredArrayOfPointTest {
 
     @Test
     public void shouldConstructArrayOfGivenLengthAndInitValues() throws NoSuchMethodException {
-        final int initialX = 4;
-        final int initialY = 777;
+        final long initialX = 4;
+        final long initialY = 777;
 
         long length = 9L;
 
@@ -83,9 +80,9 @@ public class StructuredArrayOfPointTest {
 
     @Test
     public void shouldConstructArrayElementsViaConstantCtorAndArgsProvider() throws NoSuchMethodException {
-        final Class[] initArgTypes = {int.class, int.class};
-        final int initialX = 4;
-        final int initialY = 777;
+        final Class[] initArgTypes = {long.class, long.class};
+        final long initialX = 4;
+        final long initialY = 777;
 
         long length = 9L;
 
@@ -150,8 +147,8 @@ public class StructuredArrayOfPointTest {
             final long index = iter.getCursor();
             final Point point = iter.next();
 
-            assertThat(valueOf(point.x), is(valueOf(index)));
-            assertThat(valueOf(point.y), is(valueOf(index * 2)));
+            assertThat(valueOf(point.getX()), is(valueOf(index)));
+            assertThat(valueOf(point.getY()), is(valueOf(index * 2)));
             sum += index;
             elementCount++;
         }
@@ -159,7 +156,7 @@ public class StructuredArrayOfPointTest {
         long sum2 = 0;
         long elementCount2 = 0;
         for (final Point point : array) {
-            sum2 += point.x;
+            sum2 += point.getX();
             elementCount2++;
         }
 
@@ -181,8 +178,8 @@ public class StructuredArrayOfPointTest {
         while (iter.hasNext()) {
             final long index = iter.getCursor();
             final Point point = iter.next();
-            assertThat(valueOf(point.x), is(valueOf(index)));
-            assertThat(valueOf(point.y), is(valueOf(index * 2)));
+            assertThat(valueOf(point.getX()), is(valueOf(index)));
+            assertThat(valueOf(point.getY()), is(valueOf(index * 2)));
             i++;
         }
 
@@ -191,8 +188,8 @@ public class StructuredArrayOfPointTest {
         while (iter.hasNext()) {
             final long index = iter.getCursor();
             final Point point = iter.next();
-            assertThat(valueOf(point.x), is(valueOf(index)));
-            assertThat(valueOf(point.y), is(valueOf(index * 2)));
+            assertThat(valueOf(point.getX()), is(valueOf(index)));
+            assertThat(valueOf(point.getY()), is(valueOf(index * 2)));
             i++;
         }
 
@@ -305,9 +302,9 @@ public class StructuredArrayOfPointTest {
 
         StructuredArray.shallowCopy(array, 4, array, 3, 2, false);
 
-        assertThat(valueOf(array.get(3).x), is(valueOf(4)));
-        assertThat(valueOf(array.get(4).x), is(valueOf(5)));
-        assertThat(valueOf(array.get(5).x), is(valueOf(5)));
+        assertThat(valueOf(array.get(3).getX()), is(valueOf(4)));
+        assertThat(valueOf(array.get(4).getX()), is(valueOf(5)));
+        assertThat(valueOf(array.get(5).getX()), is(valueOf(5)));
     }
 
     @Test
@@ -320,9 +317,9 @@ public class StructuredArrayOfPointTest {
 
         StructuredArray.shallowCopy(array, 5, array, 6, 2, false);
 
-        assertThat(valueOf(array.get(5).x), is(valueOf(5)));
-        assertThat(valueOf(array.get(6).x), is(valueOf(5)));
-        assertThat(valueOf(array.get(7).x), is(valueOf(6)));
+        assertThat(valueOf(array.get(5).getX()), is(valueOf(5)));
+        assertThat(valueOf(array.get(6).getX()), is(valueOf(5)));
+        assertThat(valueOf(array.get(7).getX()), is(valueOf(6)));
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -335,7 +332,7 @@ public class StructuredArrayOfPointTest {
     // Test support below
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
-    private void assertCorrectFixedInitialisation(final int expectedX, final int expectedY, final long[] lengths,
+    private void assertCorrectFixedInitialisation(final long expectedX, final long expectedY, final long[] lengths,
                                                   final StructuredArray array) {
         StructuredArray a = array;
         for (int i = 0; i < lengths.length - 1; i++) {
@@ -365,8 +362,8 @@ public class StructuredArrayOfPointTest {
             ap = (StructuredArrayOfPoint) a;
             Point point = ap.get(cursors[cursors.length - 1]);
 
-            assertThat(valueOf(point.x), is(valueOf(expectedX)));
-            assertThat(valueOf(point.y), is(valueOf(expectedY)));
+            assertThat(valueOf(point.getX()), is(valueOf(expectedX)));
+            assertThat(valueOf(point.getY()), is(valueOf(expectedY)));
 
             // Increment cursors from inner-most dimension out:
             for (int cursorDimension = cursors.length - 1; cursorDimension >= 0; cursorDimension--) {
@@ -423,9 +420,9 @@ public class StructuredArrayOfPointTest {
             }
 
             assertThat("elementCountToCursor: " + elementCountToCursor + " cursors: " + cursorsString,
-                    valueOf(point.x), is(valueOf(indexSum)));
+                    valueOf(point.getX()), is(valueOf(indexSum)));
             assertThat("elementCountToCursor: " + elementCountToCursor + " cursors: " + cursorsString,
-                    valueOf(point.y), is(valueOf(indexSum * 2)));
+                    valueOf(point.getY()), is(valueOf(indexSum * 2)));
 
             // Increment cursors from inner-most dimension out:
             for (int cursorDimension = cursors.length - 1; cursorDimension >= 0; cursorDimension--) {
@@ -463,7 +460,7 @@ public class StructuredArrayOfPointTest {
                 indexSum += index;
             }
 
-            point.setLocation(indexSum, indexSum * 2);
+            point.set(indexSum, indexSum * 2);
 
             // Increment cursors from inner-most dimension out:
             for (int cursorDimension = cursors.length - 1; cursorDimension >= 0; cursorDimension--) {
@@ -481,7 +478,7 @@ public class StructuredArrayOfPointTest {
 
     private static class PointCtorAndArgsProvider implements CtorAndArgsProvider<Point> {
 
-        private final Class[] argsTypes = {Integer.TYPE, Integer.TYPE};
+        private final Class[] argsTypes = {long.class, long.class};
 
         @Override
         public CtorAndArgs<Point> getForContext(ConstructionContext<Point> context) throws NoSuchMethodException {
