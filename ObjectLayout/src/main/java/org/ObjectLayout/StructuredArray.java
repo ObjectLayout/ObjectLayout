@@ -112,17 +112,13 @@ public class StructuredArray<T> extends AbstractStructuredArray<T> implements It
             final CtorAndArgs<S> arrayCtorAndArgs,
             final Class<T> elementClass,
             final long length) {
-        try {
-            StructuredArrayBuilder<S, T> arrayBuilder = new StructuredArrayBuilder<S, T>(
-                    arrayCtorAndArgs.getConstructor().getDeclaringClass(),
-                    elementClass,
-                    length).
-                    arrayCtorAndArgs(arrayCtorAndArgs).
-                    resolve();
-            return instantiate(arrayBuilder);
-        } catch (NoSuchMethodException ex) {
-            throw new RuntimeException(ex);
-        }
+        StructuredArrayBuilder<S, T> arrayBuilder = new StructuredArrayBuilder<S, T>(
+                arrayCtorAndArgs.getConstructor().getDeclaringClass(),
+                elementClass,
+                length).
+                arrayCtorAndArgs(arrayCtorAndArgs).
+                resolve();
+        return instantiate(arrayBuilder);
     }
 
     /**

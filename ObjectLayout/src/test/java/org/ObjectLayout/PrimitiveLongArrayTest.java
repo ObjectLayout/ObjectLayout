@@ -116,7 +116,7 @@ public class PrimitiveLongArrayTest {
         assertThat(a.get(1).getColor(), is("Yellow"));
     }
 
-    @Test(expected = NoSuchMethodException.class)
+    @Test(expected = IllegalArgumentException.class)
     public void testStructuredArrayOfColoredLongArrays_shouldFail() throws NoSuchMethodException {
         // Should fail to find default constructor:
         @SuppressWarnings("unchecked")

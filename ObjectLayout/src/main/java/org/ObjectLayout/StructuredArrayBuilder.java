@@ -116,6 +116,17 @@ public class StructuredArrayBuilder<S extends StructuredArray<T>, T> {
     }
 
     /**
+     * Constructs a new {@link StructuredArrayBuilder} object for creating arrays of the given array model.
+     *
+     * @param arrayModel The model of the array to be built by this builder
+     */
+    public StructuredArrayBuilder(final StructuredArrayModel<S, T> arrayModel) {
+        this.arrayModel = arrayModel;
+        this.structuredSubArrayBuilder = null;
+        this.primitiveSubArrayBuilder = null;
+    }
+
+    /**
      * Constructs a new {@link StructuredArrayBuilder} object for creating an array of type S with
      * elements of type T, and the given length. Used when T extends StructuredArray, such that the
      * arrays instantiated by this builder would include nested StructuredArrays.
@@ -248,39 +259,43 @@ public class StructuredArrayBuilder<S extends StructuredArray<T>, T> {
         return this;
     }
 
-    private void resolve(boolean resolveArrayCtorAndArgs) throws NoSuchMethodException {
-        if ((arrayCtorAndArgs == null) && resolveArrayCtorAndArgs) {
-            this.arrayCtorAndArgs = new CtorAndArgs<S>(arrayModel.getArrayClass(), EMPTY_ARG_TYPES, EMPTY_ARGS);
-        }
-
-        if (elementCtorAndArgsProvider == null) {
-            if ((structuredSubArrayBuilder != null) &&
-                    (structuredSubArrayBuilder.arrayCtorAndArgs != null)) {
-                // Use the CtorAndArgs provided for subArray elements:
-                @SuppressWarnings("unchecked")
-                AbstractCtorAndArgsProvider<T> subArrayCtorAndArgsProvider =
-                        new ConstantCtorAndArgsProvider<T>(
-                                (Constructor<T>)structuredSubArrayBuilder.arrayCtorAndArgs.getConstructor(),
-                                structuredSubArrayBuilder.arrayCtorAndArgs.getArgs());
-                elementCtorAndArgsProvider = subArrayCtorAndArgsProvider;
-            } else if ((primitiveSubArrayBuilder != null) &&
-                    (primitiveSubArrayBuilder.getArrayCtorAndArgs() != null)) {
-                // Use the CtorAndArgs provided for subArray elements:
-                @SuppressWarnings("unchecked")
-                AbstractCtorAndArgsProvider<T> subArrayCtorAndArgsProvider =
-                        new ConstantCtorAndArgsProvider<T>(
-                                (Constructor<T>)primitiveSubArrayBuilder.getArrayCtorAndArgs().getConstructor(),
-                                primitiveSubArrayBuilder.getArrayCtorAndArgs().getArgs());
-                elementCtorAndArgsProvider = subArrayCtorAndArgsProvider;
-            } else {
-                // Use the default constructor:
-                elementCtorAndArgsProvider = new ConstantCtorAndArgsProvider<T>(arrayModel.getElementClass());
+    private void resolve(boolean resolveArrayCtorAndArgs) throws IllegalStateException {
+        try {
+            if ((arrayCtorAndArgs == null) && resolveArrayCtorAndArgs) {
+                this.arrayCtorAndArgs = new CtorAndArgs<S>(arrayModel.getArrayClass(), EMPTY_ARG_TYPES, EMPTY_ARGS);
             }
-        }
 
-        if (structuredSubArrayBuilder != null) {
-            // recurse through subArray builders and resolve them too:
-            structuredSubArrayBuilder.resolve(false);
+            if (elementCtorAndArgsProvider == null) {
+                if ((structuredSubArrayBuilder != null) &&
+                        (structuredSubArrayBuilder.arrayCtorAndArgs != null)) {
+                    // Use the CtorAndArgs provided for subArray elements:
+                    @SuppressWarnings("unchecked")
+                    AbstractCtorAndArgsProvider<T> subArrayCtorAndArgsProvider =
+                            new ConstantCtorAndArgsProvider<T>(
+                                    (Constructor<T>) structuredSubArrayBuilder.arrayCtorAndArgs.getConstructor(),
+                                    structuredSubArrayBuilder.arrayCtorAndArgs.getArgs());
+                    elementCtorAndArgsProvider = subArrayCtorAndArgsProvider;
+                } else if ((primitiveSubArrayBuilder != null) &&
+                        (primitiveSubArrayBuilder.getArrayCtorAndArgs() != null)) {
+                    // Use the CtorAndArgs provided for subArray elements:
+                    @SuppressWarnings("unchecked")
+                    AbstractCtorAndArgsProvider<T> subArrayCtorAndArgsProvider =
+                            new ConstantCtorAndArgsProvider<T>(
+                                    (Constructor<T>) primitiveSubArrayBuilder.getArrayCtorAndArgs().getConstructor(),
+                                    primitiveSubArrayBuilder.getArrayCtorAndArgs().getArgs());
+                    elementCtorAndArgsProvider = subArrayCtorAndArgsProvider;
+                } else {
+                    // Use the default constructor:
+                    elementCtorAndArgsProvider = new ConstantCtorAndArgsProvider<T>(arrayModel.getElementClass());
+                }
+            }
+
+            if (structuredSubArrayBuilder != null) {
+                // recurse through subArray builders and resolve them too:
+                structuredSubArrayBuilder.resolve(false);
+            }
+        } catch (NoSuchMethodException ex) {
+            throw new IllegalArgumentException("Failed to find constructor.", ex);
         }
     }
 
@@ -290,10 +305,10 @@ public class StructuredArrayBuilder<S extends StructuredArray<T>, T> {
      * attempts.
      *
      * @return This builder
-     * @throws NoSuchMethodException if the array constructor or element constructor fail to resolve given
+     * @throws IllegalArgumentException if the array constructor or element constructor fail to resolve given
      * the current information in the builder
      */
-    public StructuredArrayBuilder<S, T> resolve() throws NoSuchMethodException {
+    public StructuredArrayBuilder<S, T> resolve() throws IllegalArgumentException {
         resolve(true);
         return this;
     }
@@ -302,10 +317,10 @@ public class StructuredArrayBuilder<S extends StructuredArray<T>, T> {
      * Build a {@link org.ObjectLayout.StructuredArray} according to the information captured in this builder
      * @return A newly instantiated {@link org.ObjectLayout.StructuredArray}
      *
-     * @throws NoSuchMethodException if the array constructor or element constructor fail to resolve given
+     * @throws IllegalArgumentException if the array constructor or element constructor fail to resolve given
      * the current information in the builder
      */
-    public S build() throws NoSuchMethodException {
+    public S build() throws IllegalArgumentException {
         resolve();
         return StructuredArray.newInstance(this);
     }
