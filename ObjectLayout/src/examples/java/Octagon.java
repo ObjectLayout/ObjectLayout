@@ -14,8 +14,6 @@ import java.lang.reflect.Constructor;
  * {@link org.ObjectLayout.IntrinsicObjectModel} members and their initialization, when the
  * intrinsic member is a StructuredArray.
  *
- * This class demonstrates
- *
  */
 public class Octagon {
     /**
