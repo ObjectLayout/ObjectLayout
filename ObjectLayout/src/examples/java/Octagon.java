@@ -56,6 +56,22 @@ public class Octagon {
         }
     }
 
+    /**
+     * Build an perfect octagon with center at (centerX, centerY), and first point
+     * at (centerX + radius, centerY)
+     * @param radius
+     */
+    public Octagon(final String color, final long centerX, final long centerY, final long radius) {
+        this.color = color;
+        for (int i = 0; i < 8; i++) {
+            Double angleRad = i * (2.0 * Math.PI) / 8.0;
+            long x = centerX + (long)(Math.cos(angleRad) * radius);
+            long y = centerY + (long)(Math.sin(angleRad) * radius);
+            points.get(i).setX(x);
+            points.get(i).setY(y);
+        }
+    }
+
     public StructuredArrayOfPoint getPoints() {
         return points;
     }
