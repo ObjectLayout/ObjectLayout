@@ -19,7 +19,7 @@ import java.lang.reflect.Constructor;
  */
 public class Octagon {
     /**
-     * Model declaration of two intrinsic object fields:
+     * Model declaration of intrinsic object field:
      */
     private static final IntrinsicObjectModel<StructuredArrayOfPoint> pointsModel =
             new IntrinsicObjectModel<StructuredArrayOfPoint>(
