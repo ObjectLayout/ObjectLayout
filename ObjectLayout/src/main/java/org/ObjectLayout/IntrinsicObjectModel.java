@@ -173,7 +173,7 @@ public final class IntrinsicObjectModel<T>  {
             if (!applicable) {
                 makeApplicable();
             }
-            if (field.get(containingObject) != null) {
+            if ((field.get(containingObject) != null) || (pendingObjects.get(containingObject) != null)) {
                 throw new IllegalArgumentException("Intrinsic object field \"" + field.getName() +
                         "\" in containing object is already initialized");
             }
