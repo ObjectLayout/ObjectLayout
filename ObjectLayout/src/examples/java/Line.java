@@ -46,10 +46,10 @@ public class Line {
      * Model declaration of two intrinsic object fields:
      */
     private static final IntrinsicObjectModel<Point> endPoint1Model =
-            new IntrinsicObjectModel<Point>(Line.class, "endPoint1", Point.class);
+            new IntrinsicObjectModel<Point>("endPoint1"){};
 
     private static final IntrinsicObjectModel<Point> endPoint2Model =
-            new IntrinsicObjectModel<Point>(Line.class, "endPoint2", Point.class);
+            new IntrinsicObjectModel<Point>("endPoint2"){};
 
     /**
      * Simple intrinsic object declaration and initialization:

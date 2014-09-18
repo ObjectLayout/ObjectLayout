@@ -110,7 +110,7 @@ public class StructuredArrayBuilder<S extends StructuredArray<T>, T> {
             throw new IllegalArgumentException("Cannot use this constructor form for nested StructuredArrays. " +
                     "Use the StructuredArrayBuilder(arrayClass, subArrayBuilder, length) form instead.");
         }
-        this.arrayModel = new StructuredArrayModel<S, T>(arrayClass, elementClass, length);
+        this.arrayModel = new StructuredArrayModel<S, T>(arrayClass, elementClass, length){};
         this.structuredSubArrayBuilder = null;
         this.primitiveSubArrayBuilder = null;
     }
@@ -138,9 +138,9 @@ public class StructuredArrayBuilder<S extends StructuredArray<T>, T> {
      */
     @SuppressWarnings("unchecked")
     public StructuredArrayBuilder(final Class<S> arrayClass,
-                           final StructuredArrayBuilder subArrayBuilder,
-                           final long length) {
-        this.arrayModel = new StructuredArrayModel<S, T>(arrayClass, subArrayBuilder.getArrayModel(), length);
+                                  final StructuredArrayBuilder subArrayBuilder,
+                                  final long length) {
+        this.arrayModel = new StructuredArrayModel<S, T>(arrayClass, subArrayBuilder.getArrayModel(), length){};
         this.structuredSubArrayBuilder = subArrayBuilder;
         this.primitiveSubArrayBuilder = null;
     }
@@ -160,7 +160,7 @@ public class StructuredArrayBuilder<S extends StructuredArray<T>, T> {
                                   final PrimitiveArrayBuilder subArrayBuilder,
                                   final long length) {
         this.arrayModel = new StructuredArrayModel<S, T>(
-                arrayClass, subArrayBuilder.getArrayModel(), length);
+                arrayClass, subArrayBuilder.getArrayModel(), length){};
         this.structuredSubArrayBuilder = null;
         this.primitiveSubArrayBuilder = subArrayBuilder;
     }

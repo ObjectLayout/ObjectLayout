@@ -35,8 +35,7 @@ public class StructuredArrayOfPoint extends StructuredArray<Point> {
         return StructuredArray.newInstance(
                 StructuredArrayOfPoint.class,
                 Point.class,
-                new ConstantCtorAndArgsProvider<Point>(
-                        xy_constructor, x, y),
+                new ConstantCtorAndArgsProvider<Point>(xy_constructor, x, y),
                 length);
     }
 

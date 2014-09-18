@@ -1,5 +1,7 @@
 package org.ObjectLayout.intrinsifiable;
 
+import java.lang.reflect.ParameterizedType;
+
 /**
  * A model that describes the structure of a AbstractStructuredArray
  *
@@ -23,7 +25,7 @@ public class AbstractStructuredArrayModel<S extends AbstractStructuredArray<T>, 
                                         final long length) {
         super(arrayClass, length);
         this.subArrayModel = null;
-        this.elementClass = elementClass;
+        this.elementClass = elementClass != null ? elementClass : deriveElementTypeParameter();
     }
 
     /**
@@ -57,5 +59,12 @@ public class AbstractStructuredArrayModel<S extends AbstractStructuredArray<T>, 
      */
     protected final Class<T> _getElementClass() {
         return elementClass;
+    }
+
+    private Class<T> deriveElementTypeParameter() {
+        ParameterizedType genericSuperclass = (ParameterizedType) this.getClass().getGenericSuperclass();
+        @SuppressWarnings("unchecked")
+        Class<T> derivedType = typeToClass(genericSuperclass.getActualTypeArguments()[1]);
+        return derivedType;
     }
 }

@@ -4,10 +4,7 @@
  */
 
 import org.ObjectLayout.IntrinsicObjectModel;
-import org.ObjectLayout.StructuredArray;
 import org.ObjectLayout.StructuredArrayModel;
-
-import java.lang.reflect.Constructor;
 
 /**
  * A simple Octagon class example with an intrinsic StructuredArray of Points. Demonstrates use of
@@ -19,15 +16,12 @@ public class Octagon {
     /**
      * Model declaration of intrinsic object field:
      */
+
     private static final IntrinsicObjectModel<StructuredArrayOfPoint> pointsModel =
             new IntrinsicObjectModel<StructuredArrayOfPoint>(
-                    Octagon.class,
                     "points",
-                    new StructuredArrayModel<StructuredArrayOfPoint, Point>(
-                            StructuredArrayOfPoint.class,
-                            Point.class,
-                            8)
-            );
+                    new StructuredArrayModel<StructuredArrayOfPoint, Point>(8){}
+            ){};
 
     /**
      * Simple intrinsic object declaration and initialization:
@@ -59,6 +53,10 @@ public class Octagon {
     /**
      * Build an perfect octagon with center at (centerX, centerY), and first point
      * at (centerX + radius, centerY)
+     *
+     * @param color
+     * @param centerX
+     * @param centerY
      * @param radius
      */
     public Octagon(final String color, final long centerX, final long centerY, final long radius) {

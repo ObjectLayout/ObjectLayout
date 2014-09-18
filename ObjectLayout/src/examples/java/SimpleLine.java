@@ -1,6 +1,9 @@
-import org.ObjectLayout.IntrinsicObjectModel;
+/*
+ * Written by Gil Tene, and released to the public domain,
+ * as explained at http://creativecommons.org/publicdomain/zero/1.0/
+ */
 
-import java.lang.reflect.Constructor;
+import org.ObjectLayout.IntrinsicObjectModel;
 
 /**
  * A simple Line class example with two intrinsic Point end point objects. Demonstrates use of
@@ -13,10 +16,10 @@ public class SimpleLine {
      * Model declaration of two intrinsic object fields:
      */
     private static final IntrinsicObjectModel<Point> endPoint1Model =
-            new IntrinsicObjectModel<Point>(SimpleLine.class, "endPoint1", Point.class);
+            new IntrinsicObjectModel<Point>("endPoint1"){};
 
     private static final IntrinsicObjectModel<Point> endPoint2Model =
-            new IntrinsicObjectModel<Point>(SimpleLine.class, "endPoint2", Point.class);
+            new IntrinsicObjectModel<Point>("endPoint2"){};
 
     /**
      * Simple intrinsic object declaration and initialization:

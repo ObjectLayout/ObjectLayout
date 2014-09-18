@@ -10,8 +10,18 @@ import org.ObjectLayout.intrinsifiable.AbstractStructuredArrayModel;
  * @param <S> The class of the StructuredArray modeled by the model
  * @param <T> The class of the elements in the StructuredArray modeled by the model
  */
-public class StructuredArrayModel<S extends StructuredArray<T>, T> extends
+public abstract class StructuredArrayModel<S extends StructuredArray<T>, T> extends
         AbstractStructuredArrayModel<S, T> {
+
+    /**
+     * Create a model of a StructuredArray instance with terminal (non StructuredArray) elements,
+     * deriving the array class and element class from the generic class parameters
+     *
+     * @param length The length of the StructuredArray modeled by the model
+     */
+    public StructuredArrayModel(final long length) {
+        super((Class<S>) null, (Class<T>) null, length);
+    }
 
     /**
      * Create a model of a StructuredArray instance with terminal (non StructuredArray) elements

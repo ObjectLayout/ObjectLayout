@@ -1,5 +1,8 @@
 package org.ObjectLayout.intrinsifiable;
 
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+
 /**
  * A model that describes the structure of a StructuredArray or PrimitiveArray
  *
@@ -17,7 +20,7 @@ public abstract class AbstractArrayModel<A extends AbstractArray> {
      */
     public AbstractArrayModel(final Class<A> arrayClass,
                               final long length) {
-        this.arrayClass = arrayClass;
+        this.arrayClass = arrayClass != null ? arrayClass : deriveArrayTypeParameter();
         this.length = length;
     }
 
@@ -35,5 +38,22 @@ public abstract class AbstractArrayModel<A extends AbstractArray> {
      */
     protected final long _getLength() {
         return length;
+    }
+
+    private Class<A> deriveArrayTypeParameter() {
+        ParameterizedType genericSuperclass = (ParameterizedType) this.getClass().getGenericSuperclass();
+        @SuppressWarnings("unchecked")
+        Class<A> derivedType = typeToClass(genericSuperclass.getActualTypeArguments()[0]);
+        return derivedType;
+    }
+
+    protected static Class typeToClass(Type t) {
+        if (t instanceof Class) {
+            return (Class) t;
+        } else if (t instanceof ParameterizedType) {
+            return (Class) ((ParameterizedType)t).getRawType();
+        } else {
+            throw new IllegalArgumentException();
+        }
     }
 }
