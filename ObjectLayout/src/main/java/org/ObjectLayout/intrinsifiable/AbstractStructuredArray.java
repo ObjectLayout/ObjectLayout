@@ -151,6 +151,32 @@ public abstract class AbstractStructuredArray<T> extends AbstractArray {
     }
 
     /**
+     * Construct a fresh StructuredArray intended to occupy a a given intrinsic field in the containing object,
+     * at the field described by the supplied intrinsicObjectModel, using the supplied constructor and arguments.
+     *
+     * OPTIMIZATION NOTE: Optimized JDK implementations may replace this implementation with a
+     * construction-in-place call on a previously allocated memory location associated with the given index.
+     */
+    protected static <T> void constructStructuredArrayWithin(
+            final Object containingObject,
+            final AbstractIntrinsicObjectModel<T> intrinsicObjectModel,
+            AbstractStructuredArrayModel subArrayModel,
+            final Constructor<T> subArrayConstructor,
+            final Object... args)
+            throws InstantiationException, IllegalAccessException, InvocationTargetException {
+        ConstructorMagic constructorMagic = getConstructorMagic();
+        constructorMagic.setConstructionArgs(subArrayModel);
+        try {
+            constructorMagic.setActive(true);
+            subArrayConstructor.setAccessible(true);
+            T array = subArrayConstructor.newInstance(args);
+            intrinsicObjectModel.registerPendingIntrinsicObject(containingObject, array);
+        } finally {
+            constructorMagic.setActive(false);
+        }
+    }
+
+    /**
      * Get an element at a supplied [index] in a StructuredArray
      *
      * OPTIMIZATION NOTE: Optimized JDK implementations may replace this implementation with a

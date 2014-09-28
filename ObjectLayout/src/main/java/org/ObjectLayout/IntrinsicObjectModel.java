@@ -1,57 +1,74 @@
 package org.ObjectLayout;
 
+import java.lang.Object;
 import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Modifier;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
-import java.util.concurrent.ConcurrentHashMap;
 
-import org.ObjectLayout.intrinsifiable.PrimitiveArray;
+import org.ObjectLayout.intrinsifiable.AbstractIntrinsicObjectModel;
 
 /**
- * @param <T> The type of the encapsulated intrinsic object
+ * An {@link IntrinsicObjectModel} declares a specific instance field of it's containing class to be intrinsic
+ * to the instances of that containing class. Intrinsic objects may have their layout within the containing
+ * object instance optimized by JDK implementations, such that access to their content is faster, and avoids
+ * certain de-referencing steps.
+ * <p>
+ * An example of declaring an intrinsic object is:
+ * <p><blockquote><pre>
+ * public class Line {
+ *     //
+ *     // Model declaration of an intrinsic object fields:
+ *     //
+ *     private static final IntrinsicObjectModel&ltPoint&gt endPoint1Model =
+ *         new IntrinsicObjectModel&ltPoint&gt("endPoint"){};
+ *     ...
+ *     //
+ *     // Simple intrinsic object declaration and initialization:
+ *     //
+ *     private final Point endPoint = endPointModel.constructWithin(this);
+ *     ...
+ *
+ *     // Later, in a constructor or instance initializer:
+ *     { IntrinsicObjectModel.makeIntrinsicObjectsAccessible(this); }
+ * }
+ * </pre></blockquote></p>
+ * <p>
+ * The declaration of an {@link IntrinsicObjectModel} is strongly tied to the class containing the intrinsic
+ * object, and to the field declaring the intrinsic object within the containing class. Each
+ * {@link IntrinsicObjectModel} instance is specific to a single intrinsic object field in a single class.
+ * The intrinsic object field must be a non-static, private, and final field of the containing class, and
+ * it's declared type must match the generic type of the {@link IntrinsicObjectModel}.
+ * <p>
+ * Each {@link IntrinsicObjectModel} instance must be declared as a static final instance of a nested class
+ * instance within the class that will contain the intrinsic object. It must be declared with a generic
+ * type that matches the intrinsic object's type, and the field name of the intrinsic object must be passed
+ * as a parameter to the {@link IntrinsicObjectModel} constructor.
+ * <p>
+ * Intrinsic object instances are not accessible until
+ * {@link IntrinsicObjectModel#makeIntrinsicObjectsAccessible(Object) makeIntrinsicObjectsAccessible()}
+ * has been called on the containing object instance. Attempts to access intrinsic object members of a
+ * containing object instance that has not had it's fields made accessible with
+ * {@link IntrinsicObjectModel#makeIntrinsicObjectsAccessible(Object) makeIntrinsicObjectsAccessible()}
+ * can (and likely will) result in {@link java.lang.NullPointerException} exceptions.
+ *
+ *
+ * @param <T> The type of the intrinsic object
  */
-
-public abstract class IntrinsicObjectModel<T>  {
-    private final Class containingClass;
-    private final String fieldNameInContainingObject;
-    private final Class<T> objectClass;
-    private final PrimitiveArrayModel primitiveArrayModel;
-    private final StructuredArrayModel structuredArrayModel;
-
-    private final Field field;
-
-    private boolean applicable = false;
-
-    ConcurrentHashMap<Object, T> pendingObjects = new ConcurrentHashMap<Object, T>();
+public abstract class IntrinsicObjectModel<T> extends AbstractIntrinsicObjectModel<T> {
 
     private IntrinsicObjectModel(
             final String fieldNameInContainingObject,
             final PrimitiveArrayModel primitiveArrayModel,
             final StructuredArrayModel structuredArrayModel) {
-
-        this.fieldNameInContainingObject = fieldNameInContainingObject;
-        this.primitiveArrayModel = primitiveArrayModel;
-        this.structuredArrayModel = structuredArrayModel;
-
-        this.containingClass = deriveContainingClass();
-        this.objectClass = deriveObjectClass();
-
-        try {
-            field = containingClass.getDeclaredField(fieldNameInContainingObject);
-            field.setAccessible(true);
-        } catch (NoSuchFieldException ex) {
-            throw new IllegalArgumentException(ex);
-        }
-
-        sanityCheckAtConstruction();
+        super(
+                fieldNameInContainingObject,
+                primitiveArrayModel,
+                structuredArrayModel
+        );
     }
 
     /**
-     * Construct an {@link org.ObjectLayout.IntrinsicObjectModel} that models an intrinsic object of within
-     * this class's Enclosing class, at the given fieldNameInContainingObject.
+     * Construct an {@link org.ObjectLayout.IntrinsicObjectModel} that models and can be used to construct
+     * an intrinsic object within this class's enclosing class, at the given fieldNameInContainingObject.
      *
      * @param fieldNameInContainingObject The name of this {@link org.ObjectLayout.IntrinsicObjectModel}'s field in
      *                                    the containing object
@@ -60,66 +77,35 @@ public abstract class IntrinsicObjectModel<T>  {
         this (fieldNameInContainingObject, null, null);
     }
 
+    /**
+     * Construct an {@link org.ObjectLayout.IntrinsicObjectModel} that models and can be used to construct
+     * an intrinsic object of type {@link org.ObjectLayout.intrinsifiable.PrimitiveArray} within this
+     * class's enclosing class, at the given fieldNameInContainingObject.
+     *
+     * @param fieldNameInContainingObject The name of this {@link org.ObjectLayout.IntrinsicObjectModel}'s field in
+     *                                    the containing object
+     * @param arrayModel The model of the array, including the array type and it's length.
+     */
     public IntrinsicObjectModel(
             final String fieldNameInContainingObject,
             final PrimitiveArrayModel arrayModel) {
         this (fieldNameInContainingObject, arrayModel, null);
     }
 
+    /**
+     * Construct an {@link org.ObjectLayout.IntrinsicObjectModel} that models and can be used to construct
+     * an intrinsic object of type {@link org.ObjectLayout.intrinsifiable.PrimitiveArray} within this
+     * class's enclosing class, at the given fieldNameInContainingObject.
+     *
+     * @param fieldNameInContainingObject The name of this {@link org.ObjectLayout.IntrinsicObjectModel}'s field in
+     *                                    the containing object
+     * @param arrayModel The model of the array, including the array type, and it's length, the type of the
+     *                   elements in the array, and any potential sub-array nesting models.
+     */
     public IntrinsicObjectModel(
             final String fieldNameInContainingObject,
             final StructuredArrayModel arrayModel) {
         this (fieldNameInContainingObject, null, arrayModel);
-    }
-
-    private void sanityCheckAtConstruction() {
-        if ((primitiveArrayModel != null) &&
-                !primitiveArrayModel.getArrayClass().equals(objectClass)) {
-            throw new IllegalArgumentException("Generic object class \"" + objectClass +
-                    "\" does not match the array class \"" + primitiveArrayModel.getArrayClass() +
-                    "\" in the supplied array model");
-
-        }
-        if ((structuredArrayModel != null) &&
-                !structuredArrayModel.getArrayClass().equals(objectClass)) {
-            throw new IllegalArgumentException("Generic object class \"" + objectClass +
-                    "\" does not match the array class \"" + structuredArrayModel.getArrayClass() +
-                    "\" in the supplied array model");
-
-        }
-        if (!Object.class.isAssignableFrom(objectClass)) {
-            throw new IllegalArgumentException("objectClass (\"" + objectClass.getName() +
-                    "\" is not a reference type (must derive from Object)");
-        }
-        // Verify field is private, final, and an object reference:
-        if (!(Modifier.isFinal(field.getModifiers()) &&
-                Modifier.isPrivate(field.getModifiers()))) {
-            throw new IllegalArgumentException("Intrinsic objects can only be constructed in private final fields");
-        }
-        if (objectClass != field.getType()) {
-            throw new IllegalArgumentException(
-                    "The field type \"" + field.getType().getName() + "\" does not match the " +
-                            "specified objectClass \"" + objectClass.getName() + "\"");
-        }
-        // Verify that no other model for this field already exists:
-        for (Field field : containingClass.getDeclaredFields()) {
-            try {
-                if (Modifier.isStatic(field.getModifiers()) &&
-                        field.getType().equals(IntrinsicObjectModel.class)) {
-                    field.setAccessible(true);
-                    IntrinsicObjectModel model = (IntrinsicObjectModel) field.get(null /* static field */);
-                    if ((model != null ) &&
-                            (model.fieldNameInContainingObject.equals(fieldNameInContainingObject))) {
-                        throw new IllegalArgumentException("An IntrinsicObjectModel for the field \"" +
-                                fieldNameInContainingObject +
-                                "\" in class \"" +
-                                containingClass.getName() + "\" already exists");
-                    }
-                }
-            } catch (IllegalAccessException ex) {
-                throw new RuntimeException("Unexpected IllegalAccessException on accessible field: ", ex);
-            }
-        }
     }
 
     /**
@@ -132,7 +118,7 @@ public abstract class IntrinsicObjectModel<T>  {
         try {
             return instantiate(
                     containingObject,
-                    objectClass.getConstructor(),
+                    getObjectClass().getConstructor(),
                     (Object[]) null
             );
         } catch (NoSuchMethodException ex) {
@@ -152,12 +138,12 @@ public abstract class IntrinsicObjectModel<T>  {
             final Object containingObject,
             final Constructor<T> objectConstructor,
             final Object... args) {
-        if (objectClass != objectConstructor.getDeclaringClass()) {
+        if (getObjectClass() != objectConstructor.getDeclaringClass()) {
             throw new IllegalArgumentException(
                     "The declaring class of the constructor (" +
                             objectConstructor.getDeclaringClass().getName() +
                             ") does not match the intrinsic object class declared in the model (" +
-                            objectClass.getName() +
+                            getObjectClass().getName() +
                             ")");
         }
         return instantiate(
@@ -179,12 +165,12 @@ public abstract class IntrinsicObjectModel<T>  {
     public final T constructWithin(
             final Object containingObject,
             final CtorAndArgs<T> objectCtorAndArgs) {
-        if (objectClass != objectCtorAndArgs.getConstructor().getDeclaringClass()) {
+        if (getObjectClass() != objectCtorAndArgs.getConstructor().getDeclaringClass()) {
             throw new IllegalArgumentException(
                     "The declaring class of the constructor (" +
                             objectCtorAndArgs.getConstructor().getDeclaringClass().getName() +
                             ") does not match the intrinsic object class declared in the model (" +
-                            objectClass.getName() +
+                            getObjectClass().getName() +
                             ")");
         }
         return instantiate(
@@ -199,31 +185,19 @@ public abstract class IntrinsicObjectModel<T>  {
             final Constructor<T> objectConstructor,
             final Object... args) {
         try {
-            if (!applicable) {
-                makeApplicable();
-            }
-            if ((field.get(containingObject) != null) || (pendingObjects.get(containingObject) != null)) {
-                throw new IllegalArgumentException("Intrinsic object field \"" + field.getName() +
-                        "\" in containing object is already initialized");
-            }
-            if (primitiveArrayModel != null) {
-                int length = (int) primitiveArrayModel.getLength(); // Already verified range at instantiation
+            _makeApplicable();
+            _sanityCheckInstantiation(containingObject);
+
+            if (_isPrimitiveArray()) {
+                constructPrimitiveArrayWithin(containingObject, objectConstructor, args);
+            } else if (_isStructuredArray()) {
                 @SuppressWarnings("unchecked")
-                Constructor<PrimitiveArray> arrayConstructor = (Constructor<PrimitiveArray>) objectConstructor;
-                @SuppressWarnings("unchecked")
-                T intrinsicObject = (T) PrimitiveArray.newInstance(length, arrayConstructor, args);
-                pendingObjects.put(containingObject, intrinsicObject);
-            } else if (structuredArrayModel != null) {
-                @SuppressWarnings("unchecked")
-                Constructor<StructuredArray> arrayConstructor = (Constructor<StructuredArray>) objectConstructor;
-                @SuppressWarnings("unchecked")
-                T intrinsicObject = (T) new StructuredArrayBuilder(structuredArrayModel).
-                        arrayCtorAndArgs(arrayConstructor, args).
-                        build();
-                pendingObjects.put(containingObject, intrinsicObject);
+                StructuredArrayBuilder arrayBuilder =
+                        new StructuredArrayBuilder((StructuredArrayModel)_getStructuredArrayModel()).
+                                arrayCtorAndArgs(objectConstructor, args).resolve();
+                StructuredArray.constructStructuredArrayWithin(containingObject, this, arrayBuilder);
             } else {
-                T intrinsicObject = objectConstructor.newInstance(args);
-                pendingObjects.put(containingObject, intrinsicObject);
+                constructElementWithin(containingObject, objectConstructor, args);
             }
             return null;
         } catch (InstantiationException ex) {
@@ -235,155 +209,22 @@ public abstract class IntrinsicObjectModel<T>  {
         }
     }
 
+//    private T instantiate(
+//            final Object containingObject,
+//            final Constructor<T> objectConstructor,
+//            final Object... args) {
+//        return super._instantiateWithin(containingObject, objectConstructor, args);
+//    }
+
     public final void makeApplicable() {
-        // Sanity check this model object:
-
-        try {
-            // First, verify that a private, static, final field in the containing class refers to this model instance:
-            Field myField = null;
-            for (Field field : containingClass.getDeclaredFields()) {
-                if (Modifier.isStatic(field.getModifiers()) &&
-                        Modifier.isPrivate(field.getModifiers()) &&
-                        Modifier.isFinal(field.getModifiers()) &&
-                        field.getType().equals(IntrinsicObjectModel.class)) {
-                    field.setAccessible(true);
-                    IntrinsicObjectModel model = (IntrinsicObjectModel) field.get(null /* static field */);
-                    if (model == this ) {
-                        myField = field;
-                    }
-                }
-            }
-            if (myField == null) {
-                throw new IllegalStateException(
-                        "IntrinsicObjectModel instance must be a private, static, final member " +
-                                "of the containing object class \"" + containingClass.getName() + "\"");
-            }
-
-            // Next, verify that this is the only model instance for this field:
-            for (Field field : containingClass.getDeclaredFields()) {
-                if (Modifier.isStatic(field.getModifiers()) &&
-                        field.getType().equals(IntrinsicObjectModel.class)) {
-                    field.setAccessible(true);
-                    IntrinsicObjectModel model = (IntrinsicObjectModel) field.get(null /* static field */);
-                    if ((model != null ) && (model != this) &&
-                            (model.fieldNameInContainingObject.equals(fieldNameInContainingObject))) {
-                        throw new IllegalArgumentException(
-                                "More than one IntrinsicObjectModel instance exists for the field \"" +
-                                        fieldNameInContainingObject +
-                                        "\" in class \"" +
-                                        containingClass.getName() + "\"");
-                    }
-                }
-
-            }
-        } catch (IllegalAccessException ex) {
-            throw new RuntimeException("Unexpected IllegalAccessException on accessible field: ", ex);
-        }
-
-        applicable = true;
+        super._makeApplicable();
     }
 
     public static void makeModelsApplicable(Class containingClass) {
-        try {
-            for (Field field : containingClass.getDeclaredFields()) {
-                if (Modifier.isStatic(field.getModifiers()) &&
-                        Modifier.isPrivate(field.getModifiers()) &&
-                        Modifier.isFinal(field.getModifiers()) &&
-                        field.getType().equals(IntrinsicObjectModel.class)) {
-                    field.setAccessible(true);
-                    IntrinsicObjectModel model = (IntrinsicObjectModel) field.get(null /* static field */);
-                    model.makeApplicable();
-                }
-            }
-        } catch (IllegalAccessException ex) {
-            throw new RuntimeException("Unexpected IllegalAccessException on accessible field: ", ex);
-        }
-    }
-
-    private void makeIntrinsicObjectAccessible(final Object containingObject) throws IllegalAccessException {
-        if (field.get(containingObject) != null) {
-            throw new IllegalStateException(
-                    "Bad value for field \"" +
-                            fieldNameInContainingObject +
-                            "\". Intrinsic object field was initialized without being " +
-                            "constructed by IntrinsicObjectModel.constructWithin(). " +
-                            "Cannot make any of the intrinsic objects fields accessible."
-            );
-        }
-
-        T intrinsicObject = pendingObjects.remove(containingObject);
-        if (intrinsicObject == null) {
-            throw new IllegalStateException(
-                    "Missing value for field \"" +
-                            fieldNameInContainingObject +
-                            "\". No intrinsic object value was constructed by IntrinsicObjectModel.constructWithin(). " +
-                            "Cannot make any of the intrinsic objects fields accessible."
-            );
-        }
-
-        field.set(containingObject, intrinsicObject);
+        AbstractIntrinsicObjectModel._makeModelsApplicable(containingClass);
     }
 
     public static void makeIntrinsicObjectsAccessible(final Object containingObject) {
-        Class containingClass = containingObject.getClass();
-        if (!containingClass.isInstance(containingObject)) {
-            throw new IllegalArgumentException("containingObject is of class " +
-                    containingObject.getClass().getName() +
-                    ", and is not an instance of " + containingClass.getName());
-        }
-        boolean successfullyValidated = false;
-        try {
-            try {
-                for (Field field : containingClass.getDeclaredFields()) {
-                    if (field.getType() == IntrinsicObjectModel.class) {
-                        field.setAccessible(true);
-                        IntrinsicObjectModel model = (IntrinsicObjectModel) field.get(containingObject);
-                        model.makeIntrinsicObjectAccessible(containingObject);
-                    }
-                }
-                successfullyValidated = true;
-            } finally {
-                if (!successfullyValidated) {
-                    // There was a failure somewhere, clean up pending objects and null related fields:
-                    for (Field field : containingClass.getDeclaredFields()) {
-                        if (field.getType() == IntrinsicObjectModel.class) {
-                            field.setAccessible(true);
-                            IntrinsicObjectModel model = (IntrinsicObjectModel) field.get(containingObject);
-                            model.pendingObjects.remove(containingObject);
-                            model.field.set(containingObject, null);
-                        }
-                    }
-                }
-            }
-        } catch (IllegalAccessException ex) {
-            throw new IllegalStateException(
-                    "Unexpected field access exception in scanning the containing object", ex);
-        }
-    }
-
-    private Class<T> deriveObjectClass() {
-        @SuppressWarnings("unchecked")
-        Class<T> objectClass = (Class<T>) deriveTypeParameter(0);
-        return objectClass;
-    }
-
-    private Class deriveContainingClass() {
-        return this.getClass().getEnclosingClass();
-    }
-
-
-    private Class deriveTypeParameter(int parameterIndex) {
-        ParameterizedType genericSuperclass = (ParameterizedType) this.getClass().getGenericSuperclass();
-        return typeToClass(genericSuperclass.getActualTypeArguments()[parameterIndex]);
-    }
-
-    private static Class typeToClass(Type t) {
-        if (t instanceof Class) {
-            return (Class) t;
-        } else if (t instanceof ParameterizedType) {
-            return (Class) ((ParameterizedType)t).getRawType();
-        } else {
-            throw new IllegalArgumentException();
-        }
+        AbstractIntrinsicObjectModel._makeIntrinsicObjectsAccessible(containingObject);
     }
 }

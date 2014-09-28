@@ -6,6 +6,7 @@
 package org.ObjectLayout;
 
 import org.ObjectLayout.intrinsifiable.AbstractArrayModel;
+import org.ObjectLayout.intrinsifiable.AbstractIntrinsicObjectModel;
 import org.ObjectLayout.intrinsifiable.AbstractStructuredArray;
 
 import java.lang.reflect.Array;
@@ -501,6 +502,16 @@ public class StructuredArray<T> extends AbstractStructuredArray<T> implements It
         return super.getLength();
     }
 
+
+    /**
+     * Get the {@link Class} of elements stored in the array.
+     *
+     * @return the {@link Class} of elements stored in the array.
+     */
+    public Class<T> getElementClass() {
+        return super.getElementClass();
+    }
+
     /**
      * Get the array model
      * @return a model of this array
@@ -529,6 +540,11 @@ public class StructuredArray<T> extends AbstractStructuredArray<T> implements It
         return super.get(index);
     }
 
+    //
+    //
+    // Populating array elements:
+    //
+    //
 
     private void populateLeafElement(final long index,
                                  CtorAndArgs<T> ctorAndArgs) {
@@ -673,20 +689,30 @@ public class StructuredArray<T> extends AbstractStructuredArray<T> implements It
         }
     }
 
-    /**
-     * Get the {@link Class} of elements stored in the array.
-     *
-     * @return the {@link Class} of elements stored in the array.
-     */
-    public Class<T> getElementClass() {
-        return super.getElementClass();
-    }
 
     /**
-     * {@inheritDoc}
+     * create a fresh StructuredArray intended to occupy a a given intrinsic field in the containing object,
+     * at the field described by the supplied intrinsicObjectModel, using the supplied constructor and arguments.
      */
-    public ElementIterator iterator() {
-        return new ElementIterator();
+    static void constructStructuredArrayWithin(
+            final Object containingObject,
+            final AbstractIntrinsicObjectModel intrinsicObjectModel,
+            StructuredArrayBuilder arrayBuilder)
+            throws InstantiationException, IllegalAccessException, InvocationTargetException {
+        ConstructionContext context = new ConstructionContext(arrayBuilder.getContextCookie());
+        ConstructorMagic constructorMagic = getConstructorMagic();
+        constructorMagic.setConstructionArgs(arrayBuilder, context);
+        try {
+            constructorMagic.setActive(true);
+            StructuredArray.constructStructuredArrayWithin(
+                    containingObject,
+                    intrinsicObjectModel,
+                    arrayBuilder.getArrayModel(),
+                    arrayBuilder.getArrayCtorAndArgs().getConstructor(),
+                    arrayBuilder.getArrayCtorAndArgs().getArgs());
+        } finally {
+            constructorMagic.setActive(false);
+        }
     }
 
     //
@@ -813,6 +839,19 @@ public class StructuredArray<T> extends AbstractStructuredArray<T> implements It
         }
     }
 
+    //
+    //
+    // Iterable interface support:
+    //
+    //
+
+    /**
+     * {@inheritDoc}
+     */
+    public ElementIterator iterator() {
+        return new ElementIterator();
+    }
+
     /**
      * Specialised {@link java.util.Iterator} with the ability to be {@link #reset()} enabling reuse.
      */
@@ -873,6 +912,12 @@ public class StructuredArray<T> extends AbstractStructuredArray<T> implements It
             return cursor;
         }
     }
+
+    //
+    //
+    // Shallow copy support:
+    //
+    //
 
     private static Field[] removeStaticFields(final Field[] declaredFields) {
         int staticFieldCount = 0;
