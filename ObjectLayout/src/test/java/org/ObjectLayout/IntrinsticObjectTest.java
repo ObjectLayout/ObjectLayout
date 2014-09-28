@@ -102,6 +102,7 @@ public class IntrinsticObjectTest {
         }
 
         Object o = constructor;
+        @SuppressWarnings("unchecked")
         private final Point intrinsicPoint =
                 intrinsicPointModel.constructWithin(this, (Constructor<Point>) o, (Object[]) null);
 

@@ -7,7 +7,9 @@ package org.ObjectLayout;
 
 import org.junit.Test;
 
+import java.awt.*;
 import java.lang.reflect.Constructor;
+import java.util.ArrayList;
 
 import static java.lang.Long.valueOf;
 import static org.hamcrest.CoreMatchers.is;
@@ -135,6 +137,84 @@ public class StructuredArrayTest {
                         build();
 
         assertCorrectVariableInitialisation(new long[] {length}, array);
+    }
+
+    @Test
+    public void shouldConstructArrayOfGivenLengthWithBuilderAndCtorAndArgsProvider2() throws NoSuchMethodException {
+        long length = 9L;
+
+        final Constructor<MockStructure> constructor = MockStructure.class.getConstructor(long.class, long.class);
+        final CtorAndArgs<MockStructure> ctorAndArgs = new CtorAndArgs<MockStructure>(constructor, (Object[]) null);
+        final Object[] args = new Object[2];
+
+        @SuppressWarnings("unchecked")
+        StructuredArray<MockStructure> array =
+                new StructuredArrayBuilder(
+                        StructuredArray.class,
+                        MockStructure.class,
+                        length).
+                        elementCtorAndArgsProvider(
+                                new CtorAndArgsProvider() {
+                                    @Override
+                                    public CtorAndArgs getForContext(
+                                            ConstructionContext context) throws NoSuchMethodException {
+                                        args[0] = context.getIndex();
+                                        args[1] = context.getIndex() * 2;
+                                        return ctorAndArgs.setArgs(args);
+                                    }
+                                }
+                        ).
+                        build();
+
+        assertCorrectVariableInitialisation(new long[] {length}, array);
+    }
+
+
+    @Test
+    public void shouldConstructArrayOfGivenLengthWithBuilderAndCtorAndArgsProvider3() throws NoSuchMethodException {
+        long length = 9L;
+
+        final Constructor<MockStructure> constructor = MockStructure.class.getConstructor(MockStructure.class);
+        final MockStructure paramMock = new MockStructure();
+        final CtorAndArgs<MockStructure> ctorAndArgs = new CtorAndArgs<MockStructure>(constructor, paramMock);
+
+        @SuppressWarnings("unchecked")
+        StructuredArray<MockStructure> array =
+                new StructuredArrayBuilder(
+                        StructuredArray.class,
+                        MockStructure.class,
+                        length).
+                        elementCtorAndArgsProvider(
+                                new CtorAndArgsProvider() {
+                                    @Override
+                                    public CtorAndArgs getForContext(
+                                            ConstructionContext context) throws NoSuchMethodException {
+                                        paramMock.setIndex(context.getIndex());
+                                        paramMock.setTestValue(context.getIndex() * 2);
+                                        return ctorAndArgs;
+                                    }
+                                }
+                        ).
+                        build();
+
+        assertCorrectVariableInitialisation(new long[] {length}, array);
+    }
+
+    @Test
+    public void shouldConstructArrayFromCollection() throws NoSuchMethodException {
+        long length = 100;
+        ArrayList<MockStructure> mockSource = new ArrayList<MockStructure>();
+        for (int i = 0; i < length; i++) {
+            mockSource.add(new MockStructure(i, i*2));
+        }
+
+        @SuppressWarnings("unchecked")
+        StructuredArray<MockStructure> mocks = StructuredArray.newInstance(StructuredArray.class,
+                MockStructure.class, mockSource);
+
+        assertThat(valueOf(mocks.get(5).getIndex()), is(valueOf(5)));
+
+        assertCorrectVariableInitialisation(new long[] {length}, mocks);
     }
 
     @Test
@@ -435,6 +515,28 @@ public class StructuredArrayTest {
         StructuredArray.shallowCopy(array, 1, array, 3, 1);
     }
 
+    @Test
+    public void moveObjectsIntoNewArray() throws NoSuchMethodException {
+        int length = 100;
+        ArrayList<MockStructure> sourceMocks = new ArrayList<MockStructure>(length);
+        for (int i = 0; i < length; i++) {
+            sourceMocks.add(new MockStructure(i, i * 2));
+        }
+
+        @SuppressWarnings("unchecked")
+        StructuredArrayBuilder<StructuredArray<MockStructure>, MockStructure> builder =
+                new StructuredArrayBuilder(
+                        StructuredArray.class,
+                        MockStructure.class,
+                        length
+                );
+        builder.elementCtorAndArgsProvider(new CopyFromArrayListProvider(sourceMocks));
+        StructuredArray<MockStructure> mocks = builder.build();
+        assertThat(valueOf(mocks.get(5).getIndex()), is(valueOf(5)));
+        assertThat(valueOf(mocks.get(5).getTestValue()), is(valueOf(10)));
+        MockStructure mock = mocks.get(7);
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
     // Test support below
@@ -653,6 +755,30 @@ public class StructuredArrayTest {
             // We could do this much more efficiently with atomic caching of a single allocated CtorAndArgs,
             // as CopyCtorAndArgsProvider does, but no need to put in the effort in a test...
             return new CtorAndArgs<MockStructure>(MockStructure.class.getConstructor(argsTypes), args);
+        }
+    }
+
+
+    private static class CopyFromArrayListProvider extends AbstractCtorAndArgsProvider<MockStructure> {
+
+        static final Constructor<MockStructure> copyCtor;
+
+        static {
+            try {
+                copyCtor = MockStructure.class.getConstructor(new Class[]{MockStructure.class});
+            } catch (NoSuchMethodException ex) {
+                throw new RuntimeException(ex);
+            }
+        }
+
+        private final ArrayList<MockStructure> fromList;
+
+        public CopyFromArrayListProvider(ArrayList<MockStructure> fromList) {
+            this.fromList = fromList;
+        }
+
+        public CtorAndArgs<MockStructure> getForContext(ConstructionContext<MockStructure> context) throws NoSuchMethodException {
+            return new CtorAndArgs<MockStructure>(copyCtor, fromList.get((int) context.getIndex()));
         }
     }
 

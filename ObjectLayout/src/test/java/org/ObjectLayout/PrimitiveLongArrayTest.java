@@ -1,6 +1,5 @@
 package org.ObjectLayout;
 
-import org.junit.Assert;
 import org.junit.Test;
 
 import java.lang.reflect.Constructor;
@@ -78,7 +77,7 @@ public class PrimitiveLongArrayTest {
         assertTrue(redArray.getColor().equals("Red"));
         assertTrue(blueArray.getColor().equals("Blue"));
         assertTrue(blueArrayCopy.getColor().equals("Blue"));
-        assertTrue(Arrays.equals(blueArray.getArray(), blueArrayCopy.getArray()));
+        assertTrue(Arrays.equals(blueArray.asArray(), blueArrayCopy.asArray()));
     }
 
     @Test
@@ -99,7 +98,7 @@ public class PrimitiveLongArrayTest {
         assertTrue(redArray.getColor().equals("Red"));
         assertTrue(blueArray.getColor().equals("Blue"));
         assertTrue(redArray.getLength() == 50);
-        assertTrue(Arrays.equals(redArray.getArray(), blueArray.getArray()));
+        assertTrue(Arrays.equals(redArray.asArray(), blueArray.asArray()));
     }
 
     @Test
@@ -112,7 +111,7 @@ public class PrimitiveLongArrayTest {
                         50).
                         build();
         assertThat(a.getLength(), is(50L));
-        assertThat(a.get(0).getLength(), is(20));
+        assertThat(a.get(0).getLength(), is(20L));
         assertThat(a.get(1).getColor(), is("Yellow"));
     }
 
@@ -143,7 +142,7 @@ public class PrimitiveLongArrayTest {
                         }).
                         build();
         assertThat(a.getLength(), is(50L));
-        assertThat(a.get(0).getLength(), is(20));
+        assertThat(a.get(0).getLength(), is(20L));
         assertThat(a.get(0).getColor(), is("Color-0"));
         assertThat(a.get(1).getColor(), is("Color-1"));
         assertThat(a.get(2).getColor(), is("Color-2"));
@@ -172,7 +171,7 @@ public class PrimitiveLongArrayTest {
                 StructuredArray.copyInstance(a);
 
         for (int i = 0; i < a.getLength(); i++) {
-            assertTrue(Arrays.equals(a.get(i).getArray(), a2.get(i).getArray()));
+            assertTrue(Arrays.equals(a.get(i).asArray(), a2.get(i).asArray()));
         }
     }
 }
