@@ -27,7 +27,7 @@ import java.util.concurrent.atomic.AtomicReference;
  *
  * @param <T> type of the element occupying each array slot
  */
-public class CopyCtorAndArgsProvider<T> extends AbstractCtorAndArgsProvider<T> {
+class CopyCtorAndArgsProvider<T> extends AbstractCtorAndArgsProvider<T> {
 
     private final long sourceOffset;
     private final Constructor<T> copyConstructor;

@@ -13,7 +13,7 @@ import java.lang.reflect.Constructor;
  *
  * @param <T> type of the element occupying each array slot
  */
-public class ConstantCtorAndArgsProvider<T> extends AbstractCtorAndArgsProvider<T> {
+class ConstantCtorAndArgsProvider<T> extends AbstractCtorAndArgsProvider<T> {
 
     private static final Class[] EMPTY_ARG_TYPES = new Class[0];
     private static final Object[] EMPTY_ARGS = new Object[0];

@@ -30,7 +30,7 @@ package org.ObjectLayout;
  *
  * @param <T> type of the element occupying each array slot.
  */
-public abstract class AbstractCtorAndArgsProvider<T>
+abstract class AbstractCtorAndArgsProvider<T>
         implements CtorAndArgsProvider<T> {
 
     /**
