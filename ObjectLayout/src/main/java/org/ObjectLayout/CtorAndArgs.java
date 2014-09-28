@@ -70,11 +70,12 @@ public class CtorAndArgs<T> {
      *
      * @param constructor Constructor to be indicated in this CtorAndArgs
      */
-    public final void setConstructor(final Constructor<T> constructor) {
+    public final CtorAndArgs<T> setConstructor(final Constructor<T> constructor) {
         if (null == constructor) {
             throw new NullPointerException("constructor cannot be null");
         }
         this.constructor = constructor;
+        return this;
     }
 
     /**
@@ -90,8 +91,9 @@ public class CtorAndArgs<T> {
      *
      * @param args constructor arguments to be indicated in this {@link CtorAndArgs}
      */
-    public final void setArgs(final Object... args) {
+    public final CtorAndArgs<T> setArgs(final Object... args) {
         this.args = args;
+        return this;
     }
 
     /**
