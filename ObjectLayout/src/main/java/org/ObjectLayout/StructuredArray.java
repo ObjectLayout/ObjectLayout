@@ -8,9 +8,11 @@ package org.ObjectLayout;
 import org.ObjectLayout.intrinsifiable.AbstractArrayModel;
 import org.ObjectLayout.intrinsifiable.AbstractStructuredArray;
 
+import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
@@ -198,6 +200,58 @@ public class StructuredArray<T> extends AbstractStructuredArray<T> implements It
         }
     }
 
+
+    /**
+     * Create a &ltS extends StructuredArray&ltT&gt&gt array instance with elements copied from a source
+     * collection.
+     * @param sourceCollection provides details for building the array
+     * @param <S> The class of the array to be created
+     * @param <T> The class of the array elements
+     * @return The newly created array
+     */
+    public static <S extends StructuredArray<T>, T> S newInstance(
+            final Class<S> arrayClass,
+            final Class<T> elementClass,
+            final Collection<T> sourceCollection) {
+
+        long length = sourceCollection.size();
+        for (T element : sourceCollection) {
+            if (element.getClass() != elementClass) {
+                throw new IllegalArgumentException(
+                        "Collection contains elements of type other than elementClass " + elementClass.getName());
+            }
+        }
+
+        final CtorAndArgs<T> copyCtorAndArgs;
+        final Object[] args = new Object[1];
+        try {
+            Constructor<T> copyCtor = elementClass.getConstructor(elementClass);
+            copyCtorAndArgs = new CtorAndArgs<T>(copyCtor, args);
+        } catch (NoSuchMethodException e) {
+            throw new IllegalArgumentException("elementClass " + elementClass.getName() +
+                    "does not have a copy constructor. ", e);
+        }
+
+        final Iterator<T> sourceIterator = sourceCollection.iterator();
+
+        StructuredArrayBuilder<S, T> arrayBuilder = new StructuredArrayBuilder<S, T>(
+                arrayClass,
+                elementClass,
+                length).
+                elementCtorAndArgsProvider(
+                        new CtorAndArgsProvider<T>() {
+                            @Override
+                            public CtorAndArgs<T> getForContext(
+                                    ConstructionContext<T> context) throws NoSuchMethodException {
+                                args[0] = sourceIterator.next();
+                                return copyCtorAndArgs.setArgs(args);
+                            }
+                        }
+                );
+
+        return instantiate(arrayBuilder);
+    }
+
     /**
      * Create a &ltS extends StructuredArray&ltT&gt&gt array instance according to the details provided in the
      * arrayBuilder.
@@ -381,6 +435,7 @@ public class StructuredArray<T> extends AbstractStructuredArray<T> implements It
         ConstructorMagic constructorMagic = getConstructorMagic();
         constructorMagic.setConstructionArgs(arrayBuilder, context);
         try {
+            arrayBuilder.resolve();
             constructorMagic.setActive(true);
             StructuredArrayModel<S, T> arrayModel = arrayBuilder.getArrayModel();
             Constructor<S> constructor = arrayBuilder.getArrayCtorAndArgs().getConstructor();
@@ -632,6 +687,130 @@ public class StructuredArray<T> extends AbstractStructuredArray<T> implements It
      */
     public ElementIterator iterator() {
         return new ElementIterator();
+    }
+
+    //
+    //
+    // Collection interface support:
+    //
+    //
+
+    /**
+     * Return a representation of this StructuredArray as a Collection. Will throw an exception if array is
+     * too long to represent as a Collection.
+     *
+     * @return a representation of this StructuredArray as a Collection
+     * @throws IllegalStateException if array is too long to represent as a Collection
+     */
+    Collection<T> asCollection() throws IllegalStateException {
+        long length = getLength();
+        if (length > Integer.MAX_VALUE) {
+            throw new IllegalStateException(
+                    "Cannot make Collection from array with more than Integer.MAX_VALUE elements (" + length + ")");
+        }
+        return new CollectionWrapper<T>(this);
+    }
+
+    class CollectionWrapper<T> implements Collection<T> {
+        StructuredArray<T> array;
+
+        CollectionWrapper(StructuredArray<T> array) {
+            this.array = array;
+        }
+
+        @Override
+        public int size() {
+            return (int) array.getLength();
+        }
+
+        @Override
+        public boolean isEmpty() {
+            return array.getLength() != 0;
+        }
+
+        @Override
+        public boolean contains(Object o) {
+            for (T element : array) {
+                if (element == o) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public Iterator<T> iterator() {
+            return array.iterator();
+        }
+
+        @Override
+        public Object[] toArray() {
+            Object[] toArray = new Object[(int) array.getLength()];
+            for (int i = 0; i < toArray.length; i++) {
+                toArray[i] = array.get(i);
+            }
+            return toArray;
+        }
+
+        @Override
+        public <T1> T1[] toArray(T1[] a) {
+            int newLength = (int) array.getLength();
+            Class newType = a.getClass();
+            @SuppressWarnings("unchecked")
+            T1[] toArray = (newType == Object[].class)
+                    ? (T1[]) new Object[newLength]
+                    : (T1[]) Array.newInstance(newType.getComponentType(), newLength);
+
+            for (int i = 0; i < toArray.length; i++) {
+                @SuppressWarnings("unchecked")
+                T1 e = (T1) array.get(i);
+                toArray[i] = e;
+            }
+            return toArray;
+        }
+
+        @Override
+        public boolean add(T t) {
+            throw new UnsupportedOperationException("StructuredArrays are immutable collections");
+        }
+
+        @Override
+        public boolean remove(Object o) {
+            throw new UnsupportedOperationException("StructuredArrays are immutable collections");
+        }
+
+        @Override
+        public boolean containsAll(Collection<?> otherCollection) {
+            for (Object otherElement : otherCollection) {
+                if (!contains(otherElement)) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        @Override
+        public boolean addAll(Collection<? extends T> c) {
+            throw new UnsupportedOperationException("StructuredArrays are immutable collections");
+        }
+
+        @Override
+        public boolean removeAll(Collection<?> c) {
+            throw new UnsupportedOperationException("StructuredArrays are immutable collections");
+        }
+
+        @Override
+        public boolean retainAll(Collection<?> c) {
+            throw new UnsupportedOperationException("StructuredArrays are immutable collections");
+        }
+
+        @Override
+        public void clear() {
+            throw new UnsupportedOperationException("StructuredArrays are immutable collections");
+        }
     }
 
     /**
