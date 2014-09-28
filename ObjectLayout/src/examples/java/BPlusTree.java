@@ -858,6 +858,6 @@ public class BPlusTree<K, V> implements Iterable<Map.Entry<K, V>> {
         int srcOff = (int) srcOffset;
         int dstOff = (int) dstOffset;
         
-        System.arraycopy(src.getArray(), srcOff, dst.getArray(), dstOff, length);
+        System.arraycopy(src.asArray(), srcOff, dst.asArray(), dstOff, length);
     }    
 }
