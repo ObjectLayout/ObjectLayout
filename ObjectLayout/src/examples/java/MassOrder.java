@@ -51,7 +51,7 @@ public class MassOrder extends
         return askOrderIndex;
     }
 
-    private final Iterable bidIterable = new
+    private final Iterable<SimpleOrder> bidIterable = new
             Iterable<SimpleOrder>() {
         @Override
         public Iterator<SimpleOrder> iterator() {
@@ -97,7 +97,7 @@ public class MassOrder extends
             } catch (NoSuchMethodException e) {
                 throw new RuntimeException(e);
             }
-        };
+        }
     };
 
     public static Builder builder() {
