@@ -41,7 +41,7 @@
  * with speed (and semantics) similar to an "array of structs" form, supporting any constructable
  * java Object as an array member.
  * <p>
- * {@link org.ObjectLayout.ObjectLayout} is meant to support an idiomatic Java way to declare
+ * {@link org.ObjectLayout.IntrinsicObjectModel} is meant to support an idiomatic Java way to declare
  * a "struct in struct" equivalent relationship between Java objects, exposing the speed benefits
  * similar to the same form in the C family languages.
  * <p>

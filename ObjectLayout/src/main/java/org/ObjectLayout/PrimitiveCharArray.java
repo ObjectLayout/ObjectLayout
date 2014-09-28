@@ -21,12 +21,14 @@ import org.ObjectLayout.intrinsifiable.AbstractPrimitiveCharArray;
 public class PrimitiveCharArray extends AbstractPrimitiveCharArray {
 
     /**
-     * Get a reference to the internal {@link char[]} representation of the array.
+     * Get a reference to a char[] that represents the contents of this array. Will throw an
+     * exception if array is too long to represent as a char[].
      *
-     * @return a reference to the internal {@link char[]} representation of the array
+     * @return a reference to a char[] that represents the contents of this array
+     * @throws IllegalStateException if array is too long to represent as a char[]
      */
-    public char[] getArray() {
-        return _getArray();
+    public char[] asArray() throws IllegalStateException {
+        return _asArray();
     }
 
     /**
@@ -36,7 +38,18 @@ public class PrimitiveCharArray extends AbstractPrimitiveCharArray {
      * @return the value of the element at the given index
      */
     public char get(final int index) {
-        return _getArray()[index];
+        return _get(index);
+    }
+
+
+    /**
+     * Get the value of an element in the array.
+     *
+     * @param index the index of the element
+     * @return the value of the element at the given index
+     */
+    public char get(final long index) {
+        return _get(index);
     }
 
     /**
@@ -46,10 +59,26 @@ public class PrimitiveCharArray extends AbstractPrimitiveCharArray {
      * @param value the value to assign to the element
      */
     public void set(final int index, final char value) {
-        _getArray()[index] = value;
+        _set(index, value);
     }
 
-    public static PrimitiveCharArray newInstance(final int length) {
+    /**
+     * set the value of an element in the array.
+     *
+     * @param index the index of the element to set
+     * @param value the value to assign to the element
+     */
+    public void set(final long index, final char value) {
+        _set(index, value);
+    }
+
+    /**
+     * Create a new instance of {@link PrimitiveCharArray} with a given length.
+     *
+     * @param length the length of the array.
+     * @return a new instance of {@link PrimitiveCharArray} with the given length
+     */
+    public static PrimitiveCharArray newInstance(final long length) {
         return PrimitiveArray.newInstance(PrimitiveCharArray.class, length);
     }
 

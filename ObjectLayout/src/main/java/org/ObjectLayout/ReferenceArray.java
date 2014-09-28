@@ -24,32 +24,55 @@ import org.ObjectLayout.intrinsifiable.AbstractReferenceArray;
 public class ReferenceArray<T> extends AbstractReferenceArray<T> {
 
     /**
-     * Get a reference to the internal array of references.
+     * Get a reference to a T[] that represents the contents of this array. Will throw an
+     * exception if array is too long to represent as a T[].
      *
-     * @return The T[] array of references
+     * @return a reference to a T[] that represents the contents of this array
+     * @throws IllegalStateException if array is too long to represent as a T[]
      */
-    public T[] getArray() {
-        return _getArray();
+    public T[] asArray() throws IllegalStateException {
+        return _asArray();
     }
 
     /**
-     * Get the reference element at the given index in the array.
+     * Get the value of an element in the array.
      *
-     * @param index the index in the array
-     * @return the reference element at the given index in the array
+     * @param index the index of the element
+     * @return the value of the element at the given index
      */
     public T get(final int index) {
-        return _getArray()[index];
+        return _get(index);
+    }
+
+
+    /**
+     * Get the value of an element in the array.
+     *
+     * @param index the index of the element
+     * @return the value of the element at the given index
+     */
+    public T get(final long index) {
+        return _get(index);
     }
 
     /**
-     * Set reference element at the given index in the array to the given value.
+     * set the value of an element in the array.
      *
-     * @param index the index in the array
-     * @param value the value to set the element to
+     * @param index the index of the element to set
+     * @param value the value to assign to the element
      */
     public void set(final int index, final T value) {
-        _getArray()[index] = value;
+        _set(index, value);
+    }
+
+    /**
+     * set the value of an element in the array.
+     *
+     * @param index the index of the element to set
+     * @param value the value to assign to the element
+     */
+    public void set(final long index, final T value) {
+        _set(index, value);
     }
 
     /**
@@ -59,7 +82,7 @@ public class ReferenceArray<T> extends AbstractReferenceArray<T> {
      * @param <T> the reference type
      * @return A newly created ReferenceArray<T>
      */
-    public static <T> ReferenceArray<T> newInstance(final int length) {
+    public static <T> ReferenceArray<T> newInstance(final long length) {
         @SuppressWarnings("unchecked")
         ReferenceArray<T> referenceArray = newInstance(ReferenceArray.class, length);
         return referenceArray;

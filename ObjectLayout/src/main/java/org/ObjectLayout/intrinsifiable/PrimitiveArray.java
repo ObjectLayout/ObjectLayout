@@ -5,20 +5,26 @@
 
 package org.ObjectLayout.intrinsifiable;
 
+import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 
 /**
  * A abstract base class for subclassable primitive and reference arrays.
+ *
+ * Subclassable arrays are useful for modeling the commonly used "struct with variable array at the end"
+ * available in the C family of languages. JDKs may optimize the layout of a PrimitiveArray such that
+ * access to the array members may be faster than regular de-referenced access through a nested array
+ * reference.
  */
 
 public abstract class PrimitiveArray extends AbstractArray {
 
-    private final int length;
+    private final long length;
 
     public static <A extends PrimitiveArray> A newInstance(
             final Class<A> arrayClass,
-            final int length) {
+            final long length) {
         try {
             return instantiate(length, arrayClass.getDeclaredConstructor(), (Object[]) null);
         } catch (NoSuchMethodException ex) {
@@ -27,7 +33,7 @@ public abstract class PrimitiveArray extends AbstractArray {
     }
 
     public static <A extends PrimitiveArray> A newInstance(
-            final int length,
+            final long length,
             final Constructor<A> arrayConstructor,
             final Object... arrayConstructorArgs) {
         return instantiate(length, arrayConstructor, arrayConstructorArgs);
@@ -41,7 +47,7 @@ public abstract class PrimitiveArray extends AbstractArray {
     }
 
     private static <A extends PrimitiveArray> A instantiate(
-            final int length,
+            final long length,
             final Constructor<A> arrayConstructor,
             final Object... arrayConstructorArgs) {
         ConstructorMagic constructorMagic = getConstructorMagic();
@@ -72,7 +78,7 @@ public abstract class PrimitiveArray extends AbstractArray {
         this();
     }
 
-    public int getLength() {
+    public long getLength() {
         return length;
     }
 
@@ -87,16 +93,16 @@ public abstract class PrimitiveArray extends AbstractArray {
             this.active = active;
         }
 
-        public void setArrayConstructorArgs(final int length) {
+        public void setArrayConstructorArgs(final long length) {
             this.length = length;
         }
 
-        public int getLength() {
+        public long getLength() {
             return length;
         }
 
         private boolean active = false;
-        private int length = 0;
+        private long length = 0;
     }
 
     private static final ThreadLocal<ConstructorMagic> threadLocalConstructorMagic = new ThreadLocal<ConstructorMagic>();
@@ -113,7 +119,46 @@ public abstract class PrimitiveArray extends AbstractArray {
     private static void checkConstructorMagic() {
         final ConstructorMagic constructorMagic = threadLocalConstructorMagic.get();
         if ((constructorMagic == null) || !constructorMagic.isActive()) {
-            throw new IllegalArgumentException("PrimitiveArray must not be directly instantiated with a constructor. Use newInstance(...) instead.");
+            throw new IllegalArgumentException(
+                    "PrimitiveArray must not be directly instantiated with a constructor." +
+                            " Use newInstance(...) instead.");
         }
+    }
+
+    static final int MAX_EXTRA_PARTITION_SIZE_POW2_EXPONENT = 30;
+    static final int MAX_EXTRA_PARTITION_SIZE = 1 << MAX_EXTRA_PARTITION_SIZE_POW2_EXPONENT;
+    static final int PARTITION_MASK = MAX_EXTRA_PARTITION_SIZE - 1;
+
+    Object createIntAddressableElements(Class componentClass) {
+        long length = getLength();
+        // Size int-addressable sub arrays:
+        final int intLength = (int) Math.min(length, Integer.MAX_VALUE);
+        return Array.newInstance(componentClass, intLength);
+    }
+
+    Object createLongAddressableElements(Class componentClass) {
+        long length = getLength();
+        // Compute size of int-addressable sub array:
+        final int intLength = (int) Math.min(length, Integer.MAX_VALUE);
+        // Size Subsequent partitions hold long-addressable-only sub arrays:
+        final long extraLength = length - intLength;
+        final int numFullPartitions = (int) (extraLength >>> MAX_EXTRA_PARTITION_SIZE_POW2_EXPONENT);
+        final int lastPartitionSize = (int) extraLength & PARTITION_MASK;
+
+        Object lastPartition = Array.newInstance(componentClass, lastPartitionSize);
+        Class partitionClass = lastPartition.getClass();
+        Object[] longAddressableElements = (Object[]) Array.newInstance(partitionClass, numFullPartitions + 1);
+
+        // longAddressableElements = new long[numFullPartitions + 1][];
+
+        // full long-addressable-only partitions:
+        for (int i = 0; i < numFullPartitions; i++) {
+            longAddressableElements[i] = Array.newInstance(componentClass, MAX_EXTRA_PARTITION_SIZE);
+        }
+
+        // Last partition with leftover long-addressable-only size:
+        longAddressableElements[numFullPartitions] = lastPartition;
+
+        return longAddressableElements;
     }
 }

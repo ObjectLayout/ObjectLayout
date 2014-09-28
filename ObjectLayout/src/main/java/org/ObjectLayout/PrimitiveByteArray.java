@@ -21,12 +21,14 @@ import org.ObjectLayout.intrinsifiable.AbstractPrimitiveByteArray;
 public class PrimitiveByteArray extends AbstractPrimitiveByteArray {
 
     /**
-     * Get a reference to the internal {@link byte[]} representation of the array.
+     * Get a reference to a byte[] that represents the contents of this array. Will throw an
+     * exception if array is too long to represent as a byte[].
      *
-     * @return a reference to the internal {@link byte[]} representation of the array
+     * @return a reference to a byte[] that represents the contents of this array
+     * @throws IllegalStateException if array is too long to represent as a byte[]
      */
-    public byte[] getArray() {
-        return _getArray();
+    public byte[] asArray() throws IllegalStateException {
+        return _asArray();
     }
 
     /**
@@ -36,7 +38,18 @@ public class PrimitiveByteArray extends AbstractPrimitiveByteArray {
      * @return the value of the element at the given index
      */
     public byte get(final int index) {
-        return _getArray()[index];
+        return _get(index);
+    }
+
+
+    /**
+     * Get the value of an element in the array.
+     *
+     * @param index the index of the element
+     * @return the value of the element at the given index
+     */
+    public byte get(final long index) {
+        return _get(index);
     }
 
     /**
@@ -46,10 +59,26 @@ public class PrimitiveByteArray extends AbstractPrimitiveByteArray {
      * @param value the value to assign to the element
      */
     public void set(final int index, final byte value) {
-        _getArray()[index] = value;
+        _set(index, value);
     }
 
-    public static PrimitiveByteArray newInstance(final int length) {
+    /**
+     * set the value of an element in the array.
+     *
+     * @param index the index of the element to set
+     * @param value the value to assign to the element
+     */
+    public void set(final long index, final byte value) {
+        _set(index, value);
+    }
+
+    /**
+     * Create a new instance of {@link PrimitiveByteArray} with a given length.
+     *
+     * @param length the length of the array.
+     * @return a new instance of {@link PrimitiveByteArray} with the given length
+     */
+    public static PrimitiveByteArray newInstance(final long length) {
         return PrimitiveArray.newInstance(PrimitiveByteArray.class, length);
     }
 

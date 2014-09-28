@@ -21,12 +21,14 @@ import org.ObjectLayout.intrinsifiable.AbstractPrimitiveDoubleArray;
 public class PrimitiveDoubleArray extends AbstractPrimitiveDoubleArray {
 
     /**
-     * Get a reference to the internal {@link double[]} representation of the array.
+     * Get a reference to a double[] that represents the contents of this array. Will throw an
+     * exception if array is too long to represent as a double[].
      *
-     * @return a reference to the internal {@link double[]} representation of the array
+     * @return a reference to a double[] that represents the contents of this array
+     * @throws IllegalStateException if array is too long to represent as a double[]
      */
-    public double[] getArray() {
-        return _getArray();
+    public double[] asArray() throws IllegalStateException {
+        return _asArray();
     }
 
     /**
@@ -36,7 +38,18 @@ public class PrimitiveDoubleArray extends AbstractPrimitiveDoubleArray {
      * @return the value of the element at the given index
      */
     public double get(final int index) {
-        return _getArray()[index];
+        return _get(index);
+    }
+
+
+    /**
+     * Get the value of an element in the array.
+     *
+     * @param index the index of the element
+     * @return the value of the element at the given index
+     */
+    public double get(final long index) {
+        return _get(index);
     }
 
     /**
@@ -46,10 +59,26 @@ public class PrimitiveDoubleArray extends AbstractPrimitiveDoubleArray {
      * @param value the value to assign to the element
      */
     public void set(final int index, final double value) {
-        _getArray()[index] = value;
+        _set(index, value);
     }
 
-    public static PrimitiveDoubleArray newInstance(final int length) {
+    /**
+     * set the value of an element in the array.
+     *
+     * @param index the index of the element to set
+     * @param value the value to assign to the element
+     */
+    public void set(final long index, final double value) {
+        _set(index, value);
+    }
+
+    /**
+     * Create a new instance of {@link PrimitiveDoubleArray} with a given length.
+     *
+     * @param length the length of the array.
+     * @return a new instance of {@link PrimitiveDoubleArray} with the given length
+     */
+    public static PrimitiveDoubleArray newInstance(final long length) {
         return PrimitiveArray.newInstance(PrimitiveDoubleArray.class, length);
     }
 

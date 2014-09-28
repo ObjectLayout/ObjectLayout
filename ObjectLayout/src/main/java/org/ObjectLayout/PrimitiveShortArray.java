@@ -21,12 +21,14 @@ import org.ObjectLayout.intrinsifiable.AbstractPrimitiveShortArray;
 public class PrimitiveShortArray extends AbstractPrimitiveShortArray {
 
     /**
-     * Get a reference to the internal {@link short[]} representation of the array.
+     * Get a reference to a short[] that represents the contents of this array. Will throw an
+     * exception if array is too long to represent as a short[].
      *
-     * @return a reference to the internal {@link short[]} representation of the array
+     * @return a reference to a short[] that represents the contents of this array
+     * @throws IllegalStateException if array is too long to represent as a short[]
      */
-    public short[] getArray() {
-        return _getArray();
+    public short[] asArray() throws IllegalStateException {
+        return _asArray();
     }
 
     /**
@@ -36,7 +38,18 @@ public class PrimitiveShortArray extends AbstractPrimitiveShortArray {
      * @return the value of the element at the given index
      */
     public short get(final int index) {
-        return _getArray()[index];
+        return _get(index);
+    }
+
+
+    /**
+     * Get the value of an element in the array.
+     *
+     * @param index the index of the element
+     * @return the value of the element at the given index
+     */
+    public short get(final long index) {
+        return _get(index);
     }
 
     /**
@@ -46,10 +59,26 @@ public class PrimitiveShortArray extends AbstractPrimitiveShortArray {
      * @param value the value to assign to the element
      */
     public void set(final int index, final short value) {
-        _getArray()[index] = value;
+        _set(index, value);
     }
 
-    public static PrimitiveShortArray newInstance(final int length) {
+    /**
+     * set the value of an element in the array.
+     *
+     * @param index the index of the element to set
+     * @param value the value to assign to the element
+     */
+    public void set(final long index, final short value) {
+        _set(index, value);
+    }
+
+    /**
+     * Create a new instance of {@link PrimitiveShortArray} with a given length.
+     *
+     * @param length the length of the array.
+     * @return a new instance of {@link PrimitiveShortArray} with the given length
+     */
+    public static PrimitiveShortArray newInstance(final long length) {
         return PrimitiveArray.newInstance(PrimitiveShortArray.class, length);
     }
 

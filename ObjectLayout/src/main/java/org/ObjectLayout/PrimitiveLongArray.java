@@ -21,12 +21,14 @@ import org.ObjectLayout.intrinsifiable.AbstractPrimitiveLongArray;
 public class PrimitiveLongArray extends AbstractPrimitiveLongArray {
 
     /**
-     * Get a reference to the internal {@link long[]} representation of the array.
+     * Get a reference to a long[] that represents the contents of this array. Will throw an
+     * exception if array is too long to represent as a long[].
      *
-     * @return a reference to the internal {@link long[]} representation of the array
+     * @return a reference to a long[] that represents the contents of this array
+     * @throws IllegalStateException if array is too long to represent as a long[]
      */
-    public long[] getArray() {
-        return _getArray();
+    public long[] asArray() {
+        return _asArray();
     }
 
     /**
@@ -36,7 +38,18 @@ public class PrimitiveLongArray extends AbstractPrimitiveLongArray {
      * @return the value of the element at the given index
      */
     public long get(final int index) {
-        return _getArray()[index];
+        return _get(index);
+    }
+
+
+    /**
+     * Get the value of an element in the array.
+     *
+     * @param index the index of the element
+     * @return the value of the element at the given index
+     */
+    public long get(final long index) {
+        return _get(index);
     }
 
     /**
@@ -46,7 +59,17 @@ public class PrimitiveLongArray extends AbstractPrimitiveLongArray {
      * @param value the value to assign to the element
      */
     public void set(final int index, final long value) {
-        _getArray()[index] = value;
+        _set(index, value);
+    }
+
+    /**
+     * set the value of an element in the array.
+     *
+     * @param index the index of the element to set
+     * @param value the value to assign to the element
+     */
+    public void set(final long index, final long value) {
+        _set(index, value);
     }
 
     /**
@@ -55,7 +78,7 @@ public class PrimitiveLongArray extends AbstractPrimitiveLongArray {
      * @param length the length of the array.
      * @return a new instance of {@link PrimitiveLongArray} with the given length
      */
-    public static PrimitiveLongArray newInstance(final int length) {
+    public static PrimitiveLongArray newInstance(final long length) {
         return PrimitiveArray.newInstance(PrimitiveLongArray.class, length);
     }
 
