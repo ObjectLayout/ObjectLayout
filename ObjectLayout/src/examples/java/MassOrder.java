@@ -5,10 +5,7 @@
 
 import java.util.Iterator;
 
-import org.ObjectLayout.ConstructionContext;
-import org.ObjectLayout.CtorAndArgs;
-import org.ObjectLayout.AbstractCtorAndArgsProvider;
-import org.ObjectLayout.StructuredArray;
+import org.ObjectLayout.*;
 
 public class MassOrder extends
         StructuredArray<SimpleOrder> {
@@ -104,8 +101,8 @@ public class MassOrder extends
         return BUILDER.get().reset();
     }
 
-    public static final class Builder extends
-            AbstractCtorAndArgsProvider<SimpleOrder> {
+    public static final class Builder implements
+            CtorAndArgsProvider<SimpleOrder> {
 
         private static CtorAndArgs<MassOrder> massOrderCtorAndArgs() {
             try {
@@ -140,8 +137,10 @@ public class MassOrder extends
         private long[] askPrices = new long[MAX_ORDERS_PER_SIDE];
         private long[] askQuantities = new long[MAX_ORDERS_PER_SIDE];
 
+        // We use final ctorAndArgs per builder instance, since each builder is expect to be used
+        // in a linear way with a thread (is likely to be thread local in common use).
         private final CtorAndArgs<MassOrder> massOrderCtorAndArgs = massOrderCtorAndArgs();
-        private CtorAndArgs<SimpleOrder> simpleOrderCtorAndArgs;
+        private final CtorAndArgs<SimpleOrder> simpleOrderCtorAndArgs = simpleOrderCtorAndArgs();
 
         public Builder() throws NoSuchMethodException {
             massOrderCtorAndArgs.setArgs(this);
@@ -197,8 +196,7 @@ public class MassOrder extends
         public CtorAndArgs<SimpleOrder> getForContext(
                 ConstructionContext<SimpleOrder> context) throws NoSuchMethodException {
             long index = context.getIndex();
-            CtorAndArgs<SimpleOrder> ctorAndArgs =
-                    simpleOrderCtorAndArgs != null ? simpleOrderCtorAndArgs : simpleOrderCtorAndArgs();
+            CtorAndArgs<SimpleOrder> ctorAndArgs = simpleOrderCtorAndArgs;
 
             if (index > bidIndex + askIndex) {
                 throw new IllegalArgumentException();
@@ -213,11 +211,6 @@ public class MassOrder extends
             }
 
             return ctorAndArgs;
-        }
-
-        @Override
-        public void recycle(CtorAndArgs<SimpleOrder> ctorAndArgs) {
-            this.simpleOrderCtorAndArgs = ctorAndArgs;
         }
 
         public MassOrder newInstance() {

@@ -180,6 +180,41 @@ public abstract class IntrinsicObjectModel<T> extends AbstractIntrinsicObjectMod
         );
     }
 
+    /**
+     * Construct an intrinsic object within the containing object, using the supplied StructuredArrayBuilder.
+     * This form of constructWithin() can only be used to construct intrinsic objects that derive from
+     * StructuredArray.
+     *
+     * @param containingObject The object instance that will contain this intrinsic object
+     * @param arrayBuilder The StructuredArrayBuilder instance to be used in constructing the array
+     * @return A reference to the the newly constructed intrinsic object
+     */
+    public final T constructWithin(
+            final Object containingObject,
+            final StructuredArrayBuilder arrayBuilder) {
+        if (!_isStructuredArray()) {
+            throw new IllegalArgumentException(
+                    "The StructuredArrayBuilder argument cannot be used on IntrinsicObjectModel" +
+                            " that do not model StructuredArray intrinsic objects"
+            );
+        }
+        if (getObjectClass() != arrayBuilder.getArrayModel().getArrayClass()) {
+            throw new IllegalArgumentException(
+                    "The class in the array builder (" +
+                            arrayBuilder.getArrayModel().getArrayClass().getName() +
+                            ") does not match the intrinsic object class declared in the model (" +
+                            getObjectClass().getName() +
+                            ")");
+        }
+        if (!arrayBuilder.getArrayModel().equals(_getStructuredArrayModel())) {
+            throw new IllegalArgumentException(
+                    "The array model in supplied array builder does not match the array model used" +
+                            " to create this IntrinsicObjectModel instance."
+            );
+        }
+        return instantiate(containingObject, arrayBuilder);
+    }
+
     private T instantiate(
             final Object containingObject,
             final Constructor<T> objectConstructor,
@@ -209,12 +244,22 @@ public abstract class IntrinsicObjectModel<T> extends AbstractIntrinsicObjectMod
         }
     }
 
-//    private T instantiate(
-//            final Object containingObject,
-//            final Constructor<T> objectConstructor,
-//            final Object... args) {
-//        return super._instantiateWithin(containingObject, objectConstructor, args);
-//    }
+    private T instantiate(
+            final Object containingObject,
+            final StructuredArrayBuilder arrayBuilder) {
+        try {
+            _makeApplicable();
+            _sanityCheckInstantiation(containingObject);
+            StructuredArray.constructStructuredArrayWithin(containingObject, this, arrayBuilder);
+            return null;
+        } catch (InstantiationException ex) {
+            throw new RuntimeException(ex);
+        } catch (IllegalAccessException ex) {
+            throw new RuntimeException(ex);
+        } catch (InvocationTargetException ex) {
+            throw new RuntimeException(ex);
+        }
+    }
 
     public final void makeApplicable() {
         super._makeApplicable();

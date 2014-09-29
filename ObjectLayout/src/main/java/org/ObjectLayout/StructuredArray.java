@@ -375,8 +375,9 @@ public class StructuredArray<T> extends AbstractStructuredArray<T> implements It
         long sourceOffset = (offsetsIndex < sourceOffsets.length) ? sourceOffsets[offsetsIndex] : 0;
         long count = (countsIndex < counts.length) ? counts[countsIndex] : sourceArrayModel.getLength();
 
+        final CtorAndArgs<T> ctorAndArgs = new CtorAndArgs<T>(elementClass, new Class[] {elementClass}, new Object[1]);
         final CtorAndArgsProvider<T> elementCopyCtorAndArgsProvider =
-                new CopyCtorAndArgsProvider<T>(elementClass, sourceOffset);
+                new CopyCtorAndArgsProvider<T>(elementClass, sourceOffset, ctorAndArgs);
 
         final AbstractArrayModel subArrayModel = sourceArrayModel.getSubArrayModel();
 
@@ -623,10 +624,6 @@ public class StructuredArray<T> extends AbstractStructuredArray<T> implements It
                 }
 
                 populateLeafElement(index, ctorAndArgs);
-
-                if (ctorAndArgsProvider instanceof AbstractCtorAndArgsProvider) {
-                    ((AbstractCtorAndArgsProvider<T>) ctorAndArgsProvider).recycle(ctorAndArgs);
-                }
             }
         } catch (NoSuchMethodException ex) {
             throw new RuntimeException(ex);
@@ -652,9 +649,6 @@ public class StructuredArray<T> extends AbstractStructuredArray<T> implements It
                 }
 
                 populatePrimitiveSubArray(index, subArrayBuilder, ctorAndArgs);
-
-                if (subArrayCtorAndArgsProvider instanceof AbstractCtorAndArgsProvider) {
-                    ((AbstractCtorAndArgsProvider<T>) subArrayCtorAndArgsProvider).recycle(ctorAndArgs);                }
             }
         } catch (NoSuchMethodException ex) {
             throw new RuntimeException(ex);
@@ -680,9 +674,6 @@ public class StructuredArray<T> extends AbstractStructuredArray<T> implements It
                 }
 
                 populateStructuredSubArray(context, subArrayBuilder, ctorAndArgs);
-
-                if (subArrayCtorAndArgsProvider instanceof AbstractCtorAndArgsProvider) {
-                    ((AbstractCtorAndArgsProvider<T>) subArrayCtorAndArgsProvider).recycle(ctorAndArgs);                }
             }
         } catch (NoSuchMethodException ex) {
             throw new RuntimeException(ex);

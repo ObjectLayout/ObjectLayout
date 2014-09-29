@@ -270,7 +270,7 @@ public class StructuredArrayBuilder<S extends StructuredArray<T>, T> {
                         (structuredSubArrayBuilder.arrayCtorAndArgs != null)) {
                     // Use the CtorAndArgs provided for subArray elements:
                     @SuppressWarnings("unchecked")
-                    AbstractCtorAndArgsProvider<T> subArrayCtorAndArgsProvider =
+                    CtorAndArgsProvider<T> subArrayCtorAndArgsProvider =
                             new ConstantCtorAndArgsProvider<T>(
                                     (Constructor<T>) structuredSubArrayBuilder.arrayCtorAndArgs.getConstructor(),
                                     structuredSubArrayBuilder.arrayCtorAndArgs.getArgs());
@@ -279,7 +279,7 @@ public class StructuredArrayBuilder<S extends StructuredArray<T>, T> {
                         (primitiveSubArrayBuilder.getArrayCtorAndArgs() != null)) {
                     // Use the CtorAndArgs provided for subArray elements:
                     @SuppressWarnings("unchecked")
-                    AbstractCtorAndArgsProvider<T> subArrayCtorAndArgsProvider =
+                    CtorAndArgsProvider<T> subArrayCtorAndArgsProvider =
                             new ConstantCtorAndArgsProvider<T>(
                                     (Constructor<T>) primitiveSubArrayBuilder.getArrayCtorAndArgs().getConstructor(),
                                     primitiveSubArrayBuilder.getArrayCtorAndArgs().getArgs());

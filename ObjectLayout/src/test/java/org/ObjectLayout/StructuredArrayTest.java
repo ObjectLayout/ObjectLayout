@@ -224,8 +224,16 @@ public class StructuredArrayTest {
         final long expectedValue = 777L;
         long length = 9L;
 
+        final CtorAndArgs<MockStructure> ctorAndArgs =
+                new CtorAndArgs<MockStructure>(MockStructure.class, initArgTypes, expectedIndex, expectedValue);
         final CtorAndArgsProvider<MockStructure> ctorAndArgsProvider =
-                new ConstantCtorAndArgsProvider<MockStructure>(MockStructure.class, initArgTypes, expectedIndex, expectedValue);
+                new CtorAndArgsProvider<MockStructure>() {
+                    @Override
+                    public CtorAndArgs<MockStructure> getForContext(
+                            ConstructionContext<MockStructure> context) throws NoSuchMethodException {
+                        return ctorAndArgs;
+                    }
+                };
 
         final StructuredArray<MockStructure> array =
                 StructuredArray.newInstance(MockStructure.class, ctorAndArgsProvider, length);
@@ -742,7 +750,7 @@ public class StructuredArrayTest {
         private final int value = 888;
     }
 
-    private static class DefaultMockCtorAndArgsProvider extends AbstractCtorAndArgsProvider<MockStructure> {
+    private static class DefaultMockCtorAndArgsProvider implements CtorAndArgsProvider<MockStructure> {
 
         private final Class[] argsTypes = {Long.TYPE, Long.TYPE};
 
@@ -759,7 +767,7 @@ public class StructuredArrayTest {
     }
 
 
-    private static class CopyFromArrayListProvider extends AbstractCtorAndArgsProvider<MockStructure> {
+    private static class CopyFromArrayListProvider implements CtorAndArgsProvider<MockStructure> {
 
         static final Constructor<MockStructure> copyCtor;
 

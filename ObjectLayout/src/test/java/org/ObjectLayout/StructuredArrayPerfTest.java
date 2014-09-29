@@ -171,8 +171,22 @@ public class StructuredArrayPerfTest {
     public void testLoopingSpeeds() throws NoSuchMethodException {
         final int length = 1000000;
 
+        final Object[] args = new Object[2];
+        final CtorAndArgs<MockStructure> ctorAndArgs =
+                new CtorAndArgs<MockStructure>(
+                        MockStructure.class.getConstructor(MockStructure.constructorArgTypes), args);
+
+
         final CtorAndArgsProvider<MockStructure> ctorAndArgsProvider =
-                new DefaultMockCtorAndArgsProvider();
+                new CtorAndArgsProvider<MockStructure>() {
+                    @Override
+                    public CtorAndArgs<MockStructure> getForContext(
+                            ConstructionContext<MockStructure> context) throws NoSuchMethodException {
+                        args[0] = context.getIndex();
+                        args[1] = context.getIndex() * 2;
+                        return ctorAndArgs;
+                    }
+                };
 
 
         array = StructuredArray.newInstance(MockStructure.class, ctorAndArgsProvider, length);
@@ -181,7 +195,7 @@ public class StructuredArrayPerfTest {
         encapsulatedRandomizedArray = new EncapsulatedRandomizedArray(length);
         genericEncapsulatedArray =
                 new GenericEncapsulatedArray<MockStructure>(
-                        MockStructure.class.getConstructor(DefaultMockCtorAndArgsProvider.argsTypes), length);
+                        MockStructure.class.getConstructor(MockStructure.constructorArgTypes), length);
         for (int i = 0; i < 10; i++) {
             testLoop(length);
             try {
@@ -208,6 +222,8 @@ public class StructuredArrayPerfTest {
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
     public static class MockStructure {
+
+        static final Class[] constructorArgTypes = {Long.TYPE, Long.TYPE};
 
         private long index = -1;
         private long testValue = Long.MIN_VALUE;
@@ -266,20 +282,6 @@ public class StructuredArrayPerfTest {
 
     public static class MockStructureWithFinalField {
         private final int value = 888;
-    }
-
-    private static class DefaultMockCtorAndArgsProvider extends AbstractCtorAndArgsProvider<MockStructure>
-    {
-        static final Class[] argsTypes = {Long.TYPE, Long.TYPE};
-
-        @Override
-        public CtorAndArgs<MockStructure> getForContext(final ConstructionContext context) throws NoSuchMethodException {
-            long indexSum = context.getIndex();
-            Object[] args = {indexSum, indexSum * 2};
-            // We could do this much more efficiently with atomic caching of a single allocated CtorAndArgs,
-            // as CopyCtorAndArgsProvider does, but no need to put in the effort in a test...
-            return new CtorAndArgs<MockStructure>(MockStructure.class.getConstructor(argsTypes), args);
-        }
     }
 
     public static class StructuredArrayOfMockStructure extends StructuredArray<MockStructure> {

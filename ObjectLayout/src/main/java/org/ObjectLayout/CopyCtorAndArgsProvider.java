@@ -27,11 +27,11 @@ import java.util.concurrent.atomic.AtomicReference;
  *
  * @param <T> type of the element occupying each array slot
  */
-class CopyCtorAndArgsProvider<T> extends AbstractCtorAndArgsProvider<T> {
+class CopyCtorAndArgsProvider<T> implements CtorAndArgsProvider<T> {
 
     private final long sourceOffset;
     private final Constructor<T> copyConstructor;
-    private final AtomicReference<CtorAndArgs<T>> cachedConstructorAndArgs = new AtomicReference<CtorAndArgs<T>>();
+    private final CtorAndArgs<T> ctorAndArgs;
 
     /**
      * Used to apply a copy constructor to a target array's elements, copying corresponding elements from a
@@ -39,8 +39,9 @@ class CopyCtorAndArgsProvider<T> extends AbstractCtorAndArgsProvider<T> {
      *
      * @throws NoSuchMethodException
      */
-    public CopyCtorAndArgsProvider(final Class<T> elementClass) throws NoSuchMethodException {
-        this(elementClass, 0);
+    public CopyCtorAndArgsProvider(final Class<T> elementClass, CtorAndArgs<T> ctorAndArgs)
+            throws NoSuchMethodException {
+        this(elementClass, 0, ctorAndArgs);
     }
 
     /**
@@ -50,9 +51,11 @@ class CopyCtorAndArgsProvider<T> extends AbstractCtorAndArgsProvider<T> {
      * @param sourceOffset The beginning index in the source from which to start copying
      * @throws NoSuchMethodException if a copy constructor is not found in element class
      */
-    public CopyCtorAndArgsProvider(final Class<T> elementClass, final long sourceOffset) throws NoSuchMethodException {
+    public CopyCtorAndArgsProvider(final Class<T> elementClass, final long sourceOffset, CtorAndArgs<T> ctorAndArgs)
+            throws NoSuchMethodException {
         this.sourceOffset = sourceOffset;
         this.copyConstructor = elementClass.getDeclaredConstructor(elementClass);
+        this.ctorAndArgs = ctorAndArgs;
     }
 
     /**
@@ -74,13 +77,6 @@ class CopyCtorAndArgsProvider<T> extends AbstractCtorAndArgsProvider<T> {
 
         T sourceElement = sourceArray.get(index);
 
-        // Try (but not too hard) to use a cached, previously allocated ctorAndArgs object:
-        CtorAndArgs<T> ctorAndArgs = cachedConstructorAndArgs.getAndSet(null);
-        if (ctorAndArgs == null) {
-            // We have nothing cached that's not being used. A bit of allocation in contended cases won't kill us:
-            ctorAndArgs = new CtorAndArgs<T>(copyConstructor, new Object[1]);
-        }
-
         ctorAndArgs.setConstructor(copyConstructor);
         // Set the source object for the copy constructor:
         ctorAndArgs.getArgs()[0] = sourceElement;
@@ -90,25 +86,5 @@ class CopyCtorAndArgsProvider<T> extends AbstractCtorAndArgsProvider<T> {
         ctorAndArgs.setContextCookie(sourceElement);
 
         return ctorAndArgs;
-    }
-
-    /**
-     * Recycle a {@link CtorAndArgs} instance (place it back in the internal cache if
-     * it's model is appropriate). This is [very] useful for avoiding a re-allocation of a
-     * new {@link CtorAndArgs} and an associated args array for each {@link #getForContext(ConstructionContext)}
-     * invocation in cases such as this, where the returned {@link CtorAndArgs} is not constant across indices,
-     * but where a cached instance can be mutated to fit the purpose. Recycling is not guaranteed to occur.
-     *
-     * @param ctorAndArgs the {@link CtorAndArgs} instance to recycle
-     */
-    @Override
-    public void recycle(final CtorAndArgs<T> ctorAndArgs) {
-        // Only recycle ctorAndArgs if ctorAndArgs is compatible with our state:
-        Object[] args = ctorAndArgs.getArgs();
-        if ((ctorAndArgs.getConstructor() != copyConstructor) || (args == null) || (args.length != 1)) {
-            return;
-        }
-
-        cachedConstructorAndArgs.lazySet(ctorAndArgs);
     }
 }

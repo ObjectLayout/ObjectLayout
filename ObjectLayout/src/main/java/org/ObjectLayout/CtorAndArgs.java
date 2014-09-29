@@ -44,7 +44,7 @@ public class CtorAndArgs<T> {
      * @param args
      * @throws NoSuchMethodException
      */
-    public CtorAndArgs(Class<T> instanceClass, final Class[] constructorArgTypes, final Object... args)
+    public CtorAndArgs(final Class<T> instanceClass, final Class[] constructorArgTypes, final Object... args)
             throws NoSuchMethodException {
         if (constructorArgTypes.length != args.length) {
             throw new IllegalArgumentException("argument types and values must be the same length");
@@ -108,7 +108,7 @@ public class CtorAndArgs<T> {
      * Set the value of the opaque contextCookie object
      * @param contextCookie carries an opaque object
      */
-    public void setContextCookie(Object contextCookie) {
+    public void setContextCookie(final Object contextCookie) {
         this.contextCookie = contextCookie;
     }
 }

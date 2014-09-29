@@ -6,6 +6,8 @@
 import org.ObjectLayout.*;
 import org.junit.Test;
 
+import java.awt.*;
+
 import static java.lang.Long.valueOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
@@ -86,8 +88,17 @@ public class StructuredArrayOfPointTest {
 
         long length = 9L;
 
+        final CtorAndArgs<Point> ctorAndArgs =
+                new CtorAndArgs<Point>(Point.class, initArgTypes, initialX, initialY);
         final CtorAndArgsProvider<Point> ctorAndArgsProvider =
-                new ConstantCtorAndArgsProvider<Point>(Point.class, initArgTypes, initialX, initialY);
+                new CtorAndArgsProvider<Point>() {
+                    @Override
+                    public CtorAndArgs<Point> getForContext(
+                            ConstructionContext<Point> context) throws NoSuchMethodException {
+                        return ctorAndArgs;
+                    }
+                };
+
         final StructuredArrayOfPoint array =
                 StructuredArrayOfPoint.newInstance(
                         StructuredArrayOfPoint.class, Point.class, ctorAndArgsProvider, length);
