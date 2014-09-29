@@ -8,7 +8,11 @@
 /**
  * <h3>ObjectLayout: An optimised memory layout package.</h3>
  * <p>
- * The ObjectLayout package provides some core classes designed with optimised memory layout in mind.
+ * The ObjectLayout package provides some key data structure classes designed with optimised memory layout
+ * in mind. These classes are aimed at matching the natural speed benefits similar data structure
+ * constructs enable in most C-style languages, while maintaining an idiomatic Java feel and a natural
+ * fit with existing code and libraries.
+ * <p>
  * The package classes provide full functionality on all JVMs (of Java SE 5 or above) at reasonable layouts
  * and execution speeds. However, the classes are carefully designed with semantics that would allow an
  * optimised JVM to implement them with improved memory layout not directly expressible in Java.
@@ -23,7 +27,7 @@
  * <ul>
  * <li>An array of structs: struct foo[];  </li>
  * <li>A struct with a struct inside: struct foo { int a; bar b; int c; }; </li>
- * <li>A struct an array at the end: struct foo { int len; char[] payload; }; </li>
+ * <li>A struct with an array at the end: struct foo { int len; char[] payload; }; </li>
  * </ul>
  * <p>
  * The speed benefits in these three forms of layout derive from two dominant benefits:
