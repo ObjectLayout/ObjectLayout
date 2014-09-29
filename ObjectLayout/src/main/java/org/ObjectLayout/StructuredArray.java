@@ -69,7 +69,15 @@ public class StructuredArray<T> extends AbstractStructuredArray<T> implements It
             final Class<T> elementClass,
             final long length) {
         try {
-            final CtorAndArgsProvider<T> ctorAndArgsProvider = new ConstantCtorAndArgsProvider<T>(elementClass);
+            final CtorAndArgs<T> constantCtorAndArgs = new CtorAndArgs<T>(elementClass);
+            final CtorAndArgsProvider<T> ctorAndArgsProvider =
+                    new CtorAndArgsProvider<T>() {
+                        @Override
+                        public CtorAndArgs<T> getForContext(ConstructionContext<T> context)
+                                throws NoSuchMethodException {
+                            return constantCtorAndArgs;
+                        }
+                    };
             return instantiate(elementClass, ctorAndArgsProvider, length);
         } catch (NoSuchMethodException ex) {
             throw new RuntimeException(ex);

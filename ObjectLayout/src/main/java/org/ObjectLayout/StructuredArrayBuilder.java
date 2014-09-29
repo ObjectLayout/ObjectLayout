@@ -200,7 +200,13 @@ public class StructuredArrayBuilder<S extends StructuredArray<T>, T> {
                     "ctoAndArgs for constructing subArray elements should be supplied in subArrayBuilder");
         }
         return elementCtorAndArgsProvider(
-                new ConstantCtorAndArgsProvider<T>(ctorAndArgs.getConstructor(), ctorAndArgs.getArgs()));
+                new CtorAndArgsProvider<T>() {
+                    @Override
+                    public CtorAndArgs<T> getForContext(ConstructionContext<T> context) throws NoSuchMethodException {
+                        return ctorAndArgs;
+                    }
+                }
+        );
     }
 
     /**
@@ -271,22 +277,38 @@ public class StructuredArrayBuilder<S extends StructuredArray<T>, T> {
                     // Use the CtorAndArgs provided for subArray elements:
                     @SuppressWarnings("unchecked")
                     CtorAndArgsProvider<T> subArrayCtorAndArgsProvider =
-                            new ConstantCtorAndArgsProvider<T>(
-                                    (Constructor<T>) structuredSubArrayBuilder.arrayCtorAndArgs.getConstructor(),
-                                    structuredSubArrayBuilder.arrayCtorAndArgs.getArgs());
+                            new CtorAndArgsProvider<T>() {
+                                @Override
+                                public CtorAndArgs<T> getForContext(
+                                        ConstructionContext<T> context) throws NoSuchMethodException {
+                                    return structuredSubArrayBuilder.arrayCtorAndArgs;
+                                }
+                            };
                     elementCtorAndArgsProvider = subArrayCtorAndArgsProvider;
                 } else if ((primitiveSubArrayBuilder != null) &&
                         (primitiveSubArrayBuilder.getArrayCtorAndArgs() != null)) {
                     // Use the CtorAndArgs provided for subArray elements:
                     @SuppressWarnings("unchecked")
                     CtorAndArgsProvider<T> subArrayCtorAndArgsProvider =
-                            new ConstantCtorAndArgsProvider<T>(
-                                    (Constructor<T>) primitiveSubArrayBuilder.getArrayCtorAndArgs().getConstructor(),
-                                    primitiveSubArrayBuilder.getArrayCtorAndArgs().getArgs());
+                            new CtorAndArgsProvider<T>() {
+                                @Override
+                                public CtorAndArgs<T> getForContext(
+                                        ConstructionContext<T> context) throws NoSuchMethodException {
+                                    return primitiveSubArrayBuilder.getArrayCtorAndArgs();
+                                }
+                            };
                     elementCtorAndArgsProvider = subArrayCtorAndArgsProvider;
                 } else {
                     // Use the default constructor:
-                    elementCtorAndArgsProvider = new ConstantCtorAndArgsProvider<T>(arrayModel.getElementClass());
+                    final CtorAndArgs<T> constantCtorAndArgs = new CtorAndArgs<T>(arrayModel.getElementClass());
+                    elementCtorAndArgsProvider =
+                            new CtorAndArgsProvider<T>() {
+                                @Override
+                                public CtorAndArgs<T> getForContext(
+                                        ConstructionContext<T> context) throws NoSuchMethodException {
+                                    return constantCtorAndArgs;
+                                }
+                            };
                 }
             }
 

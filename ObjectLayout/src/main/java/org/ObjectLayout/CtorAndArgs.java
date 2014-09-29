@@ -15,6 +15,8 @@ import java.lang.reflect.Constructor;
  * @param <T> type of the element occupying each array slot.
  */
 public class CtorAndArgs<T> {
+    private static final Class[] EMPTY_ARG_TYPES = new Class[0];
+    private static final Object[] EMPTY_ARGS = new Object[0];
 
     private Constructor<T> constructor;
     private Object[] args;
@@ -55,6 +57,16 @@ public class CtorAndArgs<T> {
         }
         setConstructor(ctor);
         setArgs(args);
+    }
+
+    /**
+     * Create a {@link CtorAndArgs} instance for the given instanceClass, using the default constructor (and no args)
+     *
+     * @param instanceClass
+     * @throws NoSuchMethodException
+     */
+    public CtorAndArgs(final Class<T> instanceClass) throws NoSuchMethodException {
+        this(instanceClass, EMPTY_ARG_TYPES, EMPTY_ARGS);
     }
 
     /**
