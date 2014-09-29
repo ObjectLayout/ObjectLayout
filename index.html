@@ -32,33 +32,61 @@
 
     </header>
     <section>
-        <h3>ObjectLayout: An optimised memory layout package.</h3>
+        <h3>org.ObjectLayout: An optimised memory layout package.</h3>
 
         <p>
-            The ObjectLayout package provides some core classes designed with optimised memory layout in mind.
+            The ObjectLayout package provides a set of data structure classes designed with optimised memory
+            layout in mind. These classes are aimed at matching the natural speed benefits similar data
+            structure constructs enable in most C-style languages, while maintaining an idiomatic Java feel
+            and a natural fit with existing code and libraries.
         </p>
         <p>
-            This package expresses specifically useful memory layout and related execution semantics that can
-            be leveraged by JVMs to provide optimised behaviors that are not directly expressible in the Java
-            language. The ObjectLayout package exposes these semantics to Java applications without requiring
-            any language changes.
+            The package classes provide full functionality on all JVMs (of Java SE 5 or above) at reasonable layouts
+            and execution speeds. However, the classes are carefully designed with semantics that would allow an
+            optimised JVM to implement them with improved memory layout not directly expressible in Java.
+        </p>
+        <h3>The common C-style constructs org.ObjectLayout seeks to match are:</h3>
+        <ul>
+            <li>An array of structs:
+                <br><code>struct foo[];</code></li>
+            <li>A struct with a struct inside: <br><code>
+                struct foo { int a; bar b; int c; };</code></li>
+            <li>A struct with an array at the end: <br><code>
+                struct foo { int len; char[] payload; };</code></li>
+        </ul>
+        <p>
+            These common C-style constructs, both individually and in composed forms, provide tangible
+            access speed benefits. The natural memory-layouts involved facilitate both dead-reckoning
+            (avoiding de-referencing and data-dependent loads) and memory streaming optimizations.
+        </p>
+        <h3>The matching org.ObjectLayout forms</h3>
         </p>
         <p>
-            All ObjectLayout package classes are expected to provide and support their full functionality on
-            all JVMs (of Java SE 5 or above) at reasonable layouts and execution speeds. However, the classes are
-            specifically designed with semantics that would allow an optimised JVM to implement them with improved
-            memory layouts and related execution optimizations.
-        </p>
-        <p>
-            The
             <a href="http://objectlayout.github.io/ObjectLayout/JavaDoc/index.html?org/ObjectLayout/StructuredArray.html"
-               class="user-mention">StructuredArray</a>
-            class is a good example of this design pattern. StructuredArray is carefully
-            designed to allow a JVM to store it in memory with a layout similar to an array of structs
-            in C-like languages, and to internally use intrinsic representations for the related StructuredArray
-            methods, exposing them to common optimizations. When a JVM optimises StructuredArray in such a way,
-            array access benefits from both direct (as opposed to de-referenced) dead-reckoning index access, as
-            well as from fixed memory strides during streaming operations.
+               class="user-mention">StructuredArray</a> is meant to provide an idiomatic Java container form
+            with speed (and semantics) similar to an "array of structs" form, supporting any constructable
+            java Object as an array member.
+        </p>
+        <p>
+            <a href="http://objectlayout.github.io/ObjectLayout/JavaDoc/index.html?org/ObjectLayout/IntrinsicObjectModel.html"
+               class="user-mention">IntrinsicObjectModel</a> is meant to support an idiomatic Java way to declare
+            a "struct in struct" equivalent relationship between Java objects, exposing the speed benefits
+            similar to the same form in the C family languages.
+        </p>
+        <p>
+            Sub-classable Primitive and Reference array classes (e.g.
+            <a href="http://objectlayout.github.io/ObjectLayout/JavaDoc/index.html?org/ObjectLayout/PrimitiveLongArray.html"
+               class="user-mention">PrimitiveLongArray</a>
+            and
+            <a href="http://objectlayout.github.io/ObjectLayout/JavaDoc/index.html?org/ObjectLayout/ReferenceArray.html"
+               class="user-mention">ReferenceArray</a>
+            ) are meant to support an idiomatic Java means of
+            declaring constructs with speed (and semantics) similar to "struct with array at the end". They do
+            so by supporting the subclassing of arrays of the various primitive and reference forms possible
+            in Java.
+            <a href="http://objectlayout.github.io/ObjectLayout/JavaDoc/index.html?org/ObjectLayout/StructuredArray.html"
+               class="user-mention">StructuredArray</a> similarly supports this capability (via
+            subclassing) for the equivalent of "struct with array of structs at the end".
         </p>
 
         <h3>Authors, Contributors, and License</h3>
