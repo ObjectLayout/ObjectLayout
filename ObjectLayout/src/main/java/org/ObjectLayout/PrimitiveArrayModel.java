@@ -1,14 +1,11 @@
 package org.ObjectLayout;
 
-import org.ObjectLayout.intrinsifiable.AbstractArrayModel;
-import org.ObjectLayout.intrinsifiable.PrimitiveArray;
-
 /**
  * A model that describes the structure of a PrimitiveArray
  *
  * @param <S> The class of the PrimitiveArray modeled by the model
  */
-public class PrimitiveArrayModel<S extends PrimitiveArray> extends AbstractArrayModel<S> {
+public class PrimitiveArrayModel<S extends AbstractPrimitiveArray> extends AbstractPrimitiveArrayModel<S> {
 
     /**
      * Create a model of a PrimitiveArray instance

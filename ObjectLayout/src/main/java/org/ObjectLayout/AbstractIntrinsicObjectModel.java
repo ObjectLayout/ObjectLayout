@@ -1,7 +1,4 @@
-package org.ObjectLayout.intrinsifiable;
-
-import org.ObjectLayout.StructuredArray;
-import org.ObjectLayout.StructuredArrayBuilder;
+package org.ObjectLayout;
 
 import java.lang.reflect.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -14,11 +11,11 @@ import java.util.concurrent.ConcurrentHashMap;
  * @param <T> The type of the intrinsic object
  */
 
-public abstract class AbstractIntrinsicObjectModel<T>  {
+abstract class AbstractIntrinsicObjectModel<T>  {
     private final Class containingClass;
     private final String fieldNameInContainingObject;
     private final Class<T> objectClass;
-    private final AbstractArrayModel primitiveArrayModel;
+    private final AbstractPrimitiveArrayModel primitiveArrayModel;
     private final AbstractStructuredArrayModel structuredArrayModel;
 
     private final Field field;
@@ -28,9 +25,9 @@ public abstract class AbstractIntrinsicObjectModel<T>  {
     // Objects that have been constructed but not yet made visible:
     private final ConcurrentHashMap<Object, T> pendingObjects = new ConcurrentHashMap<Object, T>();
 
-    protected AbstractIntrinsicObjectModel(
+    AbstractIntrinsicObjectModel(
             final String fieldNameInContainingObject,
-            final AbstractArrayModel primitiveArrayModel,
+            final AbstractPrimitiveArrayModel primitiveArrayModel,
             final AbstractStructuredArrayModel structuredArrayModel) {
 
         this.fieldNameInContainingObject = fieldNameInContainingObject;
@@ -50,7 +47,7 @@ public abstract class AbstractIntrinsicObjectModel<T>  {
         sanityCheckAtModelConstruction();
     }
 
-    protected Class<T> getObjectClass() {
+    Class<T> getObjectClass() {
         return objectClass;
     }
 
@@ -119,7 +116,7 @@ public abstract class AbstractIntrinsicObjectModel<T>  {
      * OPTIMIZATION NOTE: Optimized JDK implementations may replace this implementation with a
      * construction-in-place call on a previously allocated memory location associated with the given index.
      */
-    protected final void constructElementWithin(
+    final void constructElementWithin(
             final Object containingObject,
             final Constructor<T> constructor,
             final Object... args)
@@ -135,20 +132,20 @@ public abstract class AbstractIntrinsicObjectModel<T>  {
      * OPTIMIZATION NOTE: Optimized JDK implementations may replace this implementation with a
      * construction-in-place call on a previously allocated memory location associated with the given index.
      */
-    protected final void constructPrimitiveArrayWithin(
+    final void constructPrimitiveArrayWithin(
             final Object containingObject,
             final Constructor<T> constructor,
             final Object... args)
             throws InstantiationException, IllegalAccessException, InvocationTargetException {
         int length = (int) primitiveArrayModel._getLength();
         @SuppressWarnings("unchecked")
-        Constructor<? extends PrimitiveArray> c = (Constructor<? extends PrimitiveArray>) constructor;
+        Constructor<? extends AbstractPrimitiveArray> c = (Constructor<? extends AbstractPrimitiveArray>) constructor;
         @SuppressWarnings("unchecked")
-        T element = (T) PrimitiveArray.newInstance(length, c, args);
+        T element = (T) AbstractPrimitiveArray._newInstance(length, c, args);
         registerPendingIntrinsicObject(containingObject, element);
     }
 
-    protected final void _sanityCheckInstantiation(final Object containingObject) {
+    final void _sanityCheckInstantiation(final Object containingObject) {
         try {
             if ((field.get(containingObject) != null) || (pendingObjects.get(containingObject) != null)) {
                 throw new IllegalArgumentException("Intrinsic object field \"" + field.getName() +
@@ -159,19 +156,19 @@ public abstract class AbstractIntrinsicObjectModel<T>  {
         }
     }
 
-    protected final boolean _isPrimitiveArray() {
+    final boolean _isPrimitiveArray() {
         return (primitiveArrayModel != null);
     }
 
-    protected final boolean _isStructuredArray() {
+    final boolean _isStructuredArray() {
         return (structuredArrayModel != null);
     }
 
-    protected final AbstractStructuredArrayModel _getStructuredArrayModel() {
+    final AbstractStructuredArrayModel _getStructuredArrayModel() {
         return structuredArrayModel;
     }
 
-    protected final void _makeApplicable() {
+    final void _makeApplicable() {
         if (applicable) {
             return;
         }
@@ -222,7 +219,7 @@ public abstract class AbstractIntrinsicObjectModel<T>  {
         applicable = true;
     }
 
-    protected static void _makeModelsApplicable(Class containingClass) {
+    static void _makeModelsApplicable(Class containingClass) {
         try {
             for (Field field : containingClass.getDeclaredFields()) {
                 if (Modifier.isStatic(field.getModifiers()) &&
@@ -263,7 +260,7 @@ public abstract class AbstractIntrinsicObjectModel<T>  {
         field.set(containingObject, intrinsicObject);
     }
 
-    protected static void _makeIntrinsicObjectsAccessible(final Object containingObject) {
+    static void _makeIntrinsicObjectsAccessible(final Object containingObject) {
         Class containingClass = containingObject.getClass();
         if (!containingClass.isInstance(containingObject)) {
             throw new IllegalArgumentException("containingObject is of class " +

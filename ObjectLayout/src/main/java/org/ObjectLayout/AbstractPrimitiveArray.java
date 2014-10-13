@@ -3,7 +3,7 @@
  * as explained at http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-package org.ObjectLayout.intrinsifiable;
+package org.ObjectLayout;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
@@ -18,11 +18,11 @@ import java.lang.reflect.InvocationTargetException;
  * reference.
  */
 
-public abstract class PrimitiveArray extends AbstractArray {
+abstract class AbstractPrimitiveArray {
 
     private final long length;
 
-    public static <A extends PrimitiveArray> A newInstance(
+    static <A extends AbstractPrimitiveArray> A _newInstance(
             final Class<A> arrayClass,
             final long length) {
         try {
@@ -32,21 +32,21 @@ public abstract class PrimitiveArray extends AbstractArray {
         }
     }
 
-    public static <A extends PrimitiveArray> A newInstance(
+    static <A extends AbstractPrimitiveArray> A _newInstance(
             final long length,
             final Constructor<A> arrayConstructor,
             final Object... arrayConstructorArgs) {
         return instantiate(length, arrayConstructor, arrayConstructorArgs);
     }
 
-    public static <A extends PrimitiveArray> A copyInstance(A source) throws NoSuchMethodException {
+    static <A extends AbstractPrimitiveArray> A _copyInstance(A source) throws NoSuchMethodException {
         @SuppressWarnings("unchecked")
         final Class<A> sourceArrayClass = (Class<A>) source.getClass();
         Constructor<A> arrayConstructor = sourceArrayClass.getDeclaredConstructor(sourceArrayClass);
-        return instantiate(source.getLength(), arrayConstructor, source);
+        return instantiate(source._getLength(), arrayConstructor, source);
     }
 
-    private static <A extends PrimitiveArray> A instantiate(
+    private static <A extends AbstractPrimitiveArray> A instantiate(
             final long length,
             final Constructor<A> arrayConstructor,
             final Object... arrayConstructorArgs) {
@@ -67,18 +67,18 @@ public abstract class PrimitiveArray extends AbstractArray {
         }
     }
 
-    protected PrimitiveArray() {
+    AbstractPrimitiveArray() {
         checkConstructorMagic();
         ConstructorMagic constructorMagic = getConstructorMagic();
         length = constructorMagic.getLength();
         constructorMagic.setActive(false);
     }
 
-    protected PrimitiveArray(PrimitiveArray source) {
+    AbstractPrimitiveArray(AbstractPrimitiveArray source) {
         this();
     }
 
-    public long getLength() {
+    final long _getLength() {
         return length;
     }
 
@@ -93,11 +93,11 @@ public abstract class PrimitiveArray extends AbstractArray {
             this.active = active;
         }
 
-        public void setArrayConstructorArgs(final long length) {
+        private void setArrayConstructorArgs(final long length) {
             this.length = length;
         }
 
-        public long getLength() {
+        private long getLength() {
             return length;
         }
 
@@ -129,15 +129,15 @@ public abstract class PrimitiveArray extends AbstractArray {
     static final int MAX_EXTRA_PARTITION_SIZE = 1 << MAX_EXTRA_PARTITION_SIZE_POW2_EXPONENT;
     static final int PARTITION_MASK = MAX_EXTRA_PARTITION_SIZE - 1;
 
-    Object createIntAddressableElements(Class componentClass) {
-        long length = getLength();
+    final Object createIntAddressableElements(Class componentClass) {
+        long length = _getLength();
         // Size int-addressable sub arrays:
         final int intLength = (int) Math.min(length, Integer.MAX_VALUE);
         return Array.newInstance(componentClass, intLength);
     }
 
-    Object createLongAddressableElements(Class componentClass) {
-        long length = getLength();
+    final Object createLongAddressableElements(Class componentClass) {
+        long length = _getLength();
         // Compute size of int-addressable sub array:
         final int intLength = (int) Math.min(length, Integer.MAX_VALUE);
         // Size Subsequent partitions hold long-addressable-only sub arrays:

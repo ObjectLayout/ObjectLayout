@@ -4,8 +4,6 @@ import java.lang.Object;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 
-import org.ObjectLayout.intrinsifiable.AbstractIntrinsicObjectModel;
-
 /**
  * An {@link IntrinsicObjectModel} declares a specific instance field of it's containing class to be intrinsic
  * to the instances of that containing class. Intrinsic objects may have their layout within the containing
@@ -79,7 +77,7 @@ public abstract class IntrinsicObjectModel<T> extends AbstractIntrinsicObjectMod
 
     /**
      * Construct an {@link org.ObjectLayout.IntrinsicObjectModel} that models and can be used to construct
-     * an intrinsic object of type {@link org.ObjectLayout.intrinsifiable.PrimitiveArray} within this
+     * an intrinsic object of type {@link AbstractPrimitiveArray} within this
      * class's enclosing class, at the given fieldNameInContainingObject.
      *
      * @param fieldNameInContainingObject The name of this {@link org.ObjectLayout.IntrinsicObjectModel}'s field in
@@ -94,7 +92,7 @@ public abstract class IntrinsicObjectModel<T> extends AbstractIntrinsicObjectMod
 
     /**
      * Construct an {@link org.ObjectLayout.IntrinsicObjectModel} that models and can be used to construct
-     * an intrinsic object of type {@link org.ObjectLayout.intrinsifiable.PrimitiveArray} within this
+     * an intrinsic object of type {@link AbstractPrimitiveArray} within this
      * class's enclosing class, at the given fieldNameInContainingObject.
      *
      * @param fieldNameInContainingObject The name of this {@link org.ObjectLayout.IntrinsicObjectModel}'s field in

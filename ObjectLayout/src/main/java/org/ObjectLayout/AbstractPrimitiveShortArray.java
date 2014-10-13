@@ -3,33 +3,33 @@
  * as explained at http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-package org.ObjectLayout.intrinsifiable;
+package org.ObjectLayout;
 
 /**
- * This class contains the intrinsifiable portions of PrimitiveIntArray behavior. JDK implementations
- * that choose to intrinsify PrimitiveIntArray are expected to replace the implementation of this
+ * This class contains the intrinsifiable portions of PrimitiveShortArray behavior. JDK implementations
+ * that choose to intrinsify PrimitiveShortArray are expected to replace the implementation of this
  * base class.
  */
 
-public abstract class AbstractPrimitiveIntArray extends PrimitiveArray {
+abstract class AbstractPrimitiveShortArray extends AbstractPrimitiveArray {
 
-    private final int[][] longAddressableElements; // Used to store elements at indexes above Integer.MAX_VALUE
-    private final int[] intAddressableElements;
+    private final short[][] longAddressableElements; // Used to store elements at indexes above Integer.MAX_VALUE
+    private final short[] intAddressableElements;
 
-    protected final int[] _asArray() {
-        if (getLength() > Integer.MAX_VALUE) {
+    final short[] _asArray() {
+        if (_getLength() > Integer.MAX_VALUE) {
             throw new IllegalStateException(
-                    "Cannot make int[] from array with more than Integer.MAX_VALUE elements (" +
-                            getLength() + ")");
+                    "Cannot make short[] from array with more than Integer.MAX_VALUE elements (" +
+                            _getLength() + ")");
         }
         return intAddressableElements;
     }
 
-    protected int _get(final int index) {
+    short _get(final int index) {
         return intAddressableElements[index];
     }
 
-    protected int _get(final long index) {
+    short _get(final long index) {
         if (index < Integer.MAX_VALUE) {
             return _get((int) index);
         }
@@ -42,11 +42,11 @@ public abstract class AbstractPrimitiveIntArray extends PrimitiveArray {
         return longAddressableElements[partitionIndex][partitionOffset];
     }
 
-    protected void _set(final int index, final int value) {
+    void _set(final int index, final short value) {
         intAddressableElements[index] = value;
     }
 
-    protected void _set(final long index, final int value) {
+    void _set(final long index, final short value) {
         if (index < Integer.MAX_VALUE) {
             _set((int) index, value);
         }
@@ -58,16 +58,16 @@ public abstract class AbstractPrimitiveIntArray extends PrimitiveArray {
 
         longAddressableElements[partitionIndex][partitionOffset] = value;
     }
-
-    protected AbstractPrimitiveIntArray() {
-        intAddressableElements = (int[]) createIntAddressableElements(int.class);
-        longAddressableElements = (int[][]) createLongAddressableElements(int.class);
+    
+    AbstractPrimitiveShortArray() {
+        intAddressableElements = (short[]) createIntAddressableElements(short.class);
+        longAddressableElements = (short[][]) createLongAddressableElements(short.class);
     }
 
-    protected AbstractPrimitiveIntArray(AbstractPrimitiveIntArray sourceArray) {
+    AbstractPrimitiveShortArray(AbstractPrimitiveShortArray sourceArray) {
         intAddressableElements = sourceArray.intAddressableElements.clone();
         int numLongAddressablePartitions = sourceArray.longAddressableElements.length;
-        longAddressableElements = new int[numLongAddressablePartitions][];
+        longAddressableElements = new short[numLongAddressablePartitions][];
         for (int i = 0; i < numLongAddressablePartitions; i++) {
             longAddressableElements[i] = sourceArray.longAddressableElements[i].clone();
         }

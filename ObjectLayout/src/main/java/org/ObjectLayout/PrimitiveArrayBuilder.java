@@ -1,11 +1,9 @@
 package org.ObjectLayout;
 
-import org.ObjectLayout.intrinsifiable.PrimitiveArray;
-
 import java.lang.reflect.Constructor;
 
 /**
- * A builder used for instantiating a {@link PrimitiveArray}&ltT&gt
+ * A builder used for instantiating a {@link AbstractPrimitiveArray}&ltT&gt
  * <p>
  * {@link org.ObjectLayout.PrimitiveArrayBuilder} follows the commonly used builder pattern, and is useful for
  * capturing the instantiation parameters of {@link org.ObjectLayout.StructuredArray}s.
@@ -37,7 +35,7 @@ import java.lang.reflect.Constructor;
  *
  * @param <S> The class of the PrimitiveArray that is to be instantiated by the builder
  */
-public class PrimitiveArrayBuilder<S extends PrimitiveArray> {
+public class PrimitiveArrayBuilder<S extends AbstractPrimitiveArray> {
     private static final Class[] EMPTY_ARG_TYPES = new Class[0];
 
     private final PrimitiveArrayModel<S> arrayModel;
@@ -103,8 +101,8 @@ public class PrimitiveArrayBuilder<S extends PrimitiveArray> {
     }
 
     /**
-     * Build a {@link PrimitiveArray} according to the information captured in this builder
-     * @return A newly instantiated {@link PrimitiveArray}
+     * Build a {@link AbstractPrimitiveArray} according to the information captured in this builder
+     * @return A newly instantiated {@link AbstractPrimitiveArray}
      *
      * @throws NoSuchMethodException if the array constructor or element constructor fail to resolve given
      * the current information in the builder
@@ -112,7 +110,7 @@ public class PrimitiveArrayBuilder<S extends PrimitiveArray> {
     public S build() throws NoSuchMethodException {
         resolve();
         int length = (int) arrayModel.getLength(); // Already verified range at instantiation
-        return PrimitiveArray.newInstance(length, arrayCtorAndArgs.getConstructor(), arrayCtorAndArgs.getArgs());
+        return AbstractPrimitiveArray._newInstance(length, arrayCtorAndArgs.getConstructor(), arrayCtorAndArgs.getArgs());
     }
 
     /**

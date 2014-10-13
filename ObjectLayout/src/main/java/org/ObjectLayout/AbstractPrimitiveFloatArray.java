@@ -3,33 +3,33 @@
  * as explained at http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-package org.ObjectLayout.intrinsifiable;
+package org.ObjectLayout;
 
 /**
- * This class contains the intrinsifiable portions of PrimitiveByteArray behavior. JDK implementations
- * that choose to intrinsify PrimitiveByteArray are expected to replace the implementation of this
+ * This class contains the intrinsifiable portions of PrimitiveFloatArray behavior. JDK implementations
+ * that choose to intrinsify PrimitiveFloatArray are expected to replace the implementation of this
  * base class.
  */
 
-public abstract class AbstractPrimitiveByteArray extends PrimitiveArray {
+abstract class AbstractPrimitiveFloatArray extends AbstractPrimitiveArray {
 
-    private final byte[][] longAddressableElements; // Used to store elements at indexes above Integer.MAX_VALUE
-    private final byte[] intAddressableElements;
+    private final float[][] longAddressableElements; // Used to store elements at indexes above Integer.MAX_VALUE
+    private final float[] intAddressableElements;
 
-    protected final byte[] _asArray() {
-        if (getLength() > Integer.MAX_VALUE) {
+    final float[] _asArray() {
+        if (_getLength() > Integer.MAX_VALUE) {
             throw new IllegalStateException(
-                    "Cannot make byte[] from array with more than Integer.MAX_VALUE elements (" +
-                            getLength() + ")");
+                    "Cannot make float[] from array with more than Integer.MAX_VALUE elements (" +
+                            _getLength() + ")");
         }
         return intAddressableElements;
     }
 
-    protected byte _get(final int index) {
+    float _get(final int index) {
         return intAddressableElements[index];
     }
 
-    protected byte _get(final long index) {
+    float _get(final long index) {
         if (index < Integer.MAX_VALUE) {
             return _get((int) index);
         }
@@ -42,11 +42,11 @@ public abstract class AbstractPrimitiveByteArray extends PrimitiveArray {
         return longAddressableElements[partitionIndex][partitionOffset];
     }
 
-    protected void _set(final int index, final byte value) {
+    void _set(final int index, final float value) {
         intAddressableElements[index] = value;
     }
 
-    protected void _set(final long index, final byte value) {
+    void _set(final long index, final float value) {
         if (index < Integer.MAX_VALUE) {
             _set((int) index, value);
         }
@@ -58,16 +58,16 @@ public abstract class AbstractPrimitiveByteArray extends PrimitiveArray {
 
         longAddressableElements[partitionIndex][partitionOffset] = value;
     }
-    
-    protected AbstractPrimitiveByteArray() {
-        intAddressableElements = (byte[]) createIntAddressableElements(byte.class);
-        longAddressableElements = (byte[][]) createLongAddressableElements(byte.class);
+
+    AbstractPrimitiveFloatArray() {
+        intAddressableElements = (float[]) createIntAddressableElements(float.class);
+        longAddressableElements = (float[][]) createLongAddressableElements(float.class);
     }
 
-    protected AbstractPrimitiveByteArray(AbstractPrimitiveByteArray sourceArray) {
+    AbstractPrimitiveFloatArray(AbstractPrimitiveFloatArray sourceArray) {
         intAddressableElements = sourceArray.intAddressableElements.clone();
         int numLongAddressablePartitions = sourceArray.longAddressableElements.length;
-        longAddressableElements = new byte[numLongAddressablePartitions][];
+        longAddressableElements = new float[numLongAddressablePartitions][];
         for (int i = 0; i < numLongAddressablePartitions; i++) {
             longAddressableElements[i] = sourceArray.longAddressableElements[i].clone();
         }

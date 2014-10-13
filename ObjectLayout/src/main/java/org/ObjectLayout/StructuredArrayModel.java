@@ -1,9 +1,5 @@
 package org.ObjectLayout;
 
-import org.ObjectLayout.intrinsifiable.AbstractArrayModel;
-import org.ObjectLayout.intrinsifiable.PrimitiveArray;
-import org.ObjectLayout.intrinsifiable.AbstractStructuredArrayModel;
-
 /**
  * A model that describes the structure of a StructuredArray
  *
@@ -62,7 +58,7 @@ public abstract class StructuredArrayModel<S extends StructuredArray<T>, T> exte
      * @param <A2> The class of the PrimitiveArray modeled by the subArrayModel
      */
     @SuppressWarnings("unchecked")
-    public <A2 extends PrimitiveArray>
+    public <A2 extends AbstractPrimitiveArray>
     StructuredArrayModel(final Class<S> arrayClass,
                          final PrimitiveArrayModel<A2> subArrayModel,
                          final long length) {
@@ -89,13 +85,22 @@ public abstract class StructuredArrayModel<S extends StructuredArray<T>, T> exte
                 (getLength() != otherArray.getLength())) {
             return false;
         }
-        if ((getSubArrayModel() == null) && (otherArray.getSubArrayModel() == null)) {
-            return true;
+        if ((getPrimitiveSubArrayModel() == null) && (otherArray.getPrimitiveSubArrayModel() == null)) {
+            if ((getStructuredSubArrayModel() == null) &&(otherArray.getStructuredSubArrayModel() == null)) {
+                return true;
+            }
+            // if either structuredSubArrayModel is null, they are not equal. Otherwise, compare subArrays:
+            return (getStructuredSubArrayModel() != null) &&
+                    (otherArray.getStructuredSubArrayModel() != null) &&
+                    getStructuredSubArrayModel().equals(otherArray.getStructuredSubArrayModel());
         }
-        // if either subArrayModel is null, they are not equal. Otherwise, compare subArrays:
-        return (getSubArrayModel() != null) &&
-                (otherArray.getSubArrayModel() != null) &&
-                getSubArrayModel().equals(otherArray.getSubArrayModel());
+        if ((getStructuredSubArrayModel() != null) || (otherArray.getStructuredSubArrayModel() != null)) {
+            return false;
+        }
+        // if either primitiveSubArrayModel is null, they are not equal. Otherwise, compare subArrays:
+        return (getPrimitiveSubArrayModel() != null) &&
+                (otherArray.getPrimitiveSubArrayModel() != null) &&
+                getPrimitiveSubArrayModel().equals(otherArray.getPrimitiveSubArrayModel());
     }
 
     /**
@@ -118,8 +123,16 @@ public abstract class StructuredArrayModel<S extends StructuredArray<T>, T> exte
      * Get the model describing the structure of the elements of the array being modeled
      * @return the model describing the structure of the elements of the array being modeled
      */
-    public final AbstractArrayModel getSubArrayModel() {
-        return super._getSubArrayModel();
+    public final AbstractStructuredArrayModel getStructuredSubArrayModel() {
+        return super._getStructuredSubArrayModel();
+    }
+
+    /**
+     * Get the model describing the structure of the elements of the array being modeled
+     * @return the model describing the structure of the elements of the array being modeled
+     */
+    public final AbstractPrimitiveArrayModel getPrimitiveSubArrayModel() {
+        return super._getPrimitiveSubArrayModel();
     }
 
     /**

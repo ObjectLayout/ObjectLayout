@@ -6,8 +6,7 @@
 package org.ObjectLayout;
 
 
-import org.ObjectLayout.intrinsifiable.AbstractReferenceArray;
-
+import java.lang.reflect.Constructor;
 
 /**
  * A subclassable array of object references.
@@ -32,6 +31,15 @@ public class ReferenceArray<T> extends AbstractReferenceArray<T> {
      */
     public T[] asArray() throws IllegalStateException {
         return _asArray();
+    }
+
+    /**
+     * Get the length of the array
+     *
+     * @return the length of the array
+     */
+    public long getLength() {
+        return _getLength();
     }
 
     /**
@@ -76,19 +84,6 @@ public class ReferenceArray<T> extends AbstractReferenceArray<T> {
     }
 
     /**
-     * Create a new instance of ReferenceArray<T> with a given length.
-     *
-     * @param length the length of the array
-     * @param <T> the reference type
-     * @return A newly created ReferenceArray<T>
-     */
-    public static <T> ReferenceArray<T> newInstance(final long length) {
-        @SuppressWarnings("unchecked")
-        ReferenceArray<T> referenceArray = newInstance(ReferenceArray.class, length);
-        return referenceArray;
-    }
-
-    /**
      * Default constructor
      */
     public ReferenceArray() {
@@ -102,5 +97,63 @@ public class ReferenceArray<T> extends AbstractReferenceArray<T> {
      */
     public ReferenceArray(ReferenceArray<T> sourceArray) {
         super(sourceArray);
+    }
+
+    /**
+     * Create a new instance of ReferenceArray&ltT&gt with a given length.
+     *
+     * @param length the length of the array
+     * @param <T> the reference type
+     * @return A newly created ReferenceArray&ltT&gt
+     */
+    public static <T> ReferenceArray<T> newInstance(final long length) {
+        @SuppressWarnings("unchecked")
+        ReferenceArray<T> referenceArray = _newInstance(ReferenceArray.class, length);
+        return referenceArray;
+    }
+
+    /**
+     * Create a new instance of &ltA extends {@link ReferenceArray}&ltT&gt&gt with a given length.
+     *
+     * @param arrayClass The class of the array to be created (extends ReferenceArray&ltT&gt)
+     * @param length the length of the array.
+     * @param <T> the reference type
+     * @param <A> The class of the array to be created (extends ReferenceArray&ltT&gt)
+     * @return a new instance of &ltA extends {@link ReferenceArray}&ltT&gt&gt with a given length
+     */
+    public static <T, A extends ReferenceArray<T>> A newInstance(
+            final Class<A> arrayClass,
+            final long length) {
+        return AbstractPrimitiveArray._newInstance(arrayClass, length);
+    }
+
+    /**
+     * Create a new instance of &ltA extends {@link ReferenceArray}&ltT&gt&gt with a given length,
+     * array constructor, and array constructor arguments.
+     *
+     * @param length The length of the array.
+     * @param arrayConstructor The array constructor to use
+     * @param arrayConstructorArgs The arguments to pass to the array constructor
+     * @param <T> the reference type
+     * @param <A> The class of the array to be created (extends ReferenceArray&ltT&gt)
+     * @return a new instance of &ltA extends {@link ReferenceArray}&ltT&gt&gt
+     */
+    public static <T, A extends ReferenceArray<T>> A newInstance(
+            final long length,
+            final Constructor<A> arrayConstructor,
+            final Object... arrayConstructorArgs) {
+        return AbstractPrimitiveArray._newInstance(length, arrayConstructor, arrayConstructorArgs);
+    }
+
+    /**
+     * Create a new &ltA extends {@link ReferenceArray}&ltT&gt&gt instance, using a copy constructor to
+     * replicate the contents of the given source array
+     * @param source The array to replicate
+     * @param <A> The class of the array to be created (extends ReferenceArray&ltT&gt)
+     * @return a new instance of &ltA extends {@link ReferenceArray}&ltT&gt&gt copied from the source array
+     * @throws NoSuchMethodException if &ltA&gt does not have a copy constructor
+     */
+    public static <T, A extends ReferenceArray<T>> A copyInstance(A source) throws NoSuchMethodException {
+        return AbstractPrimitiveArray._copyInstance(source);
     }
 }

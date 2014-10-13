@@ -5,8 +5,7 @@
 
 package org.ObjectLayout;
 
-import org.ObjectLayout.intrinsifiable.PrimitiveArray;
-import org.ObjectLayout.intrinsifiable.AbstractPrimitiveDoubleArray;
+import java.lang.reflect.Constructor;
 
 /**
  * A subclassable array of doubles.
@@ -29,6 +28,15 @@ public class PrimitiveDoubleArray extends AbstractPrimitiveDoubleArray {
      */
     public double[] asArray() throws IllegalStateException {
         return _asArray();
+    }
+
+    /**
+     * Get the length of the array
+     *
+     * @return the length of the array
+     */
+    public long getLength() {
+        return _getLength();
     }
 
     /**
@@ -73,16 +81,6 @@ public class PrimitiveDoubleArray extends AbstractPrimitiveDoubleArray {
     }
 
     /**
-     * Create a new instance of {@link PrimitiveDoubleArray} with a given length.
-     *
-     * @param length the length of the array.
-     * @return a new instance of {@link PrimitiveDoubleArray} with the given length
-     */
-    public static PrimitiveDoubleArray newInstance(final long length) {
-        return PrimitiveArray.newInstance(PrimitiveDoubleArray.class, length);
-    }
-
-    /**
      * Default constructor
      */
     public PrimitiveDoubleArray() {
@@ -96,5 +94,58 @@ public class PrimitiveDoubleArray extends AbstractPrimitiveDoubleArray {
      */
     public PrimitiveDoubleArray(PrimitiveDoubleArray sourceArray) {
         super(sourceArray);
+    }
+
+    /**
+     * Create a new instance of {@link PrimitiveDoubleArray} with a given length.
+     *
+     * @param length the length of the array.
+     * @return a new instance of {@link PrimitiveDoubleArray} with the given length
+     */
+    public static PrimitiveDoubleArray newInstance(final long length) {
+        return AbstractPrimitiveArray._newInstance(PrimitiveDoubleArray.class, length);
+    }
+
+    /**
+     * Create a new instance of &ltA extends {@link PrimitiveDoubleArray}&gt with a given length.
+     *
+     * @param arrayClass The class of the array to be created (extends PrimitiveDoubleArray) 
+     * @param length the length of the array.
+     * @param <A> The class of the array to be created (extends PrimitiveDoubleArray)
+     * @return a new instance of &ltA extends {@link PrimitiveDoubleArray}&gt with a given length
+     */
+    public static <A extends PrimitiveDoubleArray> A newInstance(
+            final Class<A> arrayClass,
+            final long length) {
+        return AbstractPrimitiveArray._newInstance(arrayClass, length);
+    }
+
+    /**
+     * Create a new instance of &ltA extends {@link PrimitiveDoubleArray}&gt with a given length,
+     * array constructor, and array constructor arguments.
+     *
+     * @param length The length of the array.
+     * @param arrayConstructor The array constructor to use 
+     * @param arrayConstructorArgs The arguments to pass to the array constructor
+     * @param <A> The class of the array to be created (extends PrimitiveDoubleArray)
+     * @return a new instance of &ltA extends {@link PrimitiveDoubleArray}&gt
+     */
+    public static <A extends PrimitiveDoubleArray> A newInstance(
+            final long length,
+            final Constructor<A> arrayConstructor,
+            final Object... arrayConstructorArgs) {
+        return AbstractPrimitiveArray._newInstance(length, arrayConstructor, arrayConstructorArgs);
+    }
+
+    /**
+     * Create a new &ltA extends {@link PrimitiveDoubleArray}&gt instance, using a copy constructor to
+     * replicate the contents of the given source array
+     * @param source The array to replicate
+     * @param <A> The class of the array to be created (extends PrimitiveDoubleArray)
+     * @return a new instance of &ltA extends {@link PrimitiveDoubleArray}&gt copied from the source array
+     * @throws NoSuchMethodException if &ltA&gt does not have a copy constructor
+     */
+    public static <A extends PrimitiveDoubleArray> A copyInstance(A source) throws NoSuchMethodException {
+        return AbstractPrimitiveArray._copyInstance(source);
     }
 }

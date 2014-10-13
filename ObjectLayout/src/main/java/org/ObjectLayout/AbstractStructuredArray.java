@@ -3,7 +3,7 @@
  * as explained at http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-package org.ObjectLayout.intrinsifiable;
+package org.ObjectLayout;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -15,7 +15,7 @@ import java.lang.reflect.InvocationTargetException;
  *
  * @param <T> the element type in the array
  */
-public abstract class AbstractStructuredArray<T> extends AbstractArray {
+abstract class AbstractStructuredArray<T> {
 
     //
     //
@@ -29,7 +29,7 @@ public abstract class AbstractStructuredArray<T> extends AbstractArray {
      * in "Internal fields" section farther below.
      */
 
-    protected AbstractStructuredArray() {
+    AbstractStructuredArray() {
         checkConstructorMagic();
         ConstructorMagic constructorMagic = getConstructorMagic();
 
@@ -59,7 +59,7 @@ public abstract class AbstractStructuredArray<T> extends AbstractArray {
      * OPTIMIZATION NOTE: Optimized JDK implementations may replace this implementation with one that
      * allocates room for the entire StructuredArray and all it's elements.
      */
-    protected static <S extends AbstractStructuredArray<T>, T> S instantiateStructuredArray(
+    static <S extends AbstractStructuredArray<T>, T> S instantiateStructuredArray(
             AbstractStructuredArrayModel<S, T> arrayModel, Constructor<S> arrayConstructor, Object... args) {
 
         // For implementations that need the array class and the element class,
@@ -95,7 +95,7 @@ public abstract class AbstractStructuredArray<T> extends AbstractArray {
      * OPTIMIZATION NOTE: Optimized JDK implementations may replace this implementation with a
      * construction-in-place call on a previously allocated memory location associated with the given index.
      */
-    protected void constructElementAtIndex(
+    void constructElementAtIndex(
             final long index,
             final Constructor<T> constructor,
             final Object... args)
@@ -111,17 +111,17 @@ public abstract class AbstractStructuredArray<T> extends AbstractArray {
      * OPTIMIZATION NOTE: Optimized JDK implementations may replace this implementation with a
      * construction-in-place call on a previously allocated memory location associated with the given index.
      */
-    protected void constructPrimitiveSubArrayAtIndex(
+    void constructPrimitiveSubArrayAtIndex(
             final long index,
-            AbstractArrayModel primitiveSubArrayModel,
+            AbstractPrimitiveArrayModel primitiveSubArrayModel,
             final Constructor<T> constructor,
             final Object... args)
             throws InstantiationException, IllegalAccessException, InvocationTargetException {
         int length = (int) primitiveSubArrayModel._getLength();
         @SuppressWarnings("unchecked")
-        Constructor<? extends PrimitiveArray> c = (Constructor<? extends PrimitiveArray>) constructor;
+        Constructor<? extends AbstractPrimitiveArray> c = (Constructor<? extends AbstractPrimitiveArray>) constructor;
         @SuppressWarnings("unchecked")
-        T element = (T) PrimitiveArray.newInstance(length, c, args);
+        T element = (T) AbstractPrimitiveArray._newInstance(length, c, args);
         storeElementInLocalStorageAtIndex(element, index);
     }
 
@@ -132,7 +132,7 @@ public abstract class AbstractStructuredArray<T> extends AbstractArray {
      * OPTIMIZATION NOTE: Optimized JDK implementations may replace this implementation with a
      * construction-in-place call on a previously allocated memory location associated with the given index.
      */
-    protected void constructSubArrayAtIndex(
+    void constructSubArrayAtIndex(
             long index,
             AbstractStructuredArrayModel subArrayModel,
             final Constructor<T> subArrayConstructor,
@@ -157,7 +157,7 @@ public abstract class AbstractStructuredArray<T> extends AbstractArray {
      * OPTIMIZATION NOTE: Optimized JDK implementations may replace this implementation with a
      * construction-in-place call on a previously allocated memory location associated with the given index.
      */
-    protected static <T> void constructStructuredArrayWithin(
+    static <T> void constructStructuredArrayWithin(
             final Object containingObject,
             final AbstractIntrinsicObjectModel<T> intrinsicObjectModel,
             AbstractStructuredArrayModel subArrayModel,
@@ -183,7 +183,7 @@ public abstract class AbstractStructuredArray<T> extends AbstractArray {
      * faster access form (e.g. they may be able to derive the element reference directly from the
      * structuredArray reference without requiring a de-reference).
      */
-    protected T get(final int index) {
+    T get(final int index) {
         return intAddressableElements[index];
     }
 
@@ -194,7 +194,7 @@ public abstract class AbstractStructuredArray<T> extends AbstractArray {
      * faster access form (e.g. they may be able to derive the element reference directly from the
      * structuredArray reference without requiring a de-reference).
      */
-    protected T get(final long index) {
+    T get(final long index) {
         if (index < Integer.MAX_VALUE) {
             return get((int) index);
         }
@@ -213,11 +213,11 @@ public abstract class AbstractStructuredArray<T> extends AbstractArray {
     //
     //
 
-    protected Class<T> getElementClass() {
+    Class<T> getElementClass() {
         return elementClass;
     }
 
-    protected long getLength() {
+    long getLength() {
         return length;
     }
 
@@ -314,11 +314,11 @@ public abstract class AbstractStructuredArray<T> extends AbstractArray {
             this.active = active;
         }
 
-        public void setConstructionArgs(AbstractStructuredArrayModel arrayModel) {
+        private void setConstructionArgs(AbstractStructuredArrayModel arrayModel) {
             this.arrayModel = arrayModel;
         }
 
-        public AbstractStructuredArrayModel getArrayModel() {
+        private AbstractStructuredArrayModel getArrayModel() {
             return arrayModel;
         }
 

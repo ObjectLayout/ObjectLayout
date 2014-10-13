@@ -1,4 +1,4 @@
-package org.ObjectLayout.intrinsifiable;
+package org.ObjectLayout;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -8,7 +8,7 @@ import java.lang.reflect.Type;
  *
  * @param <A> The class of the array modeled by the model
  */
-public abstract class AbstractArrayModel<A extends AbstractArray> {
+abstract class AbstractPrimitiveArrayModel<A extends AbstractPrimitiveArray> {
     private final Class<A> arrayClass;
     private final long length;
 
@@ -18,8 +18,8 @@ public abstract class AbstractArrayModel<A extends AbstractArray> {
      * @param arrayClass The class of the array modeled by the model
      * @param length The length of the StructuredArray modeled by the model
      */
-    public AbstractArrayModel(final Class<A> arrayClass,
-                              final long length) {
+    AbstractPrimitiveArrayModel(final Class<A> arrayClass,
+                                       final long length) {
         this.arrayClass = arrayClass != null ? arrayClass : deriveArrayTypeParameter();
         this.length = length;
     }
@@ -28,7 +28,7 @@ public abstract class AbstractArrayModel<A extends AbstractArray> {
      * Get the class of the array modeled by this model
      * @return the class of the StructuredArray modeled by this model
      */
-    protected final Class<A> _getArrayClass() {
+    final Class<A> _getArrayClass() {
         return arrayClass;
     }
 
@@ -36,7 +36,7 @@ public abstract class AbstractArrayModel<A extends AbstractArray> {
      * Get the length of the array modeled by the model
      * @return The length of the StructuredArray modeled by the model
      */
-    protected final long _getLength() {
+    final long _getLength() {
         return length;
     }
 
@@ -47,7 +47,7 @@ public abstract class AbstractArrayModel<A extends AbstractArray> {
         return derivedType;
     }
 
-    protected static Class typeToClass(Type t) {
+    static Class typeToClass(Type t) {
         if (t instanceof Class) {
             return (Class) t;
         } else if (t instanceof ParameterizedType) {

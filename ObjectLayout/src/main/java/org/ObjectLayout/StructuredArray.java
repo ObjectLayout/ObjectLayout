@@ -5,10 +5,6 @@
 
 package org.ObjectLayout;
 
-import org.ObjectLayout.intrinsifiable.AbstractArrayModel;
-import org.ObjectLayout.intrinsifiable.AbstractIntrinsicObjectModel;
-import org.ObjectLayout.intrinsifiable.AbstractStructuredArray;
-
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -346,12 +342,7 @@ public class StructuredArray<T> extends AbstractStructuredArray<T> implements It
                                 ") is smaller than sourceOffset (" + sourceOffsets[depth] +
                                 ") + count (" + counts[depth] + ")" );
             }
-            AbstractArrayModel subArrayModel = arrayModel.getSubArrayModel();
-            if ((subArrayModel != null) && StructuredArrayModel.class.isInstance(subArrayModel)) {
-                arrayModel = (StructuredArrayModel) subArrayModel;
-            } else {
-                arrayModel = null;
-            }
+            arrayModel = (StructuredArrayModel) arrayModel.getStructuredSubArrayModel();
             depth++;
         }
 
@@ -387,20 +378,18 @@ public class StructuredArray<T> extends AbstractStructuredArray<T> implements It
         final CtorAndArgsProvider<T> elementCopyCtorAndArgsProvider =
                 new CopyCtorAndArgsProvider<T>(elementClass, sourceOffset, ctorAndArgs);
 
-        final AbstractArrayModel subArrayModel = sourceArrayModel.getSubArrayModel();
-
-        if ((subArrayModel != null) && StructuredArrayModel.class.isInstance(subArrayModel)) {
+        if (sourceArrayModel.getStructuredSubArrayModel() != null) {
             // This array contains another array:
             StructuredArrayBuilder subArrayBuilder =
-                    createCopyingArrayBuilder((StructuredArrayModel) subArrayModel,
+                    createCopyingArrayBuilder((StructuredArrayModel)sourceArrayModel.getStructuredSubArrayModel(),
                             sourceOffsets, offsetsIndex + 1,
                             counts, countsIndex + 1);
             return new StructuredArrayBuilder<S, T>(sourceArrayClass, subArrayBuilder, count).
                             elementCtorAndArgsProvider(elementCopyCtorAndArgsProvider).
                             resolve();
-        } else if ((subArrayModel != null) && PrimitiveArrayModel.class.isInstance(subArrayModel)) {
+        } else if (sourceArrayModel.getPrimitiveSubArrayModel() != null) {
             // This array contains elements that are PrimitiveArrays:
-            PrimitiveArrayModel model = (PrimitiveArrayModel) subArrayModel;
+            PrimitiveArrayModel model = (PrimitiveArrayModel) sourceArrayModel.getPrimitiveSubArrayModel();
             @SuppressWarnings("unchecked")
             PrimitiveArrayBuilder subArrayBuilder = new PrimitiveArrayBuilder(model.getArrayClass(), model.getLength());
             return new StructuredArrayBuilder<S, T>(sourceArrayClass, subArrayBuilder, count).
@@ -1087,16 +1076,16 @@ public class StructuredArray<T> extends AbstractStructuredArray<T> implements It
             this.active = active;
         }
 
-        public void setConstructionArgs(final StructuredArrayBuilder arrayBuilder, final ConstructionContext context) {
+        private void setConstructionArgs(final StructuredArrayBuilder arrayBuilder, final ConstructionContext context) {
             this.arrayBuilder = arrayBuilder;
             this.context = context;
         }
 
-        public StructuredArrayBuilder getArrayBuilder() {
+        private StructuredArrayBuilder getArrayBuilder() {
             return arrayBuilder;
         }
 
-        public ConstructionContext getContext() {
+        private ConstructionContext getContext() {
             return context;
         }
 

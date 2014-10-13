@@ -3,7 +3,7 @@
  * as explained at http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-package org.ObjectLayout.intrinsifiable;
+package org.ObjectLayout;
 
 /**
  * This class contains the intrinsifiable portions of PrimitiveShortArray behavior. JDK implementations
@@ -11,25 +11,25 @@ package org.ObjectLayout.intrinsifiable;
  * base class.
  */
 
-public abstract class AbstractReferenceArray<T> extends PrimitiveArray {
+abstract class AbstractReferenceArray<T> extends AbstractPrimitiveArray {
 
     private final T[][] longAddressableElements; // Used to store elements at indexes above Integer.MAX_VALUE
     private final T[] intAddressableElements;
 
-    protected final T[] _asArray() {
-        if (getLength() > Integer.MAX_VALUE) {
+    final T[] _asArray() {
+        if (_getLength() > Integer.MAX_VALUE) {
             throw new IllegalStateException(
                     "Cannot make T[] from array with more than Integer.MAX_VALUE elements (" +
-                            getLength() + ")");
+                            _getLength() + ")");
         }
         return intAddressableElements;
     }
 
-    protected T _get(final int index) {
+    T _get(final int index) {
         return intAddressableElements[index];
     }
 
-    protected T _get(final long index) {
+    T _get(final long index) {
         if (index < Integer.MAX_VALUE) {
             return _get((int) index);
         }
@@ -42,11 +42,11 @@ public abstract class AbstractReferenceArray<T> extends PrimitiveArray {
         return longAddressableElements[partitionIndex][partitionOffset];
     }
 
-    protected void _set(final int index, final T value) {
+    void _set(final int index, final T value) {
         intAddressableElements[index] = value;
     }
 
-    protected void _set(final long index, final T value) {
+    void _set(final long index, final T value) {
         if (index < Integer.MAX_VALUE) {
             _set((int) index, value);
         }
@@ -59,13 +59,13 @@ public abstract class AbstractReferenceArray<T> extends PrimitiveArray {
         longAddressableElements[partitionIndex][partitionOffset] = value;
     }
     @SuppressWarnings("unchecked")
-    protected AbstractReferenceArray() {
+    AbstractReferenceArray() {
         intAddressableElements = (T[]) createIntAddressableElements(Object.class);
         longAddressableElements = (T[][]) createLongAddressableElements(Object.class);
     }
 
     @SuppressWarnings("unchecked")
-    protected AbstractReferenceArray(AbstractReferenceArray sourceArray) {
+    AbstractReferenceArray(AbstractReferenceArray sourceArray) {
         intAddressableElements = (T[]) sourceArray.intAddressableElements.clone();
         int numLongAddressablePartitions = sourceArray.longAddressableElements.length;
         longAddressableElements = (T[][]) new Object[numLongAddressablePartitions][];
