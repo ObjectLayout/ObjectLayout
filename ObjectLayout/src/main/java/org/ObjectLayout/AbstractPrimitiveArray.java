@@ -46,6 +46,20 @@ public abstract class AbstractPrimitiveArray {
         return instantiate(source._getLength(), arrayConstructor, source);
     }
 
+    /**
+     * create a fresh PrimitiveArray intended to occupy a a given intrinsic field in the containing object,
+     * at the field described by the supplied intrinsicObjectModel, using the supplied constructor and arguments.
+     */
+    static <A extends AbstractPrimitiveArray> void constructPrimitiveArrayWithin(
+            final Object containingObject,
+            final AbstractIntrinsicObjectModel<A> intrinsicObjectModel,
+            final long length,
+            final Constructor<A> arrayConstructor,
+            final Object... arrayConstructorArgs) {
+        A array = instantiate(length, arrayConstructor, arrayConstructorArgs);
+        intrinsicObjectModel.registerPendingIntrinsicObject(containingObject, array);
+    }
+
     private static <A extends AbstractPrimitiveArray> A instantiate(
             final long length,
             final Constructor<A> arrayConstructor,

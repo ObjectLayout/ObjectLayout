@@ -1,6 +1,7 @@
 package org.ObjectLayout;
 
 import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 
 /**
  * A builder used for instantiating a {@link AbstractPrimitiveArray}&ltT&gt
@@ -132,5 +133,22 @@ public class PrimitiveArrayBuilder<S extends AbstractPrimitiveArray> {
      */
     public CtorAndArgs<S> getArrayCtorAndArgs() {
         return arrayCtorAndArgs;
+    }
+
+    /**
+     * create a fresh PrimitiveArray intended to occupy a a given intrinsic field in the containing object,
+     * at the field described by the supplied intrinsicObjectModel, using the supplied constructor and arguments.
+     */
+    static void constructPrimitiveArrayWithin(
+            final Object containingObject,
+            final AbstractIntrinsicObjectModel intrinsicObjectModel,
+            PrimitiveArrayBuilder arrayBuilder)
+            throws InstantiationException, IllegalAccessException, InvocationTargetException {
+        AbstractPrimitiveArray.constructPrimitiveArrayWithin(
+                containingObject, intrinsicObjectModel,
+                arrayBuilder.getArrayModel().getLength(),
+                arrayBuilder.getArrayCtorAndArgs().getConstructor(),
+                arrayBuilder.getArrayCtorAndArgs().getArgs()
+        );
     }
 }

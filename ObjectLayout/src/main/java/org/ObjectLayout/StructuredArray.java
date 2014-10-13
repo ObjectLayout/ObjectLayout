@@ -545,36 +545,20 @@ public class StructuredArray<T> extends AbstractStructuredArray<T> implements It
     //
 
     private void populateLeafElement(final long index,
-                                 CtorAndArgs<T> ctorAndArgs) {
-        try {
-            // Instantiate:
-            constructElementAtIndex(index, ctorAndArgs.getConstructor(), ctorAndArgs.getArgs());
-        } catch (InstantiationException ex) {
-            throw new RuntimeException(ex);
-        } catch (IllegalAccessException ex) {
-            throw new RuntimeException(ex);
-        } catch (InvocationTargetException ex) {
-            throw new RuntimeException(ex);
-        }
+                                     CtorAndArgs<T> ctorAndArgs) {
+        // Instantiate:
+        constructElementAtIndex(index, ctorAndArgs.getConstructor(), ctorAndArgs.getArgs());
     }
 
     private void populatePrimitiveSubArray(final long index,
                                            PrimitiveArrayBuilder subArrayBuilder,
                                            final CtorAndArgs<T> subArrayCtorAndArgs) {
-        try {
-            // Instantiate:
-            constructPrimitiveSubArrayAtIndex(
-                    index,
-                    subArrayBuilder.getArrayModel(),
-                    subArrayCtorAndArgs.getConstructor(),
-                    subArrayCtorAndArgs.getArgs());
-        } catch (InstantiationException ex) {
-            throw new RuntimeException(ex);
-        } catch (IllegalAccessException ex) {
-            throw new RuntimeException(ex);
-        } catch (InvocationTargetException ex) {
-            throw new RuntimeException(ex);
-        }
+        // Instantiate:
+        constructPrimitiveSubArrayAtIndex(
+                index,
+                subArrayBuilder.getArrayModel(),
+                subArrayCtorAndArgs.getConstructor(),
+                subArrayCtorAndArgs.getArgs());
     }
 
     private void populateStructuredSubArray(final ConstructionContext<T> context,
@@ -592,12 +576,6 @@ public class StructuredArray<T> extends AbstractStructuredArray<T> implements It
                     subArrayBuilder.getArrayModel(),
                     subArrayCtorAndArgs.getConstructor(),
                     subArrayCtorAndArgs.getArgs());
-        } catch (InstantiationException ex) {
-            throw new RuntimeException(ex);
-        } catch (IllegalAccessException ex) {
-            throw new RuntimeException(ex);
-        } catch (InvocationTargetException ex) {
-            throw new RuntimeException(ex);
         } finally {
             constructorMagic.setActive(false);
         }
@@ -676,7 +654,6 @@ public class StructuredArray<T> extends AbstractStructuredArray<T> implements It
             throw new RuntimeException(ex);
         }
     }
-
 
     /**
      * create a fresh StructuredArray intended to occupy a a given intrinsic field in the containing object,

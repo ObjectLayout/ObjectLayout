@@ -168,6 +168,10 @@ abstract class AbstractIntrinsicObjectModel<T>  {
         return structuredArrayModel;
     }
 
+    final AbstractPrimitiveArrayModel _getPrimitiveArrayModel() {
+        return primitiveArrayModel;
+    }
+
     final void _makeApplicable() {
         if (applicable) {
             return;

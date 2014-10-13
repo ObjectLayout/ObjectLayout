@@ -179,12 +179,12 @@ public abstract class IntrinsicObjectModel<T> extends AbstractIntrinsicObjectMod
     }
 
     /**
-     * Construct an intrinsic object within the containing object, using the supplied StructuredArrayBuilder.
+     * Construct an intrinsic object within the containing object, using the supplied {@link StructuredArrayBuilder}.
      * This form of constructWithin() can only be used to construct intrinsic objects that derive from
      * StructuredArray.
      *
      * @param containingObject The object instance that will contain this intrinsic object
-     * @param arrayBuilder The StructuredArrayBuilder instance to be used in constructing the array
+     * @param arrayBuilder The {@link StructuredArrayBuilder} instance to be used in constructing the array
      * @return A reference to the the newly constructed intrinsic object
      */
     public final T constructWithin(
@@ -205,6 +205,41 @@ public abstract class IntrinsicObjectModel<T> extends AbstractIntrinsicObjectMod
                             ")");
         }
         if (!arrayBuilder.getArrayModel().equals(_getStructuredArrayModel())) {
+            throw new IllegalArgumentException(
+                    "The array model in supplied array builder does not match the array model used" +
+                            " to create this IntrinsicObjectModel instance."
+            );
+        }
+        return instantiate(containingObject, arrayBuilder);
+    }
+
+    /**
+     * Construct an intrinsic object within the containing object, using the supplied {@link PrimitiveArrayBuilder}.
+     * This form of constructWithin() can only be used to construct intrinsic objects that derive from
+     * StructuredArray.
+     *
+     * @param containingObject The object instance that will contain this intrinsic object
+     * @param arrayBuilder The {@link PrimitiveArrayBuilder} instance to be used in constructing the array
+     * @return A reference to the the newly constructed intrinsic object
+     */
+    public final T constructWithin(
+            final Object containingObject,
+            final PrimitiveArrayBuilder arrayBuilder) {
+        if (!_isPrimitiveArray()) {
+            throw new IllegalArgumentException(
+                    "The PrimitiveArrayBuilder argument cannot be used on IntrinsicObjectModel" +
+                            " that do not model PrimitiveArrayBuilder intrinsic objects"
+            );
+        }
+        if (getObjectClass() != arrayBuilder.getArrayModel().getArrayClass()) {
+            throw new IllegalArgumentException(
+                    "The class in the array builder (" +
+                            arrayBuilder.getArrayModel().getArrayClass().getName() +
+                            ") does not match the intrinsic object class declared in the model (" +
+                            getObjectClass().getName() +
+                            ")");
+        }
+        if (!arrayBuilder.getArrayModel().equals(_getPrimitiveArrayModel())) {
             throw new IllegalArgumentException(
                     "The array model in supplied array builder does not match the array model used" +
                             " to create this IntrinsicObjectModel instance."
@@ -249,6 +284,24 @@ public abstract class IntrinsicObjectModel<T> extends AbstractIntrinsicObjectMod
             _makeApplicable();
             _sanityCheckInstantiation(containingObject);
             StructuredArray.constructStructuredArrayWithin(containingObject, this, arrayBuilder);
+            return null;
+        } catch (InstantiationException ex) {
+            throw new RuntimeException(ex);
+        } catch (IllegalAccessException ex) {
+            throw new RuntimeException(ex);
+        } catch (InvocationTargetException ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
+
+    private T instantiate(
+            final Object containingObject,
+            final PrimitiveArrayBuilder arrayBuilder) {
+        try {
+            _makeApplicable();
+            _sanityCheckInstantiation(containingObject);
+            PrimitiveArrayBuilder.constructPrimitiveArrayWithin(containingObject, this, arrayBuilder);
             return null;
         } catch (InstantiationException ex) {
             throw new RuntimeException(ex);

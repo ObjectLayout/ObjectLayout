@@ -98,10 +98,17 @@ abstract class AbstractStructuredArray<T> {
     void constructElementAtIndex(
             final long index,
             final Constructor<T> constructor,
-            final Object... args)
-            throws InstantiationException, IllegalAccessException, InvocationTargetException {
-        T element = constructor.newInstance(args);
-        storeElementInLocalStorageAtIndex(element, index);
+            final Object... args) {
+        try {
+            T element = constructor.newInstance(args);
+            storeElementInLocalStorageAtIndex(element, index);
+        } catch (InstantiationException ex) {
+            throw new RuntimeException(ex);
+        } catch (IllegalAccessException ex) {
+            throw new RuntimeException(ex);
+        } catch (InvocationTargetException ex) {
+            throw new RuntimeException(ex);
+        }
     }
 
     /**
@@ -115,8 +122,7 @@ abstract class AbstractStructuredArray<T> {
             final long index,
             AbstractPrimitiveArrayModel primitiveSubArrayModel,
             final Constructor<T> constructor,
-            final Object... args)
-            throws InstantiationException, IllegalAccessException, InvocationTargetException {
+            final Object... args) {
         int length = (int) primitiveSubArrayModel._getLength();
         @SuppressWarnings("unchecked")
         Constructor<? extends AbstractPrimitiveArray> c = (Constructor<? extends AbstractPrimitiveArray>) constructor;
@@ -136,8 +142,7 @@ abstract class AbstractStructuredArray<T> {
             long index,
             AbstractStructuredArrayModel subArrayModel,
             final Constructor<T> subArrayConstructor,
-            final Object... args)
-            throws InstantiationException, IllegalAccessException, InvocationTargetException {
+            final Object... args) {
         ConstructorMagic constructorMagic = getConstructorMagic();
         constructorMagic.setConstructionArgs(subArrayModel);
         try {
@@ -145,6 +150,12 @@ abstract class AbstractStructuredArray<T> {
             subArrayConstructor.setAccessible(true);
             T subArray = subArrayConstructor.newInstance(args);
             storeElementInLocalStorageAtIndex(subArray, index);
+        } catch (InstantiationException ex) {
+            throw new RuntimeException(ex);
+        } catch (IllegalAccessException ex) {
+            throw new RuntimeException(ex);
+        } catch (InvocationTargetException ex) {
+            throw new RuntimeException(ex);
         } finally {
             constructorMagic.setActive(false);
         }
@@ -162,8 +173,7 @@ abstract class AbstractStructuredArray<T> {
             final AbstractIntrinsicObjectModel<T> intrinsicObjectModel,
             AbstractStructuredArrayModel subArrayModel,
             final Constructor<T> subArrayConstructor,
-            final Object... args)
-            throws InstantiationException, IllegalAccessException, InvocationTargetException {
+            final Object... args) {
         ConstructorMagic constructorMagic = getConstructorMagic();
         constructorMagic.setConstructionArgs(subArrayModel);
         try {
@@ -171,6 +181,12 @@ abstract class AbstractStructuredArray<T> {
             subArrayConstructor.setAccessible(true);
             T array = subArrayConstructor.newInstance(args);
             intrinsicObjectModel.registerPendingIntrinsicObject(containingObject, array);
+        } catch (InstantiationException ex) {
+            throw new RuntimeException(ex);
+        } catch (IllegalAccessException ex) {
+            throw new RuntimeException(ex);
+        } catch (InvocationTargetException ex) {
+            throw new RuntimeException(ex);
         } finally {
             constructorMagic.setActive(false);
         }
