@@ -18,7 +18,7 @@ import java.lang.reflect.InvocationTargetException;
  * reference.
  */
 
-abstract class AbstractPrimitiveArray {
+public abstract class AbstractPrimitiveArray {
 
     private final long length;
 
