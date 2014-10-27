@@ -3,35 +3,32 @@
  * as explained at http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-import org.ObjectLayout.IntrinsicObjectModel;
+import org.ObjectLayout.Intrinsic;
+import org.ObjectLayout.IntrinsicObjects;
+
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * A simple Line class example with two intrinsic Point end point objects. Demonstrates use of
- * {@link org.ObjectLayout.IntrinsicObjectModel}
- * members and their initialization.
+ * {@link org.ObjectLayout.Intrinsic} and {@link org.ObjectLayout.IntrinsicObjects}
  *
  */
 public class SimpleLine {
     /**
-     * Model declaration of two intrinsic object fields:
-     */
-    private static final IntrinsicObjectModel<Point> endPoint1Model =
-            new IntrinsicObjectModel<Point>("endPoint1"){};
-
-    private static final IntrinsicObjectModel<Point> endPoint2Model =
-            new IntrinsicObjectModel<Point>("endPoint2"){};
-
-    /**
      * Simple intrinsic object declaration and initialization:
      */
-    private final Point endPoint1 = endPoint1Model.constructWithin(this);
-    private final Point endPoint2 = endPoint2Model.constructWithin(this);
+    @Intrinsic
+    private final Point endPoint1 = IntrinsicObjects.constructWithin("endPoint1", this);
+    @Intrinsic
+    private final Point endPoint2 = IntrinsicObjects.constructWithin("endPoint2", this);
+    @Intrinsic
+    private final AtomicLong along = IntrinsicObjects.constructWithin("along", this);
 
     /**
      * Use of makeIntrinsicObjectsAccessible in initializer (useful if no constructors exist, for example):
      */
     {
-        IntrinsicObjectModel.makeIntrinsicObjectsAccessible(this);
+        IntrinsicObjects.makeIntrinsicObjectsAccessible(this);
     }
 
     public SimpleLine() {

@@ -3,8 +3,10 @@
  * as explained at http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-import org.ObjectLayout.IntrinsicObjectModel;
-import org.ObjectLayout.StructuredArrayModel;
+
+import org.ObjectLayout.Intrinsic;
+import org.ObjectLayout.IntrinsicObjects;
+import org.ObjectLayout.StructuredArray;
 
 /**
  * A simple Octagon class example with an intrinsic StructuredArray of Points. Demonstrates use of
@@ -14,22 +16,16 @@ import org.ObjectLayout.StructuredArrayModel;
  */
 public class Octagon {
     /**
-     * Model declaration of intrinsic object field:
+     * Intrinsic object declaration and initialization for a StructuredArray member:
      */
+    @Intrinsic(length = 8)
+    private final StructuredArrayOfPoint points = IntrinsicObjects.constructWithin("points", this);
 
-    private static final IntrinsicObjectModel<StructuredArrayOfPoint> pointsModel =
-            new IntrinsicObjectModel<StructuredArrayOfPoint>(
-                    "points",
-                    new StructuredArrayModel<StructuredArrayOfPoint, Point>(8){}
-            ){};
-
-    /**
-     * Simple intrinsic object declaration and initialization:
-     */
-    private final StructuredArrayOfPoint points = pointsModel.constructWithin(this);
+    @Intrinsic(length = 8)
+    private final StructuredArray<Point> otherPoints = IntrinsicObjects.constructWithin("otherPoints", this);
 
     {
-        IntrinsicObjectModel.makeIntrinsicObjectsAccessible(this);
+        IntrinsicObjects.makeIntrinsicObjectsAccessible(this);
     }
 
     private final String color;

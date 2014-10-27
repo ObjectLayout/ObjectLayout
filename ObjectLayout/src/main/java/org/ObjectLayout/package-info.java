@@ -41,16 +41,18 @@
  * </ol>
  * <h3>The matching ObjectLayout forms</h3>
  * <p>
- * {@link org.ObjectLayout.StructuredArray} is meant to provide an idiomatic Java container form
+ * {@link org.ObjectLayout.StructuredArray} provides an idiomatic Java collection form
  * with speed (and semantics) similar to an "array of structs" form, supporting any constructable
  * java Object as an array member.
  * <p>
- * {@link org.ObjectLayout.IntrinsicObjectModel} is meant to support an idiomatic Java way to declare
- * a "struct in struct" equivalent relationship between Java objects, exposing the speed benefits
- * similar to the same form in the C family languages.
+ * {@link org.ObjectLayout.Intrinsic @Intrinsic} provides an idiomatic Java means for declaring
+ * member objects that are intrinsic to the instances of the class they are declared in.
+ * {@link org.ObjectLayout.Intrinsic @Intrinsic} provides a "struct in struct" equivalent
+ * relationship between Java objects, exposing the speed and layout benefits similar to the same
+ * form in the C family languages. Fields annotated with {@link org.ObjectLayout.Intrinsic @Intrinsic}
  * <p>
  * Sub-classable Primitive and Reference array classes (e.g. {@link org.ObjectLayout.PrimitiveLongArray}
- * and {@link org.ObjectLayout.ReferenceArray}) are meant to support an idiomatic Java means of
+ * and {@link org.ObjectLayout.ReferenceArray}) provide an idiomatic Java means of
  * declaring constructs with speed (and semantics) similar to "struct with array at the end". They do
  * so by supporting the subclassing of arrays of the various primitive and reference forms possible
  * in Java. {@link org.ObjectLayout.StructuredArray} similarly supports this capability (via

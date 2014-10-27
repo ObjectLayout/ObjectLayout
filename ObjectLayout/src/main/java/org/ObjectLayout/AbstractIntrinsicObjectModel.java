@@ -1,6 +1,10 @@
 package org.ObjectLayout;
 
-import java.lang.reflect.*;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Modifier;
+import java.util.Collection;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -13,36 +17,30 @@ import java.util.concurrent.ConcurrentHashMap;
 
 abstract class AbstractIntrinsicObjectModel<T>  {
     private final Class containingClass;
-    private final String fieldNameInContainingObject;
     private final Class<T> objectClass;
     private final AbstractPrimitiveArrayModel primitiveArrayModel;
     private final AbstractStructuredArrayModel structuredArrayModel;
 
     private final Field field;
 
-    private boolean applicable = false;
-
     // Objects that have been constructed but not yet made visible:
     private final ConcurrentHashMap<Object, T> pendingObjects = new ConcurrentHashMap<Object, T>();
 
     AbstractIntrinsicObjectModel(
-            final String fieldNameInContainingObject,
+            final Field field,
             final AbstractPrimitiveArrayModel primitiveArrayModel,
             final AbstractStructuredArrayModel structuredArrayModel) {
 
-        this.fieldNameInContainingObject = fieldNameInContainingObject;
+        @SuppressWarnings("unchecked")
+        Class<T> objectClass = (Class<T>) field.getType();
+
+        this.field = field;
+        this.containingClass = field.getDeclaringClass();
+        this.objectClass = objectClass;
         this.primitiveArrayModel = primitiveArrayModel;
         this.structuredArrayModel = structuredArrayModel;
 
-        this.containingClass = deriveContainingClass();
-        this.objectClass = deriveObjectClass();
-
-        try {
-            field = containingClass.getDeclaredField(fieldNameInContainingObject);
-            field.setAccessible(true);
-        } catch (NoSuchFieldException ex) {
-            throw new IllegalArgumentException(ex);
-        }
+        field.setAccessible(true);
 
         sanityCheckAtModelConstruction();
     }
@@ -92,9 +90,9 @@ abstract class AbstractIntrinsicObjectModel<T>  {
                     field.setAccessible(true);
                     AbstractIntrinsicObjectModel model = (AbstractIntrinsicObjectModel) field.get(null /* static field */);
                     if ((model != null ) &&
-                            (model.fieldNameInContainingObject.equals(fieldNameInContainingObject))) {
+                            (model.field.equals(field))) {
                         throw new IllegalArgumentException("An IntrinsicObjectModel for the field \"" +
-                                fieldNameInContainingObject +
+                                field.getName() +
                                 "\" in class \"" +
                                 containingClass.getName() + "\" already exists");
                     }
@@ -148,7 +146,7 @@ abstract class AbstractIntrinsicObjectModel<T>  {
     final void _sanityCheckInstantiation(final Object containingObject) {
         try {
             if ((field.get(containingObject) != null) || (pendingObjects.get(containingObject) != null)) {
-                throw new IllegalArgumentException("Intrinsic object field \"" + field.getName() +
+                throw new IllegalStateException("Intrinsic object field \"" + field.getName() +
                         "\" in containing object is already initialized");
             }
         } catch (IllegalAccessException e) {
@@ -172,79 +170,11 @@ abstract class AbstractIntrinsicObjectModel<T>  {
         return primitiveArrayModel;
     }
 
-    final void _makeApplicable() {
-        if (applicable) {
-            return;
-        }
-
-        // Sanity check this model object:
-        try {
-            // First, verify that a private, static, final field in the containing class refers to this model instance:
-            Field myField = null;
-            for (Field field : containingClass.getDeclaredFields()) {
-                if (Modifier.isStatic(field.getModifiers()) &&
-                        Modifier.isPrivate(field.getModifiers()) &&
-                        Modifier.isFinal(field.getModifiers()) &&
-                        AbstractIntrinsicObjectModel.class.isAssignableFrom(field.getType())) {
-                    field.setAccessible(true);
-                    AbstractIntrinsicObjectModel model = (AbstractIntrinsicObjectModel) field.get(null /* static field */);
-                    if (model == this ) {
-                        myField = field;
-                    }
-                }
-            }
-            if (myField == null) {
-                throw new IllegalStateException(
-                        "IntrinsicObjectModel instance must be a private, static, final member " +
-                                "of the containing object class \"" + containingClass.getName() + "\"");
-            }
-
-            // Next, verify that this is the only model instance for this field:
-            for (Field field : containingClass.getDeclaredFields()) {
-                if (Modifier.isStatic(field.getModifiers()) &&
-                        AbstractIntrinsicObjectModel.class.isAssignableFrom(field.getType())) {
-                    field.setAccessible(true);
-                    AbstractIntrinsicObjectModel model = (AbstractIntrinsicObjectModel) field.get(null /* static field */);
-                    if ((model != null ) && (model != this) &&
-                            (model.fieldNameInContainingObject.equals(fieldNameInContainingObject))) {
-                        throw new IllegalArgumentException(
-                                "More than one IntrinsicObjectModel instance exists for the field \"" +
-                                        fieldNameInContainingObject +
-                                        "\" in class \"" +
-                                        containingClass.getName() + "\"");
-                    }
-                }
-
-            }
-        } catch (IllegalAccessException ex) {
-            throw new RuntimeException("Unexpected IllegalAccessException on accessible field: ", ex);
-        }
-
-        applicable = true;
-    }
-
-    static void _makeModelsApplicable(Class containingClass) {
-        try {
-            for (Field field : containingClass.getDeclaredFields()) {
-                if (Modifier.isStatic(field.getModifiers()) &&
-                        Modifier.isPrivate(field.getModifiers()) &&
-                        Modifier.isFinal(field.getModifiers()) &&
-                        AbstractIntrinsicObjectModel.class.isAssignableFrom(field.getType())) {
-                    field.setAccessible(true);
-                    AbstractIntrinsicObjectModel model = (AbstractIntrinsicObjectModel) field.get(null /* static field */);
-                    model._makeApplicable();
-                }
-            }
-        } catch (IllegalAccessException ex) {
-            throw new RuntimeException("Unexpected IllegalAccessException on accessible field: ", ex);
-        }
-    }
-
     private void makeIntrinsicObjectAccessible(final Object containingObject) throws IllegalAccessException {
         if (field.get(containingObject) != null) {
             throw new IllegalStateException(
                     "Bad value for field \"" +
-                            fieldNameInContainingObject +
+                            field.getName() +
                             "\". Intrinsic object field was initialized without being " +
                             "constructed by IntrinsicObjectModel.constructWithin(). " +
                             "Cannot make any of the intrinsic objects fields accessible."
@@ -255,7 +185,7 @@ abstract class AbstractIntrinsicObjectModel<T>  {
         if (intrinsicObject == null) {
             throw new IllegalStateException(
                     "Missing value for field \"" +
-                            fieldNameInContainingObject +
+                            field.getName() +
                             "\". No intrinsic object value was constructed by IntrinsicObjectModel.constructWithin(). " +
                             "Cannot make any of the intrinsic objects fields accessible."
             );
@@ -264,66 +194,28 @@ abstract class AbstractIntrinsicObjectModel<T>  {
         field.set(containingObject, intrinsicObject);
     }
 
-    static void _makeIntrinsicObjectsAccessible(final Object containingObject) {
-        Class containingClass = containingObject.getClass();
-        if (!containingClass.isInstance(containingObject)) {
-            throw new IllegalArgumentException("containingObject is of class " +
-                    containingObject.getClass().getName() +
-                    ", and is not an instance of " + containingClass.getName());
-        }
-        boolean successfullyValidated = false;
-        try {
+    static void _makeIntrinsicObjectsInCollectionAccessible(
+            final Collection<? extends AbstractIntrinsicObjectModel> models,
+            final Object containingObject) {
+        try{
+            boolean successfullyValidated = false;
             try {
-                for (Field field : containingClass.getDeclaredFields()) {
-                    if (AbstractIntrinsicObjectModel.class.isAssignableFrom(field.getType())) {
-                        field.setAccessible(true);
-                        AbstractIntrinsicObjectModel model = (AbstractIntrinsicObjectModel) field.get(containingObject);
-                        model.makeIntrinsicObjectAccessible(containingObject);
-                    }
+                for (AbstractIntrinsicObjectModel model : models) {
+                    model.makeIntrinsicObjectAccessible(containingObject);
                 }
                 successfullyValidated = true;
             } finally {
                 if (!successfullyValidated) {
                     // There was a failure somewhere, clean up pending objects and null related fields:
-                    for (Field field : containingClass.getDeclaredFields()) {
-                        if (AbstractIntrinsicObjectModel.class.isAssignableFrom(field.getType())) {
-                            field.setAccessible(true);
-                            AbstractIntrinsicObjectModel model = (AbstractIntrinsicObjectModel) field.get(containingObject);
-                            model.pendingObjects.remove(containingObject);
-                            model.field.set(containingObject, null);
-                        }
+                    for (AbstractIntrinsicObjectModel model : models) {
+                        model.pendingObjects.remove(containingObject);
+                        model.field.set(containingObject, null);
                     }
                 }
             }
         } catch (IllegalAccessException ex) {
             throw new IllegalStateException(
                     "Unexpected field access exception in scanning the containing object", ex);
-        }
-    }
-
-    private Class<T> deriveObjectClass() {
-        @SuppressWarnings("unchecked")
-        Class<T> objectClass = (Class<T>) deriveTypeParameter(0);
-        return objectClass;
-    }
-
-    private Class deriveContainingClass() {
-        return this.getClass().getEnclosingClass();
-    }
-
-
-    private Class deriveTypeParameter(int parameterIndex) {
-        ParameterizedType genericSuperclass = (ParameterizedType) this.getClass().getGenericSuperclass();
-        return typeToClass(genericSuperclass.getActualTypeArguments()[parameterIndex]);
-    }
-
-    private static Class typeToClass(Type t) {
-        if (t instanceof Class) {
-            return (Class) t;
-        } else if (t instanceof ParameterizedType) {
-            return (Class) ((ParameterizedType)t).getRawType();
-        } else {
-            throw new IllegalArgumentException("Must have a declared generic type");
         }
     }
 }

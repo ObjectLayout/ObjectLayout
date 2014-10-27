@@ -55,6 +55,8 @@
                 <configuration>
                     <source>1.6</source>
                     <target>1.6</target>
+                    <!-- Disable annotation processing for ourselves. -->
+                    <compilerArgument>-proc:none</compilerArgument>
                     <encoding>UTF-8</encoding>
                 </configuration>
             </plugin>
