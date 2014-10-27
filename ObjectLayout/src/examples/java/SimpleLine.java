@@ -6,8 +6,6 @@
 import org.ObjectLayout.Intrinsic;
 import org.ObjectLayout.IntrinsicObjects;
 
-import java.util.concurrent.atomic.AtomicLong;
-
 /**
  * A simple Line class example with two intrinsic Point end point objects. Demonstrates use of
  * {@link org.ObjectLayout.Intrinsic} and {@link org.ObjectLayout.IntrinsicObjects}

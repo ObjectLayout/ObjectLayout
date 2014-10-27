@@ -6,7 +6,6 @@
 
 import org.ObjectLayout.Intrinsic;
 import org.ObjectLayout.IntrinsicObjects;
-import org.ObjectLayout.StructuredArray;
 
 /**
  * A simple Octagon class example with an intrinsic StructuredArray of Points. Demonstrates use of
