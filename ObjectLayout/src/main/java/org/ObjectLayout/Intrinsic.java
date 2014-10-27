@@ -30,25 +30,22 @@ import java.util.Objects;
  * IntrinsicObjects.makeIntrinsicObjectsAccessible()}
  * may (and likely will) result in {@link NullPointerException} exceptions.
  * <p>
- * An example of declaring intrinsic objects is:
+ * An example of declaring an intrinsic object is:
  * <p><blockquote><pre>
  * public class Line {
  *     //
- *     // Model declaration of an intrinsic object fields:
- *     //
- *     private static final IntrinsicObjectModel&ltPoint&gt endPoint1Model =
- *         new IntrinsicObjectModel&ltPoint&gt("endPoint"){};
- *     ...
- *     //
  *     // Simple intrinsic object declaration and initialization:
  *     //
- *     private final Point endPoint = endPointModel.constructWithin(this);
+ *     {@literal @}Intrinsic
+ *     private final Point endPoint1 = IntrinsicObjects.constructWithin("endPoint1", this);
+ *     {@literal @}Intrinsic
+ *     private final Point endPoint2 = IntrinsicObjects.constructWithin("endPoint2", this);
  *     ...
  *
  *     // Later, in a constructor or instance initializer:
- *     { IntrinsicObjectModel.makeIntrinsicObjectsAccessible(this); }
+ *     { IntrinsicObjects.makeIntrinsicObjectsAccessible(this); }
  * }
- *
+ * </pre></blockquote></p>
  *
  */
 
