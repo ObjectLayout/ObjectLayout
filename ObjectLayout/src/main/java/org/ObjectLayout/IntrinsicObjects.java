@@ -50,7 +50,11 @@ import java.util.concurrent.ConcurrentHashMap;
  * may (and likely will) result in {@link NullPointerException} exceptions.
  *
  */
-public abstract class IntrinsicObjects {
+public final class IntrinsicObjects {
+
+    // Prevent construction:
+    private IntrinsicObjects() {
+    }
 
     /**
      * Construct an intrinsic object at the given field within the containing object, using a default constructor.
