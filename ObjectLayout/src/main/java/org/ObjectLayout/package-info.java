@@ -49,7 +49,7 @@
  * member objects that are intrinsic to the instances of the class they are declared in.
  * {@link org.ObjectLayout.Intrinsic @Intrinsic} provides a "struct in struct" equivalent
  * relationship between Java objects, exposing the speed and layout benefits similar to the same
- * form in the C family languages. Fields annotated with {@link org.ObjectLayout.Intrinsic @Intrinsic}
+ * form in the C family languages.
  * <p>
  * Sub-classable Primitive and Reference array classes (e.g. {@link org.ObjectLayout.PrimitiveLongArray}
  * and {@link org.ObjectLayout.ReferenceArray}) provide an idiomatic Java means of
