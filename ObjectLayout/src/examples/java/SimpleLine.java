@@ -21,8 +21,6 @@ public class SimpleLine {
     private final Point endPoint1 = IntrinsicObjects.constructWithin("endPoint1", this);
     @Intrinsic
     private final Point endPoint2 = IntrinsicObjects.constructWithin("endPoint2", this);
-    @Intrinsic
-    private final AtomicLong along = IntrinsicObjects.constructWithin("along", this);
 
     /**
      * Use of makeIntrinsicObjectsAccessible in initializer (useful if no constructors exist, for example):

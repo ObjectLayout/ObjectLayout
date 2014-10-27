@@ -21,9 +21,6 @@ public class Octagon {
     @Intrinsic(length = 8)
     private final StructuredArrayOfPoint points = IntrinsicObjects.constructWithin("points", this);
 
-    @Intrinsic(length = 8)
-    private final StructuredArray<Point> otherPoints = IntrinsicObjects.constructWithin("otherPoints", this);
-
     {
         IntrinsicObjects.makeIntrinsicObjectsAccessible(this);
     }
