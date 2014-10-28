@@ -16,15 +16,11 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 
 abstract class AbstractIntrinsicObjectModel<T>  {
+    private final Field field;
     private final Class containingClass;
     private final Class<T> objectClass;
     private final AbstractPrimitiveArrayModel primitiveArrayModel;
     private final AbstractStructuredArrayModel structuredArrayModel;
-
-    private final Field field;
-
-    // Objects that have been constructed but not yet made visible:
-    private final ConcurrentHashMap<Object, T> pendingObjects = new ConcurrentHashMap<Object, T>();
 
     AbstractIntrinsicObjectModel(
             final Field field,
@@ -103,10 +99,6 @@ abstract class AbstractIntrinsicObjectModel<T>  {
         }
     }
 
-    void registerPendingIntrinsicObject(final Object containingObject, final T pendingObject) {
-        pendingObjects.put(containingObject, pendingObject);
-    }
-
     /**
      * Construct a fresh element intended to occupy a given intrinsic field in the containing object, using the
      * supplied constructor and arguments.
@@ -114,13 +106,14 @@ abstract class AbstractIntrinsicObjectModel<T>  {
      * OPTIMIZATION NOTE: Optimized JDK implementations may replace this implementation with a
      * construction-in-place call on a previously allocated memory location associated with the given index.
      */
-    final void constructElementWithin(
+    final T constructElementWithin(
             final Object containingObject,
             final Constructor<T> constructor,
             final Object... args)
             throws InstantiationException, IllegalAccessException, InvocationTargetException {
         T element = constructor.newInstance(args);
-        registerPendingIntrinsicObject(containingObject, element);
+        directlyInitializeTargetField(containingObject, element);
+        return element;
     }
 
     /**
@@ -130,7 +123,7 @@ abstract class AbstractIntrinsicObjectModel<T>  {
      * OPTIMIZATION NOTE: Optimized JDK implementations may replace this implementation with a
      * construction-in-place call on a previously allocated memory location associated with the given index.
      */
-    final void constructPrimitiveArrayWithin(
+    final T constructPrimitiveArrayWithin(
             final Object containingObject,
             final Constructor<T> constructor,
             final Object... args)
@@ -140,12 +133,13 @@ abstract class AbstractIntrinsicObjectModel<T>  {
         Constructor<? extends AbstractPrimitiveArray> c = (Constructor<? extends AbstractPrimitiveArray>) constructor;
         @SuppressWarnings("unchecked")
         T element = (T) AbstractPrimitiveArray._newInstance(length, c, args);
-        registerPendingIntrinsicObject(containingObject, element);
+        directlyInitializeTargetField(containingObject, element);
+        return element;
     }
 
     final void _sanityCheckInstantiation(final Object containingObject) {
         try {
-            if ((field.get(containingObject) != null) || (pendingObjects.get(containingObject) != null)) {
+            if (field.get(containingObject) != null) {
                 throw new IllegalStateException("Intrinsic object field \"" + field.getName() +
                         "\" in containing object is already initialized");
             }
@@ -170,52 +164,21 @@ abstract class AbstractIntrinsicObjectModel<T>  {
         return primitiveArrayModel;
     }
 
-    private void makeIntrinsicObjectAccessible(final Object containingObject) throws IllegalAccessException {
-        if (field.get(containingObject) != null) {
-            throw new IllegalStateException(
-                    "Bad value for field \"" +
-                            field.getName() +
-                            "\". Intrinsic object field was initialized without being " +
-                            "constructed by IntrinsicObjectModel.constructWithin(). " +
-                            "Cannot make any of the intrinsic objects fields accessible."
-            );
-        }
-
-        T intrinsicObject = pendingObjects.remove(containingObject);
-        if (intrinsicObject == null) {
-            throw new IllegalStateException(
-                    "Missing value for field \"" +
-                            field.getName() +
-                            "\". No intrinsic object value was constructed by IntrinsicObjectModel.constructWithin(). " +
-                            "Cannot make any of the intrinsic objects fields accessible."
-            );
-        }
-
-        field.set(containingObject, intrinsicObject);
-    }
-
-    static void _makeIntrinsicObjectsInCollectionAccessible(
-            final Collection<? extends AbstractIntrinsicObjectModel> models,
-            final Object containingObject) {
-        try{
-            boolean successfullyValidated = false;
-            try {
-                for (AbstractIntrinsicObjectModel model : models) {
-                    model.makeIntrinsicObjectAccessible(containingObject);
-                }
-                successfullyValidated = true;
-            } finally {
-                if (!successfullyValidated) {
-                    // There was a failure somewhere, clean up pending objects and null related fields:
-                    for (AbstractIntrinsicObjectModel model : models) {
-                        model.pendingObjects.remove(containingObject);
-                        model.field.set(containingObject, null);
-                    }
-                }
+    void directlyInitializeTargetField(final Object containingObject,
+                                       T intrinsicObject) {
+        try {
+            if (field.get(containingObject) != null) {
+                throw new IllegalStateException(
+                        "Bad value for field \"" +
+                                field.getName() +
+                                "\". Intrinsic object field was initialized without being " +
+                                "constructed by IntrinsicObjectModel.constructWithin(). " +
+                                "Cannot make any of the intrinsic objects fields accessible."
+                );
             }
-        } catch (IllegalAccessException ex) {
-            throw new IllegalStateException(
-                    "Unexpected field access exception in scanning the containing object", ex);
+            field.set(containingObject, intrinsicObject);
+        } catch (IllegalAccessException e) {
+            throw new IllegalStateException(e);
         }
     }
 }

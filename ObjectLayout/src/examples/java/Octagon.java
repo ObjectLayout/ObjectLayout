@@ -20,10 +20,6 @@ public class Octagon {
     @Intrinsic(length = 8)
     private final StructuredArrayOfPoint points = IntrinsicObjects.constructWithin("points", this);
 
-    {
-        IntrinsicObjects.makeIntrinsicObjectsAccessible(this);
-    }
-
     private final String color;
 
     public Octagon() {

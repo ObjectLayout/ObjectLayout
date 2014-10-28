@@ -168,7 +168,7 @@ abstract class AbstractStructuredArray<T> {
      * OPTIMIZATION NOTE: Optimized JDK implementations may replace this implementation with a
      * construction-in-place call on a previously allocated memory location associated with the given index.
      */
-    static <T> void constructStructuredArrayWithin(
+    static <T> T constructStructuredArrayWithin(
             final Object containingObject,
             final AbstractIntrinsicObjectModel<T> intrinsicObjectModel,
             AbstractStructuredArrayModel subArrayModel,
@@ -180,7 +180,8 @@ abstract class AbstractStructuredArray<T> {
             constructorMagic.setActive(true);
             subArrayConstructor.setAccessible(true);
             T array = subArrayConstructor.newInstance(args);
-            intrinsicObjectModel.registerPendingIntrinsicObject(containingObject, array);
+            intrinsicObjectModel.directlyInitializeTargetField(containingObject, array);
+            return array;
         } catch (InstantiationException ex) {
             throw new RuntimeException(ex);
         } catch (IllegalAccessException ex) {
@@ -244,12 +245,12 @@ abstract class AbstractStructuredArray<T> {
     //
 
     /**
-      * OPTIMIZATION NOTE: Optimized JDK implementations may choose to hide these fields in non-Java-accessible
-      * internal instance fields (much like array.length is hidden), in order to ensure that no uncontrolled
-      * modification of the fields can be made by any Java program (not even via reflection getting at private
-      * fields and bypassing their finality). This is an important security concern because optimization
-      * may need to make strong assumptions about the true finality of some of these fields.
-      */
+     * OPTIMIZATION NOTE: Optimized JDK implementations may choose to hide these fields in non-Java-accessible
+     * internal instance fields (much like array.length is hidden), in order to ensure that no uncontrolled
+     * modification of the fields can be made by any Java program (not even via reflection getting at private
+     * fields and bypassing their finality). This is an important security concern because optimization
+     * may need to make strong assumptions about the true finality of some of these fields.
+     */
 
     private final Class<T> elementClass;
 
@@ -296,18 +297,18 @@ abstract class AbstractStructuredArray<T> {
     }
 
     private void storeElementInLocalStorageAtIndex(T element, long index0) {
-            // place in proper internal storage location:
-            if (index0 < Integer.MAX_VALUE) {
-                intAddressableElements[(int) index0] = element;
-                return;
-            }
+        // place in proper internal storage location:
+        if (index0 < Integer.MAX_VALUE) {
+            intAddressableElements[(int) index0] = element;
+            return;
+        }
 
-            // Calculate index into long-addressable-only partitions:
-            final long longIndex0 = (index0 - Integer.MAX_VALUE);
-            final int partitionIndex = (int) (longIndex0 >>> MAX_EXTRA_PARTITION_SIZE_POW2_EXPONENT);
-            final int partitionOffset = (int) longIndex0 & PARTITION_MASK;
+        // Calculate index into long-addressable-only partitions:
+        final long longIndex0 = (index0 - Integer.MAX_VALUE);
+        final int partitionIndex = (int) (longIndex0 >>> MAX_EXTRA_PARTITION_SIZE_POW2_EXPONENT);
+        final int partitionOffset = (int) longIndex0 & PARTITION_MASK;
 
-            longAddressableElements[partitionIndex][partitionOffset] = element;
+        longAddressableElements[partitionIndex][partitionOffset] = element;
     }
 
     //
@@ -359,4 +360,4 @@ abstract class AbstractStructuredArray<T> {
                     "StructuredArray<> must not be directly instantiated with a constructor. Use newInstance(...) instead.");
         }
     }
- }
+}

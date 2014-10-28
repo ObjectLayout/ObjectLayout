@@ -13,14 +13,16 @@ import java.util.HashMap;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
+ * Intrinsic objects (declared with the {@link org.ObjectLayout.Intrinsic @Intrisic} annotation) may have
+ * their layout within the containing object instance optimized by JDK implementations, such that access
+ * to their content is faster, and avoids certain de-referencing steps.
+ * <p>
  * The {@link org.ObjectLayout.IntrinsicObjects} class provides static methods for constructing objects
  * that are {@link org.ObjectLayout.Intrinsic @Intrisic} to their containing class. Calls to
  * {@link org.ObjectLayout.IntrinsicObjects#constructWithin
  * constructWithin(String fieldName, Object containingObject)} (and variants) are used to construct and
  * initialize intrinsic objects associated with specific instance fields that are declared as
- * {@link org.ObjectLayout.Intrinsic @Intrisic} in their containing class. Intrinsic objects may
- * have their layout within the containing object instance optimized by JDK implementations, such that
- * access to their content is faster, and avoids certain de-referencing steps.
+ * {@link org.ObjectLayout.Intrinsic @Intrisic} in their containing class.
  * <p>
  * An example of declaring an intrinsic object is:
  * <p><blockquote><pre>
@@ -33,21 +35,8 @@ import java.util.concurrent.ConcurrentHashMap;
  *     {@literal @}Intrinsic
  *     private final Point endPoint2 = IntrinsicObjects.constructWithin("endPoint2", this);
  *     ...
- *
- *     // Later, in a constructor or instance initializer:
- *     { IntrinsicObjects.makeIntrinsicObjectsAccessible(this); }
  * }
  * </pre></blockquote></p>
- * <p>
- * Furthermore, {@link org.ObjectLayout.Intrinsic @Intrisic} fields are not accessible until
- * {@link org.ObjectLayout.IntrinsicObjects#makeIntrinsicObjectsAccessible(Object)
- * IntrinsicObjects.makeIntrinsicObjectsAccessible()}
- * has been called on the containing object instance. Attempts to access
- * {@link org.ObjectLayout.Intrinsic @Intrisic} fields of a
- * containing object instance that has not had it's fields made accessible with
- * {@link org.ObjectLayout.IntrinsicObjects#makeIntrinsicObjectsAccessible(Object)
- * IntrinsicObjects.makeIntrinsicObjectsAccessible()}
- * may (and likely will) result in {@link NullPointerException} exceptions.
  *
  */
 public final class IntrinsicObjects {
@@ -156,14 +145,6 @@ public final class IntrinsicObjects {
             final PrimitiveArrayBuilder arrayBuilder) {
         IntrinsicObjectModel<T> model = lookupModelFor(fieldName, containingObject);
         return model.constructWithin(containingObject, arrayBuilder);
-    }
-
-
-    public static void makeIntrinsicObjectsAccessible(final Object containingObject) {
-        HashMap<String, IntrinsicObjectModel> modelsByFieldName =
-                lookupModelsByFieldNameForClass(containingObject);
-        AbstractIntrinsicObjectModel._makeIntrinsicObjectsInCollectionAccessible(
-                modelsByFieldName.values(), containingObject);
     }
 
     private static final

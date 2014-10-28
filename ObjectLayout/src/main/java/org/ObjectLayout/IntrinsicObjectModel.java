@@ -168,25 +168,32 @@ final class IntrinsicObjectModel<T> extends AbstractIntrinsicObjectModel<T> {
         return instantiate(containingObject, arrayBuilder);
     }
 
-    private T instantiate(
+    private <E> T instantiate(
             final Object containingObject,
             final Constructor<T> objectConstructor,
             final Object... args) {
         try {
             _sanityCheckInstantiation(containingObject);
-
+            T intrinsicInstance;
             if (_isPrimitiveArray()) {
-                constructPrimitiveArrayWithin(containingObject, objectConstructor, args);
+                intrinsicInstance =
+                        constructPrimitiveArrayWithin(containingObject, objectConstructor, args);
             } else if (_isStructuredArray()) {
                 @SuppressWarnings("unchecked")
-                StructuredArrayBuilder arrayBuilder =
+                StructuredArrayBuilder<StructuredArray<E>, E> arrayBuilder =
                         new StructuredArrayBuilder((StructuredArrayModel)_getStructuredArrayModel()).
                                 arrayCtorAndArgs(objectConstructor, args).resolve();
-                StructuredArray.constructStructuredArrayWithin(containingObject, this, arrayBuilder);
+                @SuppressWarnings("unchecked")
+                IntrinsicObjectModel<StructuredArray<E>> model =
+                        (IntrinsicObjectModel<StructuredArray<E>>) this;
+                @SuppressWarnings("unchecked")
+                T array = (T) StructuredArray.constructStructuredArrayWithin(containingObject, model, arrayBuilder);
+                intrinsicInstance = array;
             } else {
-                constructElementWithin(containingObject, objectConstructor, args);
+                intrinsicInstance =
+                        constructElementWithin(containingObject, objectConstructor, args);
             }
-            return null;
+            return intrinsicInstance;
         } catch (InstantiationException ex) {
             throw new RuntimeException(ex);
         } catch (IllegalAccessException ex) {
@@ -196,13 +203,20 @@ final class IntrinsicObjectModel<T> extends AbstractIntrinsicObjectModel<T> {
         }
     }
 
-    private T instantiate(
+    private <E> T instantiate(
             final Object containingObject,
             final StructuredArrayBuilder arrayBuilder) {
         try {
             _sanityCheckInstantiation(containingObject);
-            StructuredArray.constructStructuredArrayWithin(containingObject, this, arrayBuilder);
-            return null;
+            @SuppressWarnings("unchecked")
+            StructuredArrayBuilder<StructuredArray<E>, E> builder = arrayBuilder;
+            @SuppressWarnings("unchecked")
+            IntrinsicObjectModel<StructuredArray<E>> model =
+                    (IntrinsicObjectModel<StructuredArray<E>>) this;
+            @SuppressWarnings("unchecked")
+            T intrinsicInstance =
+                    (T) StructuredArray.constructStructuredArrayWithin(containingObject, model, builder);
+            return intrinsicInstance;
         } catch (InstantiationException ex) {
             throw new RuntimeException(ex);
         } catch (IllegalAccessException ex) {
@@ -218,8 +232,14 @@ final class IntrinsicObjectModel<T> extends AbstractIntrinsicObjectModel<T> {
             final PrimitiveArrayBuilder arrayBuilder) {
         try {
             _sanityCheckInstantiation(containingObject);
-            PrimitiveArrayBuilder.constructPrimitiveArrayWithin(containingObject, this, arrayBuilder);
-            return null;
+            @SuppressWarnings("unchecked")
+            PrimitiveArrayBuilder<AbstractPrimitiveArray> builder = arrayBuilder;
+            @SuppressWarnings("unchecked")
+            IntrinsicObjectModel<AbstractPrimitiveArray> model = (IntrinsicObjectModel<AbstractPrimitiveArray>) this;
+            @SuppressWarnings("unchecked")
+            T intrinsicInstance =
+                    (T) PrimitiveArrayBuilder.constructPrimitiveArrayWithin(containingObject, model, builder);
+            return intrinsicInstance;
         } catch (InstantiationException ex) {
             throw new RuntimeException(ex);
         } catch (IllegalAccessException ex) {

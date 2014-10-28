@@ -45,8 +45,8 @@ public class IntrinsticObjectTest {
         assertThat(valueOf(endPoint2.getY()), is(4L));
     }
 
-    @Test(expected = NullPointerException.class)
-    public void shouldFailToAccessFakeIntrinsic() throws NoSuchMethodException {
+    @Test
+    public void shouldSucceedInAccessFakeIntrinsic() throws NoSuchMethodException {
         Line line = new Line();
         Point endPoint1 = line.getEndPoint1();
         Point endPoint2 = line.getEndPoint2();
@@ -56,8 +56,11 @@ public class IntrinsticObjectTest {
         assertThat(valueOf(endPoint2.getX()), is(0L));
         assertThat(valueOf(endPoint2.getY()), is(0L));
 
+        // Make a fake intrinsic Point in the line:
         Point badPoint = new Point(0, 0);
         Line line2 = new Line(line, badPoint);
+
+        // Access should still work (may be slower, but should work):
         endPoint1 = line2.getEndPoint1();
         endPoint2 = line2.getEndPoint2();
 
@@ -88,10 +91,6 @@ public class IntrinsticObjectTest {
                 IntrinsicObjects.constructWithin(
                         "intrinsicPoint", this, (Constructor<Point>) o, (Object[]) null);
 
-        BadContainerSuperPoint() {
-            IntrinsicObjects.makeIntrinsicObjectsAccessible(this);
-        }
-
         Point getPoint() {
             return intrinsicPoint;
         }
@@ -108,10 +107,6 @@ public class IntrinsticObjectTest {
      */
     static class BadContainerNonIntrinsic {
         private final Point intrinsicPoint = IntrinsicObjects.constructWithin("intrinsicPoint", this);
-
-        BadContainerNonIntrinsic() {
-            IntrinsicObjects.makeIntrinsicObjectsAccessible(this);
-        }
 
         Point getPoint() {
             return intrinsicPoint;
@@ -131,10 +126,6 @@ public class IntrinsticObjectTest {
         @Intrinsic
         final Point intrinsicPoint = IntrinsicObjects.constructWithin("intrinsicPoint", this);
 
-        BadContainerNonPrivate() {
-            IntrinsicObjects.makeIntrinsicObjectsAccessible(this);
-        }
-
         Point getPoint() {
             return intrinsicPoint;
         }
@@ -152,10 +143,6 @@ public class IntrinsticObjectTest {
     static class BadContainerNonFinal {
         @Intrinsic
         private Point intrinsicPoint = IntrinsicObjects.constructWithin("intrinsicPoint", this);
-
-        BadContainerNonFinal() {
-            IntrinsicObjects.makeIntrinsicObjectsAccessible(this);
-        }
 
         Point getPoint() {
             return intrinsicPoint;
@@ -175,23 +162,19 @@ public class IntrinsticObjectTest {
         @Intrinsic
         private final Point intrinsicPoint = null;
 
-        BadContainerNullMember() {
-            IntrinsicObjects.makeIntrinsicObjectsAccessible(this);
-        }
-
         Point getPoint() {
             return intrinsicPoint;
         }
     }
 
-    @Test(expected = IllegalStateException.class)
+    @Test(expected = NullPointerException.class)
     public void testBadContainerNullMember() throws NoSuchMethodException {
         BadContainerNullMember bad = new BadContainerNullMember();
         bad.getPoint().getX();
     }
 
     /**
-     * BadContainerOtherMemberIsNull: Badly initialized but not accessed member (should fail).
+     * BadContainerOtherMemberIsNull: Badly initialized but not accessed member (should still work, may be slower).
      */
     static class BadContainerOtherMemberIsNull {
         @Intrinsic
@@ -199,23 +182,19 @@ public class IntrinsticObjectTest {
         @Intrinsic
         private final Point intrinsicPoint2 = null;
 
-        BadContainerOtherMemberIsNull() {
-            IntrinsicObjects.makeIntrinsicObjectsAccessible(this);
-        }
-
         Point getPoint() {
             return intrinsicPoint1;
         }
     }
 
-    @Test(expected = IllegalStateException.class)
+    @Test
     public void testBadContainerOtherMemberIsNull() throws NoSuchMethodException {
         BadContainerOtherMemberIsNull bad = new BadContainerOtherMemberIsNull();
         bad.getPoint().getX();
     }
 
     /**
-     * BadContainerCrossAssignment: Badly initialized but not accessed member (should fail).
+     * BadContainerCrossAssignment: Badly initialized but not accessed member (should still work, may be slower).
      */
     static class BadContainerCrossAssignment {
         @Intrinsic
@@ -223,16 +202,12 @@ public class IntrinsticObjectTest {
         @Intrinsic
         private final Point intrinsicPoint2 = intrinsicPoint1;
 
-        BadContainerCrossAssignment() {
-            IntrinsicObjects.makeIntrinsicObjectsAccessible(this);
-        }
-
         Point getPoint() {
             return intrinsicPoint1;
         }
     }
 
-    @Test(expected = IllegalStateException.class)
+    @Test
     public void testBadContainerCrossAssignment() throws NoSuchMethodException {
         BadContainerCrossAssignment bad = new BadContainerCrossAssignment();
         bad.getPoint().getX();
@@ -244,10 +219,6 @@ public class IntrinsticObjectTest {
     static class BadContainerFieldName {
         @Intrinsic
         private final Point intrinsicPoint = IntrinsicObjects.constructWithin("someObject", this);
-
-        BadContainerFieldName() {
-            IntrinsicObjects.makeIntrinsicObjectsAccessible(this);
-        }
 
         Point getPoint() {
             return intrinsicPoint;
@@ -270,10 +241,6 @@ public class IntrinsticObjectTest {
         @Intrinsic
         private final long someObject = 0;
 
-        BadContainerFieldType() {
-            IntrinsicObjects.makeIntrinsicObjectsAccessible(this);
-        }
-
         Point getPoint() {
             return intrinsicPoint;
         }
@@ -284,63 +251,6 @@ public class IntrinsticObjectTest {
         BadContainerFieldType bad = new BadContainerFieldType();
         bad.getPoint().getX();
     }
-
-    /**
-     * BadContainerPrematureAccess: accessing one initialized field before all fields are initialized.
-     */
-    static class BadContainerPrematureAccess {
-        @Intrinsic
-        private final Point intrinsicPoint1 = IntrinsicObjects.constructWithin("intrinsicPoint1", this);
-        @Intrinsic
-        private final Point intrinsicPoint2;
-
-        BadContainerPrematureAccess() {
-            // The access is premature because intrinsicPoint2 was not yet initialized.
-            // Should get NPE on intrinsicPoint1:
-            intrinsicPoint1.set(0, 0);
-            intrinsicPoint2 = IntrinsicObjects.constructWithin("intrinsicPoint2", this);
-            IntrinsicObjects.makeIntrinsicObjectsAccessible(this);
-        }
-
-        Point getPoint() {
-            return intrinsicPoint1;
-        }
-    }
-
-    @Test(expected = NullPointerException.class)
-    public void testBadContainerPrematureAccess() throws NoSuchMethodException {
-        BadContainerPrematureAccess bad = new BadContainerPrematureAccess();
-        bad.getPoint().getX();
-    }
-
-    /**
-     * BadContainerPrematureMakeAccessible: making fields accessible before all fields are initialized.
-     */
-    static class BadContainerPrematureAccessible {
-        @Intrinsic
-        private final Point intrinsicPoint1 = IntrinsicObjects.constructWithin("intrinsicPoint1", this);
-        @Intrinsic
-        private final Point intrinsicPoint2;
-
-        BadContainerPrematureAccessible() {
-            // This makeIntrinsicObjectsAccessible() is premature because intrinsicPoint2 is
-            // not yet initialized. Should fail with exception:
-            IntrinsicObjects.makeIntrinsicObjectsAccessible(this);
-            intrinsicPoint1.set(0, 0);
-            intrinsicPoint2 = IntrinsicObjects.constructWithin("intrinsicPoint2", this);
-        }
-
-        Point getPoint() {
-            return intrinsicPoint1;
-        }
-    }
-
-    @Test(expected = IllegalStateException.class)
-    public void testBadContainerPrematureAccessible() throws NoSuchMethodException {
-        BadContainerPrematureAccessible bad = new BadContainerPrematureAccessible();
-        bad.getPoint().getX();
-    }
-
 
     /**
      * A simple x,y point class to be used as an element in various other examples.
@@ -436,12 +346,6 @@ public class IntrinsticObjectTest {
              * Construction-time Initialization of IntrinsicObject:
              */
             this.endPoint2 = IntrinsicObjects.constructWithin("endPoint2", this, xy_constructor, x2, y2);
-
-            /**
-             * Must make intrinsic object fields accessible before accessing them. Otherwise access
-             * attempts will generate NPEs. Should usually be done within constructor:
-             */
-            IntrinsicObjects.makeIntrinsicObjectsAccessible(this);
 
             /**
              * Access to IntrinsicObject within constructor:

@@ -20,13 +20,6 @@ public class SimpleLine {
     @Intrinsic
     private final Point endPoint2 = IntrinsicObjects.constructWithin("endPoint2", this);
 
-    /**
-     * Use of makeIntrinsicObjectsAccessible in initializer (useful if no constructors exist, for example):
-     */
-    {
-        IntrinsicObjects.makeIntrinsicObjectsAccessible(this);
-    }
-
     public SimpleLine() {
         this(0, 0, 0, 0);
     }

@@ -13,22 +13,20 @@ import java.util.Objects;
 
 /**
  * The {@link org.ObjectLayout.Intrinsic @Intrisic} annotation defines a declared object field to be
- * intrinsic to the class it is declared in. {@link org.ObjectLayout.Intrinsic @Intrisic} fields
+ * intrinsic to the class it is declared in. Intrinsic objects may have their layout within the
+ * containing object instance optimized by JDK implementations, such that access to their content is
+ * faster, and avoids certain de-referencing steps. {@link org.ObjectLayout.Intrinsic @Intrisic} fields
  * must be declared private and final.
  * <p>
- * All fields annotated with {@link org.ObjectLayout.Intrinsic @Intrisic} MUST be initialized using
+ * Fields annotated with {@link org.ObjectLayout.Intrinsic @Intrisic} SHOULD be initialized using
  * one of the {@link IntrinsicObjects#constructWithin(String, Object) IntrinsicObjects.constructWithin()}
  * variants.
  * <p>
- * Furthermore, {@link org.ObjectLayout.Intrinsic @Intrisic} fields are not accessible until
- * {@link org.ObjectLayout.IntrinsicObjects#makeIntrinsicObjectsAccessible(Object)
- * IntrinsicObjects.makeIntrinsicObjectsAccessible()}
- * has been called on the containing object instance. Attempts to access
- * {@link org.ObjectLayout.Intrinsic @Intrisic} fields of a
- * containing object instance that has not had it's fields made accessible with
- * {@link org.ObjectLayout.IntrinsicObjects#makeIntrinsicObjectsAccessible(Object)
- * IntrinsicObjects.makeIntrinsicObjectsAccessible()}
- * may (and likely will) result in {@link NullPointerException} exceptions.
+ * An {@link org.ObjectLayout.Intrinsic @Intrisic} field that is NOT initialized using one of
+ * the {@link IntrinsicObjects#constructWithin(String, Object) IntrinsicObjects.constructWithin()}
+ * variants may not be treated as intrinsic, may result in slower access behaviors,
+ * and may generate compile-time warnings.
+ *
  * <p>
  * An example of declaring an intrinsic object is:
  * <p><blockquote><pre>
@@ -41,9 +39,6 @@ import java.util.Objects;
  *     {@literal @}Intrinsic
  *     private final Point endPoint2 = IntrinsicObjects.constructWithin("endPoint2", this);
  *     ...
- *
- *     // Later, in a constructor or instance initializer:
- *     { IntrinsicObjects.makeIntrinsicObjectsAccessible(this); }
  * }
  * </pre></blockquote></p>
  *

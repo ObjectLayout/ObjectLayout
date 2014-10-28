@@ -659,17 +659,17 @@ public class StructuredArray<T> extends AbstractStructuredArray<T> implements It
      * create a fresh StructuredArray intended to occupy a a given intrinsic field in the containing object,
      * at the field described by the supplied intrinsicObjectModel, using the supplied constructor and arguments.
      */
-    static void constructStructuredArrayWithin(
+    static <T, A extends StructuredArray<T>> A constructStructuredArrayWithin(
             final Object containingObject,
-            final AbstractIntrinsicObjectModel intrinsicObjectModel,
-            StructuredArrayBuilder arrayBuilder)
+            final AbstractIntrinsicObjectModel<A> intrinsicObjectModel,
+            StructuredArrayBuilder<A, T> arrayBuilder)
             throws InstantiationException, IllegalAccessException, InvocationTargetException {
         ConstructionContext context = new ConstructionContext(arrayBuilder.getContextCookie());
         ConstructorMagic constructorMagic = getConstructorMagic();
         constructorMagic.setConstructionArgs(arrayBuilder, context);
         try {
             constructorMagic.setActive(true);
-            StructuredArray.constructStructuredArrayWithin(
+            return StructuredArray.constructStructuredArrayWithin(
                     containingObject,
                     intrinsicObjectModel,
                     arrayBuilder.getArrayModel(),

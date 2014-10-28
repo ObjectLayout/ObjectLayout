@@ -139,12 +139,12 @@ public class PrimitiveArrayBuilder<S extends AbstractPrimitiveArray> {
      * create a fresh PrimitiveArray intended to occupy a a given intrinsic field in the containing object,
      * at the field described by the supplied intrinsicObjectModel, using the supplied constructor and arguments.
      */
-    static void constructPrimitiveArrayWithin(
+    static <T extends AbstractPrimitiveArray> T constructPrimitiveArrayWithin(
             final Object containingObject,
-            final AbstractIntrinsicObjectModel intrinsicObjectModel,
-            PrimitiveArrayBuilder arrayBuilder)
+            final AbstractIntrinsicObjectModel<T> intrinsicObjectModel,
+            PrimitiveArrayBuilder<T> arrayBuilder)
             throws InstantiationException, IllegalAccessException, InvocationTargetException {
-        AbstractPrimitiveArray.constructPrimitiveArrayWithin(
+        return AbstractPrimitiveArray.constructPrimitiveArrayWithin(
                 containingObject, intrinsicObjectModel,
                 arrayBuilder.getArrayModel().getLength(),
                 arrayBuilder.getArrayCtorAndArgs().getConstructor(),
