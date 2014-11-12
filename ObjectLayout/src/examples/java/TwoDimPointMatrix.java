@@ -5,16 +5,16 @@ import java.lang.reflect.Constructor;
 /**
  * A Matrix arranged as a height long array of columns (logically indexed as [x][y])
  */
-public class TwoDimensionalPointMatrix extends StructuredArray<ArrayOfPoint> {
+public class TwoDimPointMatrix extends StructuredArray<PointArray> {
 
-    public TwoDimensionalPointMatrix() {
+    public TwoDimPointMatrix() {
     }
 
-    public TwoDimensionalPointMatrix(TwoDimensionalPointMatrix source) {
+    public TwoDimPointMatrix(TwoDimPointMatrix source) {
         super(source);
     }
 
-    public static TwoDimensionalPointMatrix newInstance(final long width, final long height) {
+    public static TwoDimPointMatrix newInstance(final long width, final long height) {
         final CtorAndArgs<Point> xy_ctorAndArgs = new CtorAndArgs<>(xy_constructor, 0, 0);
         return newInstance(
                 width,
@@ -30,15 +30,15 @@ public class TwoDimensionalPointMatrix extends StructuredArray<ArrayOfPoint> {
                 );
     }
 
-    public static TwoDimensionalPointMatrix newInstance(
+    public static TwoDimPointMatrix newInstance(
             final long width,
             final long height,
             final CtorAndArgsProvider<Point> ctorAndArgsProvider) {
-        StructuredArrayBuilder<TwoDimensionalPointMatrix, ArrayOfPoint> builder =
+        StructuredArrayBuilder<TwoDimPointMatrix, PointArray> builder =
                 new StructuredArrayBuilder<>(
-                        TwoDimensionalPointMatrix.class,
+                        TwoDimPointMatrix.class,
                         new StructuredArrayBuilder<>(
-                                ArrayOfPoint.class,
+                                PointArray.class,
                                 Point.class,
                                 width).
                                 elementCtorAndArgsProvider(ctorAndArgsProvider),
@@ -50,7 +50,7 @@ public class TwoDimensionalPointMatrix extends StructuredArray<ArrayOfPoint> {
     // If you want to support direct construction parameters for elements, with with parameter types you know
     // (statically) have a good constructor associated with the, here is an example:
 
-    public static TwoDimensionalPointMatrix newInstance(
+    public static TwoDimPointMatrix newInstance(
             final long width,
             final long height,
             final long x,
@@ -70,7 +70,7 @@ public class TwoDimensionalPointMatrix extends StructuredArray<ArrayOfPoint> {
     // An example of how to create a matrix with points pre-initialized to their [x, y]
     // in the matrix. This is a good example of using hierarchical context in determining
     // the ctorAndArgs for a specific array element:
-    public static TwoDimensionalPointMatrix newPreInitializedInstance(
+    public static TwoDimPointMatrix newPreInitializedInstance(
             final long width,
             final long height) {
         final CtorAndArgs<Point> xy_ctorAndArgs = new CtorAndArgs<>(xy_constructor, 0, 0);

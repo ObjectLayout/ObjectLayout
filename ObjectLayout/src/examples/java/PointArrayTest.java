@@ -11,20 +11,20 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
-public class ArrayOfPointTest {
+public class PointArrayTest {
 
     @Test
     public void shouldConstructArrayOfGivenDirectLengths() throws NoSuchMethodException {
         final long[] lengths = {7L, 8L, 9L};
 
         @SuppressWarnings("unchecked")
-        final StructuredArray<StructuredArray<ArrayOfPoint>> array =
+        final StructuredArray<StructuredArray<PointArray>> array =
                 new StructuredArrayBuilder(
                         StructuredArray.class,
                         new StructuredArrayBuilder(
                                 StructuredArray.class,
-                                new StructuredArrayBuilder<ArrayOfPoint, Point>(
-                                        ArrayOfPoint.class,
+                                new StructuredArrayBuilder<PointArray, Point>(
+                                        PointArray.class,
                                         Point.class,
                                         lengths[2]
                                 ),
@@ -38,14 +38,14 @@ public class ArrayOfPointTest {
         assertThat(valueOf(array.get(0).get(0).getLength()), is(lengths[2]));
 
         assertTrue(array.getElementClass().isAssignableFrom(StructuredArray.class));
-        assertTrue(array.get(0).getElementClass().isAssignableFrom(ArrayOfPoint.class));
+        assertTrue(array.get(0).getElementClass().isAssignableFrom(PointArray.class));
         assertTrue(array.get(0).get(0).getElementClass() == Point.class);
     }
 
     @Test
     public void shouldConstructArrayOfGivenLengthWithNewInstance() throws NoSuchMethodException {
         long length = 9L;
-        ArrayOfPoint array = ArrayOfPoint.newInstance(length);
+        PointArray array = PointArray.newInstance(length);
 
         assertThat(valueOf(array.getLength()), is(valueOf(length)));
         assertTrue(array.getElementClass() == Point.class);
@@ -54,9 +54,9 @@ public class ArrayOfPointTest {
     @Test
     public void shouldConstructArrayOfGivenLengthWithBuilder() throws NoSuchMethodException {
         long length = 9L;
-        ArrayOfPoint array =
-                new StructuredArrayBuilder<ArrayOfPoint, Point>(
-                        ArrayOfPoint.class,
+        PointArray array =
+                new StructuredArrayBuilder<PointArray, Point>(
+                        PointArray.class,
                         Point.class,
                         length
                 ).build();
@@ -72,8 +72,8 @@ public class ArrayOfPointTest {
 
         long length = 9L;
 
-        final ArrayOfPoint array =
-                ArrayOfPoint.newInstance(length, initialX, initialY);
+        final PointArray array =
+                PointArray.newInstance(length, initialX, initialY);
 
         assertCorrectFixedInitialisation(initialX, initialY, new long[] {length}, array);
     }
@@ -97,9 +97,9 @@ public class ArrayOfPointTest {
                     }
                 };
 
-        final ArrayOfPoint array =
-                ArrayOfPoint.newInstance(
-                        ArrayOfPoint.class, Point.class, length, ctorAndArgsProvider);
+        final PointArray array =
+                PointArray.newInstance(
+                        PointArray.class, Point.class, length, ctorAndArgsProvider);
 
         assertCorrectFixedInitialisation(initialX, initialY, new long[] {length}, array);
     }
@@ -108,8 +108,8 @@ public class ArrayOfPointTest {
     public void shouldConstructArrayElementsViaCtorAndArgsProvider() throws NoSuchMethodException {
         final long[] lengths = {9};
         final PointCtorAndArgsProvider ctorAndArgsProvider = new PointCtorAndArgsProvider();
-        final ArrayOfPoint array =
-                ArrayOfPoint.newInstance(lengths[0], ctorAndArgsProvider);
+        final PointArray array =
+                PointArray.newInstance(lengths[0], ctorAndArgsProvider);
 
         assertCorrectVariableInitialisation(lengths, array);
     }
@@ -120,13 +120,13 @@ public class ArrayOfPointTest {
         final long[] lengths = {7, 8, 9};
         final PointCtorAndArgsProvider ctorAndArgsProvider = new PointCtorAndArgsProvider();
 
-        final StructuredArrayBuilder<StructuredArray<StructuredArray<ArrayOfPoint>>,
-                StructuredArray<ArrayOfPoint>> builder = get3dBuilder(lengths);
+        final StructuredArrayBuilder<StructuredArray<StructuredArray<PointArray>>,
+                StructuredArray<PointArray>> builder = get3dBuilder(lengths);
         builder.getStructuredSubArrayBuilder().
                 getStructuredSubArrayBuilder().
                 elementCtorAndArgsProvider(ctorAndArgsProvider);
 
-        final StructuredArray<StructuredArray<ArrayOfPoint>> array = builder.build();
+        final StructuredArray<StructuredArray<PointArray>> array = builder.build();
 
         assertCorrectVariableInitialisation(lengths, array);
     }
@@ -134,7 +134,7 @@ public class ArrayOfPointTest {
     @Test
     public void shouldSetAndGetCorrectValueAtGivenIndex() throws NoSuchMethodException {
         final long[] lengths = {11, 10, 3};
-        final StructuredArray<StructuredArray<ArrayOfPoint>> array = get3dBuilder(lengths).build();
+        final StructuredArray<StructuredArray<PointArray>> array = get3dBuilder(lengths).build();
 
         initValues(lengths, array);
         assertCorrectVariableInitialisation(lengths, array);
@@ -143,12 +143,12 @@ public class ArrayOfPointTest {
     @Test
     public void shouldIterateOverArray() throws NoSuchMethodException {
         final long[] lengths = {11};
-        final ArrayOfPoint array =
-                ArrayOfPoint.newInstance(lengths[0]);
+        final PointArray array =
+                PointArray.newInstance(lengths[0]);
 
         initValues(lengths, array);
 
-        ArrayOfPoint.ElementIterator iter = array.iterator();
+        PointArray.ElementIterator iter = array.iterator();
 
         long sum = 0;
         long elementCount = 0;
@@ -177,13 +177,13 @@ public class ArrayOfPointTest {
     @Test
     public void shouldIterateOverArrayAndResetAgain() throws NoSuchMethodException {
         final long length = 11;
-        final ArrayOfPoint array =
-                ArrayOfPoint.newInstance(length);
+        final PointArray array =
+                PointArray.newInstance(length);
 
         initValues(new long[] {length}, array);
 
         int i = 0;
-        final ArrayOfPoint.ElementIterator iter = array.iterator();
+        final PointArray.ElementIterator iter = array.iterator();
         while (iter.hasNext()) {
             final long index = iter.getCursor();
             final Point point = iter.next();
@@ -209,14 +209,14 @@ public class ArrayOfPointTest {
     public void shouldConstructCopyOfArray() throws NoSuchMethodException {
         final long length = 15;
         final PointCtorAndArgsProvider ctorAndArgsProvider = new PointCtorAndArgsProvider();
-        final ArrayOfPoint sourceArray =
-                ArrayOfPoint.newInstance(length, ctorAndArgsProvider);
+        final PointArray sourceArray =
+                PointArray.newInstance(length, ctorAndArgsProvider);
 
         assertThat(valueOf(sourceArray.getLength()), is(valueOf(length)));
         assertTrue(sourceArray.getElementClass() == Point.class);
 
-        final ArrayOfPoint newArray =
-                (ArrayOfPoint) StructuredArray.copyInstance(sourceArray);
+        final PointArray newArray =
+                (PointArray) StructuredArray.copyInstance(sourceArray);
 
         // We expect MockStructure elements to be initialized with index = index, and testValue = index * 2:
         assertCorrectVariableInitialisation(new long[] {length}, newArray);
@@ -228,23 +228,23 @@ public class ArrayOfPointTest {
         final long[] lengths = {15, 7, 5};
         final PointCtorAndArgsProvider ctorAndArgsProvider = new PointCtorAndArgsProvider();
 
-        final StructuredArrayBuilder<StructuredArray<StructuredArray<ArrayOfPoint>>,
-                StructuredArray<ArrayOfPoint>> builder = get3dBuilder(lengths);
+        final StructuredArrayBuilder<StructuredArray<StructuredArray<PointArray>>,
+                StructuredArray<PointArray>> builder = get3dBuilder(lengths);
         builder.getStructuredSubArrayBuilder().
                 getStructuredSubArrayBuilder().
                 elementCtorAndArgsProvider(ctorAndArgsProvider);
 
-        final StructuredArray<StructuredArray<ArrayOfPoint>> sourceArray = builder.build();
+        final StructuredArray<StructuredArray<PointArray>> sourceArray = builder.build();
 
-        StructuredArray<ArrayOfPoint> subArray1 = sourceArray.get(0);
-        ArrayOfPoint subArray2 = subArray1.get(0);
+        StructuredArray<PointArray> subArray1 = sourceArray.get(0);
+        PointArray subArray2 = subArray1.get(0);
 
         assertThat(valueOf(sourceArray.getLength()), is(valueOf(lengths[0])));
         assertThat(valueOf(subArray1.getLength()), is(valueOf(lengths[1])));
         assertThat(valueOf(subArray2.getLength()), is(valueOf(lengths[2])));
         assertTrue(subArray2.getElementClass() == Point.class);
 
-        final StructuredArray<StructuredArray<ArrayOfPoint>> newArray =
+        final StructuredArray<StructuredArray<PointArray>> newArray =
                 StructuredArray.copyInstance(sourceArray);
 
         // We expect MockStructure elements to be initialized with index = index, and testValue = index * 2:
@@ -257,16 +257,16 @@ public class ArrayOfPointTest {
         final long[] lengths = {15, 7, 5};
         final PointCtorAndArgsProvider ctorAndArgsProvider = new PointCtorAndArgsProvider();
 
-        final StructuredArrayBuilder<StructuredArray<StructuredArray<ArrayOfPoint>>,
-                StructuredArray<ArrayOfPoint>> builder = get3dBuilder(lengths);
+        final StructuredArrayBuilder<StructuredArray<StructuredArray<PointArray>>,
+                StructuredArray<PointArray>> builder = get3dBuilder(lengths);
         builder.getStructuredSubArrayBuilder().
                 getStructuredSubArrayBuilder().
                 elementCtorAndArgsProvider(ctorAndArgsProvider);
 
-        final StructuredArray<StructuredArray<ArrayOfPoint>> sourceArray = builder.build();
+        final StructuredArray<StructuredArray<PointArray>> sourceArray = builder.build();
 
-        StructuredArray<ArrayOfPoint> subArray1 = sourceArray.get(0);
-        ArrayOfPoint subArray2 = subArray1.get(0);
+        StructuredArray<PointArray> subArray1 = sourceArray.get(0);
+        PointArray subArray2 = subArray1.get(0);
 
         assertThat(valueOf(sourceArray.getLength()), is(valueOf(lengths[0])));
         assertThat(valueOf(subArray1.getLength()), is(valueOf(lengths[1])));
@@ -275,7 +275,7 @@ public class ArrayOfPointTest {
 
         long[] offsets = {2, 2, 2};
         long[] counts = {13, 5, 3};
-        final StructuredArray<StructuredArray<ArrayOfPoint>> newArray =
+        final StructuredArray<StructuredArray<PointArray>> newArray =
                 StructuredArray.copyInstance(sourceArray, offsets, counts);
 
         assertCorrectVariableInitialisation(counts, newArray, 2);
@@ -284,8 +284,8 @@ public class ArrayOfPointTest {
     @Test(expected = ArrayIndexOutOfBoundsException.class)
     public void shouldThrowOutOfBoundExceptionForAccessesOutOfBounds() throws NoSuchMethodException {
         final long length = 11;
-        final ArrayOfPoint array =
-                ArrayOfPoint.newInstance(length);
+        final PointArray array =
+                PointArray.newInstance(length);
 
         array.get(length);
     }
@@ -293,19 +293,19 @@ public class ArrayOfPointTest {
     @Test
     public void shouldNotThrowIncompatibleTypeExceptionForGetsOfProperTypes() throws NoSuchMethodException {
         final long[] lengths = {11, 7, 4};
-        final StructuredArray<StructuredArray<ArrayOfPoint>> array = get3dBuilder(lengths).build();
+        final StructuredArray<StructuredArray<PointArray>> array = get3dBuilder(lengths).build();
 
         // Step by step gets of the correct type (array vs. element) per dimension:
-        StructuredArray<ArrayOfPoint> subArray1 = array.get(2);
-        ArrayOfPoint subArray2 = subArray1.get(2);
+        StructuredArray<PointArray> subArray1 = array.get(2);
+        PointArray subArray2 = subArray1.get(2);
         subArray2.get(2);
     }
 
     @Test
     public void shouldCopyRegionLeftInArray() throws NoSuchMethodException {
         final long length = 11;
-        final ArrayOfPoint array =
-                ArrayOfPoint.newInstance(length);
+        final PointArray array =
+                PointArray.newInstance(length);
 
         initValues(new long[]{length}, array);
 
@@ -319,8 +319,8 @@ public class ArrayOfPointTest {
     @Test
     public void shouldCopyRegionRightInArray() throws NoSuchMethodException {
         final long length = 11;
-        final ArrayOfPoint array =
-                ArrayOfPoint.newInstance(length);
+        final PointArray array =
+                PointArray.newInstance(length);
 
         initValues(new long[]{length}, array);
 
@@ -333,7 +333,7 @@ public class ArrayOfPointTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void shouldFailToConstructDirectly() throws NoSuchMethodException {
-        final ArrayOfPoint array = new ArrayOfPoint();
+        final PointArray array = new PointArray();
     }
 
 
@@ -348,7 +348,7 @@ public class ArrayOfPointTest {
             assertThat(valueOf(a.getLength()), is(valueOf(lengths[i])));
             a = (StructuredArray) a.get(0);
         }
-        ArrayOfPoint ap = (ArrayOfPoint) a;
+        PointArray ap = (PointArray) a;
         assertThat(valueOf(ap.getLength()), is(valueOf(lengths[lengths.length - 1])));
 
         assertTrue(ap.getElementClass() == Point.class);
@@ -368,7 +368,7 @@ public class ArrayOfPointTest {
             for (int i = 0; i < cursors.length - 1; i++) {
                 a = (StructuredArray) a.get(cursors[i]);
             }
-            ap = (ArrayOfPoint) a;
+            ap = (PointArray) a;
             Point point = ap.get(cursors[cursors.length - 1]);
 
             assertThat(valueOf(point.getX()), is(valueOf(expectedX)));
@@ -398,7 +398,7 @@ public class ArrayOfPointTest {
             assertThat(valueOf(a.getLength()), is(valueOf(lengths[i])));
             a = (StructuredArray) a.get(0);
         }
-        ArrayOfPoint ap = (ArrayOfPoint) a;
+        PointArray ap = (PointArray) a;
         assertThat(valueOf(ap.getLength()), is(valueOf(lengths[lengths.length - 1])));
 
         assertTrue(ap.getElementClass() == Point.class);
@@ -418,7 +418,7 @@ public class ArrayOfPointTest {
             for (int i = 0; i < cursors.length - 1; i++) {
                 a = (StructuredArray) a.get(cursors[i]);
             }
-            ap = (ArrayOfPoint) a;
+            ap = (PointArray) a;
             Point point = ap.get(cursors[cursors.length - 1]);
 
             long indexSum = 0;
@@ -461,7 +461,7 @@ public class ArrayOfPointTest {
             for (int i = 0; i < cursors.length - 1; i++) {
                 a = (StructuredArray) a.get(cursors[i]);
             }
-            ArrayOfPoint ap = (ArrayOfPoint) a;
+            PointArray ap = (PointArray) a;
             Point point = ap.get(cursors[cursors.length - 1]);
 
             long indexSum = 0;
@@ -502,17 +502,17 @@ public class ArrayOfPointTest {
     }
 
 
-    StructuredArrayBuilder<StructuredArray<StructuredArray<ArrayOfPoint>>,
-            StructuredArray<ArrayOfPoint>> get3dBuilder(long... lengths) {
+    StructuredArrayBuilder<StructuredArray<StructuredArray<PointArray>>,
+            StructuredArray<PointArray>> get3dBuilder(long... lengths) {
         @SuppressWarnings("unchecked")
-        StructuredArrayBuilder<StructuredArray<StructuredArray<ArrayOfPoint>>,
-                StructuredArray<ArrayOfPoint>> builder =
+        StructuredArrayBuilder<StructuredArray<StructuredArray<PointArray>>,
+                StructuredArray<PointArray>> builder =
                 new StructuredArrayBuilder(
                         StructuredArray.class,
                         new StructuredArrayBuilder(
                                 StructuredArray.class,
-                                new StructuredArrayBuilder<ArrayOfPoint, Point>(
-                                        ArrayOfPoint.class,
+                                new StructuredArrayBuilder<PointArray, Point>(
+                                        PointArray.class,
                                         Point.class,
                                         lengths[2]
                                 ),

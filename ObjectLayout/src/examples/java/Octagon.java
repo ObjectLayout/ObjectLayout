@@ -18,7 +18,7 @@ public class Octagon {
      * Intrinsic object declaration and initialization for a StructuredArray member:
      */
     @Intrinsic(length = 8)
-    private final ArrayOfPoint points = IntrinsicObjects.constructWithin("points", this);
+    private final PointArray points = IntrinsicObjects.constructWithin("points", this);
 
     private final String color;
 
@@ -58,7 +58,7 @@ public class Octagon {
         }
     }
 
-    public ArrayOfPoint getPoints() {
+    public PointArray getPoints() {
         return points;
     }
 

@@ -14,7 +14,7 @@ public class OctagonTest {
     @Test
     public void shouldConstructOctagon() throws NoSuchMethodException {
         Octagon octagon = new Octagon();
-        ArrayOfPoint points = octagon.getPoints();
+        PointArray points = octagon.getPoints();
 
         assertThat(valueOf(points.get(0).getX()), is(0L));
         assertThat(valueOf(points.get(0).getY()), is(0L));

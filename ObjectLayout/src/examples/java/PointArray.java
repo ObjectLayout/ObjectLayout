@@ -9,37 +9,37 @@ import org.ObjectLayout.CtorAndArgsProvider;
 import org.ObjectLayout.StructuredArray;
 import java.lang.reflect.Constructor;
 
-public class ArrayOfPoint extends StructuredArray<Point> {
+public class PointArray extends StructuredArray<Point> {
 
 
     // expose copy constructor:
-    public ArrayOfPoint(ArrayOfPoint source) {
+    public PointArray(PointArray source) {
         super(source);
     }
 
     // Default constructor needs to be defined only because we wanted to expose a copy constructor
-    public ArrayOfPoint() {
+    public PointArray() {
     }
 
     // newInstance wrapper for convenience (cleaner/fewer parameters for API user):
-    public static ArrayOfPoint newInstance(final long length) {
-        return StructuredArray.newInstance(ArrayOfPoint.class, Point.class, length);
+    public static PointArray newInstance(final long length) {
+        return StructuredArray.newInstance(PointArray.class, Point.class, length);
     }
 
     // newInstance wrapper for convenience (cleaner/fewer parameters for API user):
-    public static ArrayOfPoint newInstance(final long length,
+    public static PointArray newInstance(final long length,
                                            final CtorAndArgsProvider<Point> ctorAndArgsProvider) {
         return StructuredArray.newInstance(
-                ArrayOfPoint.class, Point.class, length, ctorAndArgsProvider);
+                PointArray.class, Point.class, length, ctorAndArgsProvider);
     }
 
     // If you want to support direct construction parameters for elements, with with
     // parameter types you know (statically) have a good constructor associated with the,
     // here is an example:
-    public static ArrayOfPoint newInstance(final long length, final long x, final long y) {
+    public static PointArray newInstance(final long length, final long x, final long y) {
         final CtorAndArgs<Point> xy_ctorAndArgs = new CtorAndArgs<Point>(xy_constructor, x, y);
         return StructuredArray.newInstance(
-                ArrayOfPoint.class,
+                PointArray.class,
                 Point.class,
                 length,
                 // This can be a Lambda expression in Java 8:
