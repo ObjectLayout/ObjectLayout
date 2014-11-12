@@ -21,10 +21,10 @@ public class Octagons extends StructuredArray<Octagon> {
     }
 
     public static Octagons newInstance(
-            final CtorAndArgsProvider<Octagon> ctorAndArgsProvider,
-            final long length) {
+            final long length,
+            final CtorAndArgsProvider<Octagon> ctorAndArgsProvider) {
         return StructuredArray.newInstance(
-                Octagons.class, Octagon.class, ctorAndArgsProvider, length);
+                Octagons.class, Octagon.class, length, ctorAndArgsProvider);
     }
 
     public static Octagons newInstance(
@@ -35,9 +35,8 @@ public class Octagons extends StructuredArray<Octagon> {
             final long radius,
             final long deltaX,
             final long deltaY) {
-        return StructuredArray.newInstance(
-                Octagons.class,
-                Octagon.class,
+        return newInstance(
+                length,
                 new CtorAndArgsProvider<Octagon>() {
                     @Override
                     public CtorAndArgs<Octagon> getForContext(
@@ -50,16 +49,18 @@ public class Octagons extends StructuredArray<Octagon> {
                                 radius
                         );
                     }
-                },
-                length);
+                });
     }
 
     static final Constructor<Octagon> cxyr_constructor;
 
     static {
         try {
-            cxyr_constructor = Octagon.class.getConstructor(
-                    new Class[] {String.class, long.class, long.class, long.class});
+            @SuppressWarnings("unchecked")
+            Constructor<Octagon>  constructor = Octagon.class.getConstructor(
+                    String.class, long.class, long.class, long.class);
+            cxyr_constructor = constructor;
+
         } catch (NoSuchMethodException ex) {
             throw new RuntimeException(ex);
         }

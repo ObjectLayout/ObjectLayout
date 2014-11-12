@@ -74,7 +74,7 @@ public class StructuredArray<T> extends AbstractStructuredArray<T> implements It
                             return constantCtorAndArgs;
                         }
                     };
-            return instantiate(elementClass, ctorAndArgsProvider, length);
+            return instantiate(elementClass, length, ctorAndArgsProvider);
         } catch (NoSuchMethodException ex) {
             throw new RuntimeException(ex);
         }
@@ -144,7 +144,7 @@ public class StructuredArray<T> extends AbstractStructuredArray<T> implements It
             final CtorAndArgsProvider<T> ctorAndArgsProvider,
             final long length) {
         try {
-            return instantiate(elementClass, ctorAndArgsProvider, length);
+            return instantiate(elementClass, length, ctorAndArgsProvider);
         } catch (NoSuchMethodException ex) {
             throw new RuntimeException(ex);
         }
@@ -158,8 +158,8 @@ public class StructuredArray<T> extends AbstractStructuredArray<T> implements It
      *
      * @param arrayClass of the array to create.
      * @param elementClass of each element in the array
-     * @param ctorAndArgsProvider produces element constructors [potentially] on a per element basis
      * @param length of the array to create
+     * @param ctorAndArgsProvider produces element constructors [potentially] on a per element basis
      * @param <S> The class of the array to be created
      * @param <T> The class of the array elements
      * @return The newly created array
@@ -167,12 +167,12 @@ public class StructuredArray<T> extends AbstractStructuredArray<T> implements It
     public static <S extends StructuredArray<T>, T> S newInstance(
             final Class<S> arrayClass,
             final Class<T> elementClass,
-            final CtorAndArgsProvider<T> ctorAndArgsProvider,
-            final long length) {
+            final long length,
+            final CtorAndArgsProvider<T> ctorAndArgsProvider) {
         try {
             Constructor<S> ctor = arrayClass.getDeclaredConstructor();
             CtorAndArgs<S> arrayCtorAndArgs = new CtorAndArgs<S>(ctor, EMPTY_ARGS);
-            return instantiate(arrayCtorAndArgs, elementClass, ctorAndArgsProvider, length);
+            return instantiate(arrayCtorAndArgs, elementClass, length, ctorAndArgsProvider);
         } catch (NoSuchMethodException ex) {
             throw new RuntimeException(ex);
         }
@@ -187,8 +187,8 @@ public class StructuredArray<T> extends AbstractStructuredArray<T> implements It
      *
      * @param arrayCtorAndArgs of the array to create
      * @param elementClass of each element in the array
-     * @param ctorAndArgsProvider produces element constructors [potentially] on a per element basis
      * @param length of the array to create
+     * @param ctorAndArgsProvider produces element constructors [potentially] on a per element basis
      * @param <S> The class of the array to be created
      * @param <T> The class of the array elements
      * @return The newly created array
@@ -196,10 +196,10 @@ public class StructuredArray<T> extends AbstractStructuredArray<T> implements It
     public static <S extends StructuredArray<T>, T> S newInstance(
             final CtorAndArgs<S> arrayCtorAndArgs,
             final Class<T> elementClass,
-            final CtorAndArgsProvider<T> ctorAndArgsProvider,
-            final long length) {
+            final long length,
+            final CtorAndArgsProvider<T> ctorAndArgsProvider) {
         try {
-            return instantiate(arrayCtorAndArgs, elementClass, ctorAndArgsProvider, length);
+            return instantiate(arrayCtorAndArgs, elementClass, length, ctorAndArgsProvider);
         } catch (NoSuchMethodException ex) {
             throw new RuntimeException(ex);
         }
@@ -405,8 +405,8 @@ public class StructuredArray<T> extends AbstractStructuredArray<T> implements It
 
     private static <T> StructuredArray<T> instantiate(
             final Class<T> elementClass,
-            final CtorAndArgsProvider<T> ctorAndArgsProvider,
-            final long length) throws NoSuchMethodException {
+            final long length,
+            final CtorAndArgsProvider<T> ctorAndArgsProvider) throws NoSuchMethodException {
         @SuppressWarnings("unchecked")
         StructuredArrayBuilder<StructuredArray<T>, T> arrayBuilder =
                 new StructuredArrayBuilder(StructuredArray.class, elementClass, length).
@@ -417,8 +417,8 @@ public class StructuredArray<T> extends AbstractStructuredArray<T> implements It
     private static <S extends StructuredArray<T>, T> S instantiate(
             final CtorAndArgs<S> arrayCtorAndArgs,
             final Class<T> elementClass,
-            final CtorAndArgsProvider<T> ctorAndArgsProvider,
-            final long length) throws NoSuchMethodException {
+            final long length,
+            final CtorAndArgsProvider<T> ctorAndArgsProvider) throws NoSuchMethodException {
         @SuppressWarnings("unchecked")
         StructuredArrayBuilder<S, T> arrayBuilder =
                 new StructuredArrayBuilder(arrayCtorAndArgs.getConstructor().getDeclaringClass(), elementClass, length).

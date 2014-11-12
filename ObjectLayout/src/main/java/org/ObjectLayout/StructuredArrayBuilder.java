@@ -135,12 +135,19 @@ public class StructuredArrayBuilder<S extends StructuredArray<T>, T> {
      * @param subArrayBuilder The builder used for creating individual array elements (which are themselves
      *                        StructuredArrays)
      * @param length The length of the array to be build by this builder
+     * @param <A> The class or the subArray (should match T for the StructuredArrayBuilder)
+     * @param <E> The element class in the subArray.
      */
     @SuppressWarnings("unchecked")
-    public StructuredArrayBuilder(final Class<S> arrayClass,
-                                  final StructuredArrayBuilder subArrayBuilder,
-                                  final long length) {
-        this.arrayModel = new StructuredArrayModel<S, T>(arrayClass, subArrayBuilder.getArrayModel(), length){};
+    public <A extends StructuredArray<E>, E> StructuredArrayBuilder(final Class<S> arrayClass,
+                                      final StructuredArrayBuilder<A, E> subArrayBuilder,
+                                      final long length) {
+        this.arrayModel =
+                new StructuredArrayModel<S, T>(
+                        arrayClass,
+                        subArrayBuilder.getArrayModel(),
+                        length
+                );
         this.structuredSubArrayBuilder = subArrayBuilder;
         this.primitiveSubArrayBuilder = null;
     }
@@ -154,13 +161,18 @@ public class StructuredArrayBuilder<S extends StructuredArray<T>, T> {
      * @param subArrayBuilder The builder used for creating individual array elements (which are themselves
      *                        subclassable PrimitiveArrays)
      * @param length The length of the array to be build by this builder
+     * @param <A> The class in the subArray (should match T for the StructuredArrayBuilder)
      */
     @SuppressWarnings("unchecked")
-    public StructuredArrayBuilder(final Class<S> arrayClass,
-                                  final PrimitiveArrayBuilder subArrayBuilder,
+    public <A extends AbstractPrimitiveByteArray> StructuredArrayBuilder(final Class<S> arrayClass,
+                                  final PrimitiveArrayBuilder<A> subArrayBuilder,
                                   final long length) {
-        this.arrayModel = new StructuredArrayModel<S, T>(
-                arrayClass, subArrayBuilder.getArrayModel(), length){};
+        this.arrayModel =
+                new StructuredArrayModel<S, T>(
+                        arrayClass,
+                        subArrayBuilder.getArrayModel(),
+                        length
+                );
         this.structuredSubArrayBuilder = null;
         this.primitiveSubArrayBuilder = subArrayBuilder;
     }

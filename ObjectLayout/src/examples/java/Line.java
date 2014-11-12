@@ -75,7 +75,9 @@ public class Line {
 
     static {
         try {
-            xy_constructor = Point.class.getConstructor(new Class[] {long.class, long.class});
+            @SuppressWarnings("unchecked")
+            Constructor<Point> constructor = Point.class.getConstructor(long.class, long.class);
+            xy_constructor = constructor;
         } catch (NoSuchMethodException ex) {
             throw new RuntimeException(ex);
         }

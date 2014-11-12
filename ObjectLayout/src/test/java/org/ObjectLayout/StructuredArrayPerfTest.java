@@ -288,7 +288,7 @@ public class StructuredArrayPerfTest {
         public static StructuredArrayOfMockStructure newInstance(
                 final CtorAndArgsProvider<MockStructure> ctorAndArgsProvider,final long length) {
             return StructuredArray.newInstance(
-                    StructuredArrayOfMockStructure.class, MockStructure.class, ctorAndArgsProvider, length);
+                    StructuredArrayOfMockStructure.class, MockStructure.class, length, ctorAndArgsProvider);
         }
 
     }

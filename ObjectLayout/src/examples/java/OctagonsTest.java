@@ -21,7 +21,7 @@ public class OctagonsTest {
                 100, 100 /* delta in center between members */
         );
 
-        StructuredArrayOfPoint points = octagons.get(0).getPoints();
+        ArrayOfPoint points = octagons.get(0).getPoints();
 
         assertThat(valueOf(points.get(0).getX()), is(20L));
         assertThat(valueOf(points.get(0).getY()), is(0L));

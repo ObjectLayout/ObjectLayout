@@ -219,7 +219,7 @@ public class MassOrder extends
 
             long length = bidIndex + askIndex;
             return (MassOrder) StructuredArray.newInstance(
-                    massOrderCtorAndArgs, SimpleOrder.class, this, length);
+                    massOrderCtorAndArgs, SimpleOrder.class, length, this);
         }
     }
 }

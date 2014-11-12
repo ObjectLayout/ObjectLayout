@@ -6,7 +6,7 @@ package org.ObjectLayout;
  * @param <S> The class of the StructuredArray modeled by the model
  * @param <T> The class of the elements in the StructuredArray modeled by the model
  */
-public abstract class StructuredArrayModel<S extends StructuredArray<T>, T> extends
+public class StructuredArrayModel<S extends StructuredArray<T>, T> extends
         AbstractStructuredArrayModel<S, T> {
 
     /**
