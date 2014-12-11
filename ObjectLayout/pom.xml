@@ -65,7 +65,7 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>2.12.4</version>
                 <configuration>
-                    <argLine>-Xmx1g</argLine>
+                    <argLine>-Xmx1g -Xbootclasspath/a:${basedir}/target/classes</argLine>
                     <enableAssertions>false</enableAssertions>
                 </configuration>
             </plugin>
