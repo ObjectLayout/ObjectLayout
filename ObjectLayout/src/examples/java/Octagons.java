@@ -6,8 +6,11 @@
 import org.ObjectLayout.*;
 
 import java.lang.reflect.Constructor;
+import java.util.Date;
 
 public class Octagons extends StructuredArray<Octagon> {
+
+    public Date creationDate = new Date();
 
     public Octagons() {
     }
