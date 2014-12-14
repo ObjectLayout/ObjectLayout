@@ -154,7 +154,7 @@ public class ObjectLayoutBench {
         }
 
         @Override
-		public boolean equals(final Object o) {
+        public boolean equals(final Object o) {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
 
@@ -164,14 +164,14 @@ public class ObjectLayoutBench {
         }
 
         @Override
-		public int hashCode() {
+        public int hashCode() {
             int result = (int)(index ^ (index >>> 32));
             result = 31 * result + (int)(testValue ^ (testValue >>> 32));
             return result;
         }
 
         @Override
-		public String toString() {
+        public String toString() {
             return "MockStructure{" +
                     "index=" + index +
                     ", testValue=" + testValue +
