@@ -1,6 +1,13 @@
 package bench;
 
-import org.ObjectLayout.*;
+import java.lang.reflect.Constructor;
+import java.util.Random;
+import java.util.concurrent.TimeUnit;
+
+import org.ObjectLayout.ConstructionContext;
+import org.ObjectLayout.CtorAndArgs;
+import org.ObjectLayout.CtorAndArgsProvider;
+import org.ObjectLayout.StructuredArray;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.Fork;
 import org.openjdk.jmh.annotations.Measurement;
@@ -8,10 +15,6 @@ import org.openjdk.jmh.annotations.Scope;
 import org.openjdk.jmh.annotations.Setup;
 import org.openjdk.jmh.annotations.State;
 import org.openjdk.jmh.annotations.Warmup;
-
-import java.lang.reflect.Constructor;
-import java.util.Random;
-import java.util.concurrent.TimeUnit;
 
 /*
   Run all benchmarks:
@@ -81,7 +84,7 @@ public class ObjectLayoutBench {
     @Benchmark
     public long subclassedArrayLoopSumTest() {
         long sum = 0;
-        for (int i = 0 ; i < array.getLength(); i++) {
+        for (int i = 0 ; i < subclassedArray.getLength(); i++) {
             sum += subclassedArray.get(i).getTestValue();
         }
         return sum;
@@ -150,6 +153,7 @@ public class ObjectLayoutBench {
             this.testValue = testValue;
         }
 
+        @Override
         public boolean equals(final Object o) {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
@@ -159,12 +163,14 @@ public class ObjectLayoutBench {
             return index == that.index && testValue == that.testValue;
         }
 
+        @Override
         public int hashCode() {
             int result = (int)(index ^ (index >>> 32));
             result = 31 * result + (int)(testValue ^ (testValue >>> 32));
             return result;
         }
 
+        @Override
         public String toString() {
             return "MockStructure{" +
                     "index=" + index +
