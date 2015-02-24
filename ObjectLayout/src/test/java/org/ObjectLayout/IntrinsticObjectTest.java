@@ -120,42 +120,6 @@ public class IntrinsticObjectTest {
     }
 
     /**
-     * BadContainerNonPrivate: non private intrinsic object member
-     */
-    static class BadContainerNonPrivate {
-        @Intrinsic
-        final Point intrinsicPoint = IntrinsicObjects.constructWithin("intrinsicPoint", this);
-
-        Point getPoint() {
-            return intrinsicPoint;
-        }
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testBadContainerNonPrivate() throws NoSuchMethodException {
-        BadContainerNonPrivate bad = new BadContainerNonPrivate();
-        bad.getPoint().getX();
-    }
-
-    /**
-     * BadContainerNonFinal: non final intrinsic object member
-     */
-    static class BadContainerNonFinal {
-        @Intrinsic
-        private Point intrinsicPoint = IntrinsicObjects.constructWithin("intrinsicPoint", this);
-
-        Point getPoint() {
-            return intrinsicPoint;
-        }
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testBadContainerNonFinal() throws NoSuchMethodException {
-        BadContainerNonFinal bad = new BadContainerNonFinal();
-        bad.getPoint().getX();
-    }
-
-    /**
      * BadContainerNullMember: null intrinsic object member
      */
     static class BadContainerNullMember {
