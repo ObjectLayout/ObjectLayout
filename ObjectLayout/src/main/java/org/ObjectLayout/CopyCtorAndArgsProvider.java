@@ -6,7 +6,6 @@
 package org.ObjectLayout;
 
 import java.lang.reflect.Constructor;
-import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Supports the construction of a {@link org.ObjectLayout.StructuredArray}'s individual elements using a
