@@ -138,7 +138,6 @@ public class StructuredArrayBuilder<S extends StructuredArray<T>, T> {
      * @param <A> The class or the subArray (should match T for the StructuredArrayBuilder)
      * @param <E> The element class in the subArray.
      */
-    @SuppressWarnings("unchecked")
     public <A extends StructuredArray<E>, E> StructuredArrayBuilder(final Class<S> arrayClass,
                                       final StructuredArrayBuilder<A, E> subArrayBuilder,
                                       final long length) {
@@ -163,7 +162,6 @@ public class StructuredArrayBuilder<S extends StructuredArray<T>, T> {
      * @param length The length of the array to be build by this builder
      * @param <A> The class in the subArray (should match T for the StructuredArrayBuilder)
      */
-    @SuppressWarnings("unchecked")
     public <A extends AbstractPrimitiveByteArray> StructuredArrayBuilder(final Class<S> arrayClass,
                                   final PrimitiveArrayBuilder<A> subArrayBuilder,
                                   final long length) {

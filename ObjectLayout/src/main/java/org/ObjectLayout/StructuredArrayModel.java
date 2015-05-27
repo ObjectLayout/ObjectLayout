@@ -41,7 +41,6 @@ public class StructuredArrayModel<S extends StructuredArray<T>, T> extends
      * @param <A2> The class of the StructuredArray modeled by the subArrayModel
      * @param <T2> The class of the elements in the StructuredArray modeled by the subArrayModel
      */
-    @SuppressWarnings("unchecked")
     public <A2 extends StructuredArray<T2>, T2>
     StructuredArrayModel(final Class<S> arrayClass,
                          final StructuredArrayModel<A2, T2> subArrayModel,
@@ -57,7 +56,6 @@ public class StructuredArrayModel<S extends StructuredArray<T>, T> extends
      * @param length The length of the StructuredArray modeled by the model
      * @param <A2> The class of the PrimitiveArray modeled by the subArrayModel
      */
-    @SuppressWarnings("unchecked")
     public <A2 extends AbstractPrimitiveArray>
     StructuredArrayModel(final Class<S> arrayClass,
                          final PrimitiveArrayModel<A2> subArrayModel,
