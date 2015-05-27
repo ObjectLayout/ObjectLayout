@@ -4,8 +4,6 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
-import java.util.Collection;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * This class contains the intrinsifiable portions of IntrinsicObjectModel behavior. JDK implementations
