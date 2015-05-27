@@ -299,7 +299,6 @@ public class StructuredArray<T> extends AbstractStructuredArray<T> implements It
      * @return The newly created array
      * @throws NoSuchMethodException if any contained element class does not support a copy constructor
      */
-    @SuppressWarnings("unchecked")
     public static <S extends StructuredArray<T>, T> S copyInstance(
             final S source,
             final long sourceOffset,
@@ -954,7 +953,6 @@ public class StructuredArray<T> extends AbstractStructuredArray<T> implements It
      * the source or destination arrays have nested StructuredArrays within them, or if final fields are discovered
      * and all allowFinalFieldOverwrite is not true.
      */
-    @SuppressWarnings("rawtypes")
     public static <S extends StructuredArray<T>, T> void shallowCopy(
             final S src,
             final long srcOffset,
@@ -985,7 +983,6 @@ public class StructuredArray<T> extends AbstractStructuredArray<T> implements It
      * the source or destination arrays have nested StructuredArrays within them, or if final fields are discovered
      * and all allowFinalFieldOverwrite is not true.
      */
-    @SuppressWarnings("rawtypes")
     public static <S extends StructuredArray<T>, T> void shallowCopy(
             final S src,
             final long srcOffset,
