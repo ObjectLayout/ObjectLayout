@@ -34,9 +34,13 @@ final class IntrinsicObjectModel<T> extends AbstractIntrinsicObjectModel<T> {
      */
     final T constructWithin(final Object containingObject) {
         try {
+            Constructor<T> ctor = getObjectClass().getDeclaredConstructor();
+            if (!ctor.isAccessible()) {
+                ctor.setAccessible(true);
+            }
             return instantiate(
                     containingObject,
-                    getObjectClass().getDeclaredConstructor(),
+                    ctor,
                     (Object[]) null
             );
         } catch (NoSuchMethodException ex) {

@@ -43,6 +43,14 @@ abstract class AbstractIntrinsicObjectModel<T>  {
         return objectClass;
     }
 
+    Class<T> getContainingClass() {
+        return containingClass;
+    }
+
+    Field getField() {
+        return field;
+    }
+
     private void sanityCheckAtModelConstruction() {
         if ((primitiveArrayModel != null) &&
                 !primitiveArrayModel._getArrayClass().equals(objectClass)) {
@@ -139,7 +147,8 @@ abstract class AbstractIntrinsicObjectModel<T>  {
         try {
             if (field.get(containingObject) != null) {
                 throw new IllegalStateException("Intrinsic object field \"" + field.getName() +
-                        "\" in containing object is already initialized");
+                        "\" in containing object " + containingObject + " is already initialized to " +
+                        field.get(containingObject));
             }
         } catch (IllegalAccessException e) {
             throw new IllegalStateException(e);

@@ -12,6 +12,9 @@ import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.concurrent.ConcurrentHashMap;
 
+import sun.reflect.CallerSensitive;
+import sun.reflect.Reflection;
+
 /**
  * Intrinsic objects (declared with the {@link org.ObjectLayout.Intrinsic @Intrisic} annotation) may have
  * their layout within the containing object instance optimized by JDK implementations, such that access
@@ -55,10 +58,24 @@ public final class IntrinsicObjects {
      * @param containingObject The object instance that will contain this intrinsic object
      * @return A reference to the the newly constructed intrinsic object
      */
+    @CallerSensitive
+    @SuppressWarnings("restriction")
     public static <T> T constructWithin(
             final String fieldName,
-            final Object containingObject) {
+            final Object containingObject) throws IllegalArgumentException {
+
+        // First we do some plausibility/security checks
+        Class<?> caller = Reflection.getCallerClass();
+        if (!containingObject.getClass().equals(caller))
+            throw new IllegalArgumentException();
+
         IntrinsicObjectModel<T> model = lookupModelFor(fieldName, containingObject);
+
+        // Check if our caller is allowed to access the constructor.
+        // We wrap the "IllegalAccessException" in an unchecked "IllegalArgumentException"
+        // to avoid try/catch clauses around every call to "constructWithin"
+        sanityCheckAccessRights(caller, model.getObjectClass(), null);
+
         return model.constructWithin(containingObject);
     }
 
@@ -75,12 +92,26 @@ public final class IntrinsicObjects {
      * @param args the arguments to be used with the objectConstructor
      * @return A reference to the the newly constructed intrinsic object
      */
+    @CallerSensitive
+    @SuppressWarnings("restriction")
     public static <T> T constructWithin(
             final String fieldName,
             final Object containingObject,
             final Constructor<T> objectConstructor,
             final Object... args) {
+
+        // First we do some plausibility/security checks
+        Class<?> caller = Reflection.getCallerClass();
+        if (!containingObject.getClass().equals(caller))
+            throw new IllegalArgumentException();
+
         IntrinsicObjectModel<T> model = lookupModelFor(fieldName, containingObject);
+
+        // Check if our caller is allowed to access the constructor.
+        // We wrap the "IllegalAccessException" in an unchecked "IllegalArgumentException"
+        // to avoid try/catch clauses around every call to "constructWithin"
+        sanityCheckAccessRights(caller, model.getObjectClass(), objectConstructor);
+
         return model.constructWithin(containingObject, objectConstructor, args);
     }
 
@@ -336,6 +367,22 @@ public final class IntrinsicObjects {
                 throw new IllegalArgumentException(
                         "@Intrinsic annotations can only specify elementClass for StructuredArray types");
             }
+        }
+    }
+
+    @SuppressWarnings("restriction")
+    private static <T> void sanityCheckAccessRights(Class<?> caller, Class<T> field, Constructor<T> ctor) {
+        // Check if our caller is allowed to access the constructor.
+        // We wrap the "IllegalAccessException" in an unchecked "IllegalArgumentException"
+        // to avoid try/catch clauses around every call to "constructWithin"
+        try {
+            if (ctor == null)
+                ctor = field.getDeclaredConstructor();
+            Reflection.ensureMemberAccess(caller, field, ctor, ctor.getModifiers());
+        } catch (IllegalAccessException e) {
+            throw new IllegalArgumentException(e);
+        } catch (NoSuchMethodException e) {
+            throw new IllegalArgumentException(e);
         }
     }
 }
