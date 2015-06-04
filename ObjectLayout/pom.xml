@@ -25,6 +25,12 @@
             <version>4.10</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.netbeans.api</groupId>
+            <artifactId>org-openide-util-lookup</artifactId>
+            <version>RELEASE80</version>
+            <scope>provided</scope>
+        </dependency>
     </dependencies>
 
     <build>
@@ -55,8 +61,6 @@
                 <configuration>
                     <source>1.7</source>
                     <target>1.7</target>
-                    <!-- Disable annotation processing for ourselves. -->
-                    <compilerArgument>-proc:none</compilerArgument>
                     <encoding>UTF-8</encoding>
                 </configuration>
             </plugin>

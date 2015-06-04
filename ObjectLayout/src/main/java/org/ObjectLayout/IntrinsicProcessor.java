@@ -5,6 +5,7 @@ import static javax.lang.model.SourceVersion.RELEASE_6;
 import java.util.Set;
 
 import javax.annotation.processing.AbstractProcessor;
+import javax.annotation.processing.Processor;
 import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
 import javax.annotation.processing.SupportedSourceVersion;
@@ -16,12 +17,14 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.Modifier;
 
 import javax.tools.Diagnostic;
+import org.openide.util.lookup.ServiceProvider;
 
 /**
  * A javac annotation processor for the @Intrinsic annotation.
  */
 @SupportedAnnotationTypes("org.ObjectLayout.Intrinsic")
 @SupportedSourceVersion(RELEASE_6)
+@ServiceProvider(service = Processor.class)
 public class IntrinsicProcessor extends AbstractProcessor {
     @Override
     public boolean process(Set<? extends TypeElement> annotations,
