@@ -9,7 +9,6 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
-import java.util.Objects;
 
 /**
  * The {@link org.ObjectLayout.Intrinsic @Intrisic} annotation defines a declared object field to be

@@ -258,7 +258,6 @@ public final class IntrinsicObjects {
 
         long length = getLengthFromAnnotation(intrinsicAnnotation, objectClass);
 
-        @SuppressWarnings("unchecked")
         Class<T> elementClass = deriveElementClass(field, intrinsicAnnotation);
 
         return new StructuredArrayModel<S, T>(objectClass, elementClass, length){};
