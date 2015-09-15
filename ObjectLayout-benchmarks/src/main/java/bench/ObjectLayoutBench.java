@@ -280,7 +280,7 @@ public class ObjectLayoutBench {
     }
 
     @Benchmark
-         public void randomizedBasicDataDependentLoop() {
+    public void randomizedBasicDataDependentLoop() {
         long accumulator = 0;
         int index = 0 ;
         final int length = encapsulatedArrayRandomized.getLength();
@@ -303,14 +303,10 @@ public class ObjectLayoutBench {
         blackhole.consume(accumulator);
     }
 
-    public static class Element {
-
+    public static class Element extends ElementBase {
         static int[] intArray = new int[1];
         static final Class[] constructorArgTypes_Long_IntArray = {Long.TYPE, intArray.getClass()};
         static final Class[] constructorArgTypes_SA = {Element.class};
-
-        private long index = -1;
-        private int nextIndex = Integer.MIN_VALUE;
 
         // padding elements - to make sure that each element is greater than 2x L1 D-cache line
         private long l0,l1,l2,l3,l4,l5,l6,l7,l8,l9,l10,l11,l12,l13,l14,l15;
@@ -319,11 +315,28 @@ public class ObjectLayoutBench {
         }
 
         public Element(final long index, final int[] nextIndexes) {
+            super(index, nextIndexes);
+        }
+
+        public Element(Element src) {
+            super(src);
+        }
+    }
+
+    public static class ElementBase {
+
+        private long index = -1;
+        private int nextIndex = Integer.MIN_VALUE;
+
+        public ElementBase() {
+        }
+
+        public ElementBase(final long index, final int[] nextIndexes) {
             this.index = index;
             this.nextIndex = nextIndexes[(int)index];
         }
 
-        public Element(Element src) {
+        public ElementBase(ElementBase src) {
             this.index = src.index;
             this.nextIndex = src.nextIndex;
         }
@@ -349,7 +362,7 @@ public class ObjectLayoutBench {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
 
-            final Element that = (Element)o;
+            final ElementBase that = (ElementBase)o;
 
             return index == that.index && nextIndex == that.nextIndex;
         }
