@@ -1,6 +1,14 @@
 package bench;
 
-import org.ObjectLayout.*;
+import java.lang.reflect.Constructor;
+import java.util.Random;
+import java.util.concurrent.TimeUnit;
+
+import org.ObjectLayout.ConstructionContext;
+import org.ObjectLayout.CtorAndArgs;
+import org.ObjectLayout.CtorAndArgsProvider;
+import org.ObjectLayout.StructuredArray;
+import org.openjdk.jmh.annotations.Param;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.Fork;
 import org.openjdk.jmh.annotations.Measurement;
@@ -8,12 +16,41 @@ import org.openjdk.jmh.annotations.Scope;
 import org.openjdk.jmh.annotations.Setup;
 import org.openjdk.jmh.annotations.State;
 import org.openjdk.jmh.annotations.Warmup;
+import org.openjdk.jmh.infra.Blackhole;
+import org.openjdk.jmh.runner.Runner;
+import org.openjdk.jmh.runner.RunnerException;
+import org.openjdk.jmh.runner.options.Options;
+import org.openjdk.jmh.runner.options.OptionsBuilder;
 
-import java.lang.reflect.Constructor;
-import java.util.Random;
-import java.util.concurrent.TimeUnit;
 
 /*
+
+  This benchmark creates a 1-D array of structures in 5 different ways
+  - Java array of structs
+  - Java array declared with the use of generic
+  - Hava array with shuffled elements - to mimic layout of elements in arrays after many GC cycles
+                                           when elements are referenced from multiple objects.
+                                        In real life application we are more likely to see partial re-order
+  - Structured Arrray
+  - A subclass of Strructured Array
+
+  For all 5 arrays this benchmark loops over all elements and does some operation. The reported score in number of
+  operation per second, higher is better.
+
+  There are several parameters to tune this benchmark
+
+  length - number of elements in each array
+
+  SamaLayout - when true, Structured Array is created first, and then all java arrays are initialized by the references
+  to elements of Strcutured Array. This insures that memory access pattern is the same for all 5 benchmark loops and
+  the only diffrence to be observed is how JIT transforms the main benchmark loop in each case.  When false, each of
+  the 5 arrays is created independently.
+
+  RandomArrayWalk - when true, the main loop accesses elements in array is a random order, otherwise elements are read
+  sequentially. The main loop does this:  for (...) { val = array.get(index).val ; index = val + 1;}
+  In a RandomArrayWalk case the val would always be a random number between 0 and length -1; otherwise
+  array.get(index).val == index
+
   Run all benchmarks:
     $ java -jar target/benchmarks.jar
 
@@ -30,108 +67,265 @@ import java.util.concurrent.TimeUnit;
 
 public class ObjectLayoutBench {
 
-    StructuredArray<MockStructure> array;
-    StructuredArrayOfMockStructure subclassedArray;
-    GenericEncapsulatedArray<MockStructure> genericEncapsulatedArray;
+// Default value is 1048576 = 2 ^ 20 or ~ 1M
+
+    @Param({"20"})
+    public int lengthPow2;
+    public int length; // Will be initialized is setup() to 1 << lengthPow2;
+    public int lengthMask; // Will be initialized in setup() to length - 1;
+
+    @Param({"true"})
+    public boolean SameLayout;
+
+    @Param({"false", "true"})
+    public boolean RandomArrayWalk;
+
+    StructuredArray<Element> structuredArray;
+    StructuredArrayOfMockStructure subclassedStructuredArray;
+    GenericEncapsulatedArray<Element> encapsulatedArrayGeneric;
     EncapsulatedArray encapsulatedArray;
-    EncapsulatedRandomizedArray encapsulatedRandomizedArray;
+    EncapsulatedRandomizedArray encapsulatedArrayRandomized;
+
+    public int[] linearNextIndexes;
+    public int[] shuffledNextIndexes;
+
+    private Blackhole blackhole = new Blackhole();
+
+    public static int long2Int(long l) {
+        return (int) Math.max(Math.min(Integer.MAX_VALUE, l), Integer.MIN_VALUE);
+    }
 
     @Setup
     public void setup() throws NoSuchMethodException {
-        final int length = 1000000;
+        length = 1 << lengthPow2;
+        lengthMask = length - 1;
+
+        linearNextIndexes = new int[length];
+        for (int i = 0; i < length; i++) {
+            linearNextIndexes[i] = (i + 1) & lengthMask;
+        }
+        shuffledNextIndexes = new int[length];
+        shuffleNextIndexes(shuffledNextIndexes);
 
         final Object[] args = new Object[2];
-        final CtorAndArgs<MockStructure> ctorAndArgs =
-                new CtorAndArgs<MockStructure>(
-                        MockStructure.class.getConstructor(MockStructure.constructorArgTypes), args);
+        final CtorAndArgs<Element> ctorAndArgs =
+                new CtorAndArgs<Element>(
+                        Element.class.getConstructor(Element.constructorArgTypes_Long_IntArray), args);
 
+        if (Element.class.getConstructor(Element.constructorArgTypes_Long_IntArray) == null) {
+            System.out.println("Failed to get constructor");
+        }
 
-        final CtorAndArgsProvider<MockStructure> ctorAndArgsProvider =
-                new CtorAndArgsProvider<MockStructure>() {
+        final CtorAndArgsProvider<Element> ctorAndArgsProvider =
+                new CtorAndArgsProvider<Element>() {
                     @Override
-                    public CtorAndArgs<MockStructure> getForContext(
-                            ConstructionContext<MockStructure> context) throws NoSuchMethodException {
+                    public CtorAndArgs<Element> getForContext(
+                            ConstructionContext<Element> context) throws NoSuchMethodException {
                         args[0] = context.getIndex();
-                        args[1] = context.getIndex() * 2;
+                        args[1] = RandomArrayWalk ? shuffledNextIndexes : linearNextIndexes;
                         return ctorAndArgs;
                     }
                 };
 
-        array = StructuredArray.newInstance(MockStructure.class, ctorAndArgsProvider, length);
-        subclassedArray = StructuredArrayOfMockStructure.newInstance(ctorAndArgsProvider, length);
-        encapsulatedArray = new EncapsulatedArray(length);
-        encapsulatedRandomizedArray = new EncapsulatedRandomizedArray(length);
-        genericEncapsulatedArray =
-                new GenericEncapsulatedArray<MockStructure>(
-                        MockStructure.class.getConstructor(MockStructure.constructorArgTypes), length);
+        structuredArray = StructuredArray.newInstance(Element.class, ctorAndArgsProvider, length);
+        subclassedStructuredArray = StructuredArrayOfMockStructure.newInstance(ctorAndArgsProvider, length);
+
+        int sequenceLength;
+        if ((sequenceLength = findSquenceLength(linearNextIndexes)) != length) {
+            System.out.println("sequenceLength(linearNextIndexes) = " + sequenceLength +
+                    " (!=length (" + length + "))");
+        };
+        if ((sequenceLength = findSquenceLength(shuffledNextIndexes)) != length) {
+            System.out.println("sequenceLength(shuffledNextIndexes) = " + sequenceLength +
+                    " (!=length (" + length + "))");
+        }
+        if ((sequenceLength = findSquenceLength(structuredArray)) != length) {
+            System.out.println("sequenceLength(structuredArray) = " + sequenceLength +
+                    " (!=length (" + length + "))");
+        }
+
+        if (SameLayout) {
+            // use Sructured Array to initialize java arrays
+            encapsulatedArray = new EncapsulatedArray(structuredArray);
+            encapsulatedArrayRandomized = new EncapsulatedRandomizedArray(structuredArray,
+                    shuffledNextIndexes, RandomArrayWalk);
+            encapsulatedArrayGeneric =
+                    new GenericEncapsulatedArray<Element>(
+                            Element.class.getConstructor(Element.constructorArgTypes_SA), structuredArray);
+        } else {
+            encapsulatedArray = new EncapsulatedArray(long2Int(length),
+                    RandomArrayWalk ? shuffledNextIndexes: linearNextIndexes);
+            encapsulatedArrayRandomized = new EncapsulatedRandomizedArray(long2Int(length),
+                    shuffledNextIndexes);
+            encapsulatedArrayGeneric =
+                    new GenericEncapsulatedArray<Element>(
+                            Element.class.getConstructor(Element.constructorArgTypes_Long_IntArray),
+                            long2Int(length), RandomArrayWalk ? shuffledNextIndexes: linearNextIndexes);
+        }
     }
 
-    // TODO: We should probably sink the values into Blackhole.consume,
-    // instead of summing them up, and subjecting ourselves with loop optimizations.
+    static void shuffleNextIndexes(int[] array) {
+        int length = array.length;
+        int[] visitOrderArray = new int[length];
+        Random generator = new Random(42);
+        for (int i = 0; i < length; i++) {
+            visitOrderArray[i] = i;
+        }
+        for (int i = length - 1; i >= 0; i--) {
+            int j = generator.nextInt(i + 1);
+            int temp = visitOrderArray[i];
+            visitOrderArray[i] = visitOrderArray[j];
+            visitOrderArray[j] = temp;
+        }
+        for (int i = 0; i < length - 1; i++) {
+            array[visitOrderArray[i]] = visitOrderArray[i + 1];
+        }
+        array[visitOrderArray[length - 1]] = visitOrderArray[0];
+    }
 
     @Benchmark
-    public long arrayLoopSumTest() {
-        long sum = 0;
-        for (int i = 0 ; i < array.getLength(); i++) {
-            sum += array.get(i).getTestValue();
+    public void structuredArrayDataDependentLoop() {
+        long accumulator = 0;
+        int index = 0 ;
+        final long length = structuredArray.getLength();
+        for (long i = 0 ; i < length; i++) {
+            int nextIndex = structuredArray.get(index).getNextIndex();
+            accumulator = Element.simple_math(accumulator, nextIndex);
+            index = nextIndex;
         }
-        return sum;
+        blackhole.consume(accumulator);
     }
 
     @Benchmark
-    public long subclassedArrayLoopSumTest() {
-        long sum = 0;
-        for (int i = 0 ; i < array.getLength(); i++) {
-            sum += subclassedArray.get(i).getTestValue();
+    public void structuredArrayLoop() {
+        long accumulator = 0;
+        final long length = structuredArray.getLength();
+        for (long i = 0 ; i < length; i++) {
+            int nextIndex = structuredArray.get(i).getNextIndex();
+            accumulator = Element.simple_math(accumulator, nextIndex);
         }
-        return sum;
+        blackhole.consume(accumulator);
     }
 
     @Benchmark
-    public long loopGenericEncapsulatedArraySumTest() {
-        long sum = 0;
-        for (int i = 0 ; i < genericEncapsulatedArray.getLength(); i++) {
-            sum += genericEncapsulatedArray.get(i).getTestValue();
+    public void subclassedStructuredArrayDataDependentLoop() {
+        long accumulator = 0;
+        int index = 0 ;
+        final long length = subclassedStructuredArray.getLength();
+        for (long i = 0 ; i < length; i++) {
+            int nextIndex = subclassedStructuredArray.get(index).getNextIndex();
+            accumulator = Element.simple_math(accumulator, nextIndex);
+            index = nextIndex;
         }
-        return sum;
+        blackhole.consume(accumulator);
     }
 
     @Benchmark
-    public long loopEncapsulatedArraySumTest() {
-        long sum = 0;
-        for (int i = 0 ; i < encapsulatedArray.getLength(); i++) {
-            sum += encapsulatedArray.get(i).getTestValue();
+    public void subclassedStructuredArrayLoop() {
+        long accumulator = 0;
+        final long length = subclassedStructuredArray.getLength();
+        for (long i = 0 ; i < length; i++) {
+            int nextIndex = subclassedStructuredArray.get(i).getNextIndex();
+            accumulator = Element.simple_math(accumulator, nextIndex);
         }
-        return sum;
+        blackhole.consume(accumulator);
     }
 
     @Benchmark
-    public long loopEncapsulatedRandomizedArraySumTest() {
-        long sum = 0;
-        for (int i = 0 ; i < encapsulatedRandomizedArray.getLength(); i++) {
-            sum += encapsulatedRandomizedArray.get(i).getTestValue();
+    public void genericArrayDataDependentLoop() {
+        long accumulator = 0;
+        int index = 0 ;
+        final int length = encapsulatedArrayGeneric.getLength();
+        for (int i = 0 ; i < length; i++) {
+            int nextIndex = encapsulatedArrayGeneric.get(index).getNextIndex();
+            accumulator = Element.simple_math(accumulator, nextIndex);
+            index = nextIndex;
         }
-        return sum;
+        blackhole.consume(accumulator);
     }
 
-    public static class MockStructure {
+    @Benchmark
+    public void genericArrayLoop() {
+        long accumulator = 0;
+        final int length = encapsulatedArrayGeneric.getLength();
+        for (int i = 0 ; i < length; i++) {
+            int nextIndex = encapsulatedArrayGeneric.get(i).getNextIndex();
+            accumulator = Element.simple_math(accumulator, nextIndex);
+        }
+        blackhole.consume(accumulator);
+    }
 
-        static final Class[] constructorArgTypes = {Long.TYPE, Long.TYPE};
+    @Benchmark
+    public void basicArrayLoopDataDependentLoop() {
+        long accumulator = 0;
+        int index = 0 ;
+        final int length = encapsulatedArray.getLength();
+        for (int i = 0 ; i < length; i++) {
+            int nextIndex = encapsulatedArray.get(index).getNextIndex();
+            accumulator = Element.simple_math(accumulator, nextIndex);
+            index = nextIndex;
+        }
+        blackhole.consume(accumulator);
+    }
+
+    @Benchmark
+    public void basicArrayLoopLoop() {
+        long accumulator = 0;
+        final int length = encapsulatedArray.getLength();
+        for (int i = 0 ; i < length; i++) {
+            int nextIndex = encapsulatedArray.get(i).getNextIndex();
+            accumulator = Element.simple_math(accumulator, nextIndex);
+        }
+        blackhole.consume(accumulator);
+    }
+
+    @Benchmark
+         public void randomizedBasicDataDependentLoop() {
+        long accumulator = 0;
+        int index = 0 ;
+        final int length = encapsulatedArrayRandomized.getLength();
+        for (int i = 0 ; i < length; i++) {
+            int nextIndex = encapsulatedArrayRandomized.get(index).getNextIndex();
+            accumulator = Element.simple_math(accumulator, nextIndex);
+            index = nextIndex;
+        }
+        blackhole.consume(accumulator);
+    }
+
+    @Benchmark
+    public void randomizedBasicLoop() {
+        long accumulator = 0;
+        final int length = encapsulatedArrayRandomized.getLength();
+        for (int i = 0 ; i < length; i++) {
+            int nextIndex = encapsulatedArrayRandomized.get(i).getNextIndex();
+            accumulator = Element.simple_math(accumulator, nextIndex);
+        }
+        blackhole.consume(accumulator);
+    }
+
+    public static class Element {
+
+        static int[] intArray = new int[1];
+        static final Class[] constructorArgTypes_Long_IntArray = {Long.TYPE, intArray.getClass()};
+        static final Class[] constructorArgTypes_SA = {Element.class};
 
         private long index = -1;
-        private long testValue = Long.MIN_VALUE;
+        private int nextIndex = Integer.MIN_VALUE;
 
-        public MockStructure() {
+        // padding elements - to make sure that each element is greater than 2x L1 D-cache line
+        private long l0,l1,l2,l3,l4,l5,l6,l7,l8,l9,l10,l11,l12,l13,l14,l15;
+
+        public Element() {
         }
 
-        public MockStructure(final long index, final long testValue) {
+        public Element(final long index, final int[] nextIndexes) {
             this.index = index;
-            this.testValue = testValue;
+            this.nextIndex = nextIndexes[(int)index];
         }
 
-        public MockStructure(MockStructure src) {
+        public Element(Element src) {
             this.index = src.index;
-            this.testValue = src.testValue;
+            this.nextIndex = src.nextIndex;
         }
 
         public long getIndex() {
@@ -142,62 +336,74 @@ public class ObjectLayoutBench {
             this.index = index;
         }
 
-        public long getTestValue() {
-            return testValue;
+        public int getNextIndex() {
+            return nextIndex;
         }
 
-        public void setTestValue(final long testValue) {
-            this.testValue = testValue;
+        public void setNextIndex(final int nextIndex) {
+            this.nextIndex = nextIndex;
         }
 
+        @Override
         public boolean equals(final Object o) {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
 
-            final MockStructure that = (MockStructure)o;
+            final Element that = (Element)o;
 
-            return index == that.index && testValue == that.testValue;
+            return index == that.index && nextIndex == that.nextIndex;
         }
 
+        @Override
         public int hashCode() {
             int result = (int)(index ^ (index >>> 32));
-            result = 31 * result + (int)(testValue ^ (testValue >>> 32));
+            result = 31 * result + (int)(nextIndex ^ (nextIndex >>> 32));
             return result;
         }
 
+        @Override
         public String toString() {
             return "MockStructure{" +
                     "index=" + index +
-                    ", testValue=" + testValue +
+                    ", nextIndex=" + nextIndex +
                     '}';
+        }
+
+        public static long simple_math(long param1, int param2) {
+            return  param1 ^ param2;
         }
     }
 
-    public static class MockStructureWithFinalField {
-
-        private final int value = 888;
-    }
-
-    public static class StructuredArrayOfMockStructure extends StructuredArray<MockStructure> {
+    public static class StructuredArrayOfMockStructure extends StructuredArray<Element> {
         public static StructuredArrayOfMockStructure newInstance(
-                final CtorAndArgsProvider<MockStructure> ctorAndArgsProvider,final long length) {
+                final CtorAndArgsProvider<Element> ctorAndArgsProvider,final long length) {
             return StructuredArray.newInstance(
-                    StructuredArrayOfMockStructure.class, MockStructure.class, length, ctorAndArgsProvider);
+                    StructuredArrayOfMockStructure.class, Element.class, length, ctorAndArgsProvider);
         }
 
     }
 
     static class EncapsulatedArray {
-        final MockStructure[] array;
+        final Element[] array;
 
-        EncapsulatedArray(int length) {
-            array = new MockStructure[length];
+        EncapsulatedArray(int length, int[] nextIndexes) {
+            array = new Element[length];
             for (int i = 0; i < array.length; i++) {
-                array[i] = new MockStructure(i, i*2);
+                array[i] = new Element(i, nextIndexes);
             }
         }
 
-        MockStructure get(final int index) {
+        EncapsulatedArray(StructuredArray<Element> sa_array) {
+            int length=(int)sa_array.getLength();
+            final Element[] a;
+            a = new Element[length];
+            array = a;
+            for (int i = 0; i < length; i++) {
+                array[i] = sa_array.get(i);
+            }
+        }
+
+        Element get(final int index) {
             return array[index];
         }
 
@@ -207,24 +413,40 @@ public class ObjectLayoutBench {
     }
 
     static class EncapsulatedRandomizedArray {
-        final MockStructure[] array;
+        final Element[] array;
 
-        EncapsulatedRandomizedArray(int length) {
-            array = new MockStructure[length];
+        EncapsulatedRandomizedArray(int length, int[] nextIndexes) {
+            array = new Element[length];
             for (int i = 0; i < array.length; i++) {
-                array[i] = new MockStructure(i, i*2);
+                array[i] = new Element(i, nextIndexes);
             }
-            // swap elements around randomly
-            Random generator = new Random();
-            for (int i = 0; i < array.length; i++) {
-                int target = generator.nextInt(array.length);
-                MockStructure temp = array[target];
-                array[target] = array[i];
-                array[i] = temp;
+        }
+        EncapsulatedRandomizedArray(StructuredArray<Element> sa_array, int[] nextIndexes, boolean alreadyShuffled) {
+            int length = (int)sa_array.getLength();
+            int lengthMask = length - 1;  // Strongly assuming powers of 2 here
+            final Element[] a;
+            a = new Element[length];
+            array = a;
+            if (alreadyShuffled) {
+                for (int i = 0; i < length; i++) {
+                    array[i] = sa_array.get(i);
+                }
+            } else {
+                for (int i = 0; i < length; i++) {
+                    int nextIndex = nextIndexes[i];
+                    // figure out which saIndex with contain this nextIndex:
+                    int saIndex = (nextIndex - 1) & lengthMask;
+                    array[i] = sa_array.get(saIndex);
+                }
+            }
+            int sequenceLength;
+            if ((sequenceLength = findSquenceLength(array)) != length) {
+                System.out.println("EncapsulatedRandomizedArray sequenceLength(array) = " + sequenceLength +
+                        " (!=length (" + length + ")");
             }
         }
 
-        MockStructure get(final int index) {
+        Element get(final int index) {
             return array[index];
         }
 
@@ -236,17 +458,26 @@ public class ObjectLayoutBench {
     static class GenericEncapsulatedArray<E> {
         final E[] array;
 
-        GenericEncapsulatedArray(Constructor<E> constructor, int length)
+        GenericEncapsulatedArray(Constructor<E> constructor, int length, int[] nextIndexes)
                 throws NoSuchMethodException {
             @SuppressWarnings("unchecked")
             final E[] a = (E[]) new Object[length];
             array = a;
-            try {
+            try{
                 for (int i = 0; i < array.length; i++) {
-                    array[i] = constructor.newInstance(i, i * 2);
+                    array[i] = constructor.newInstance(i, nextIndexes);
                 }
             } catch (final Exception ex) {
                 throw new RuntimeException(ex);
+            }
+        }
+        GenericEncapsulatedArray(Constructor<E> constructor, StructuredArray<E> sa_array) {
+            int length = (int) sa_array.getLength();
+            @SuppressWarnings("unchecked")
+            final E[] a = (E[]) new Object[length];
+            array = a;
+            for (int i = 0; i < length; i++) {
+                array[i] =  sa_array.get(i);
             }
         }
 
@@ -257,5 +488,84 @@ public class ObjectLayoutBench {
         int getLength() {
             return array.length;
         }
+
+        public static void main(String[] args) throws RunnerException {
+
+            Options opt = new OptionsBuilder()
+                    .include(ObjectLayoutBench.class.getSimpleName())
+                    .param("arg", "1048576") // Use this to selectively constrain/override parameters
+                    .param("SameLayout", "true")
+                    .param("RandomArrayWalk", "false")
+                    .build();
+
+
+            new Runner(opt).run();
+
+        }
+    }
+
+    // Methods for determining the sequence length within an array (if walked by nextIndex):
+
+    static int findSquenceLength(StructuredArray<Element> sa) {
+        int length = (int) sa.getLength();
+        boolean visited[] = new boolean[length];
+        int index = 0;
+        int sequenceLength = 0;
+        for (int i = 0; i < length; i++) {
+            int prevIndex = index;
+            index = sa.get(index).getNextIndex();
+            if (visited[index]) {
+                break;
+            }
+            sequenceLength++;
+            visited[index] = true;
+        }
+//        System.out.format("*** SA<E> Sequence length = %d (%7.5fx of %d)\n",
+//                sequenceLength, (sequenceLength * 1.0 / length), length);
+        return sequenceLength;
+    }
+
+    static int findSquenceLength(Element[] a) {
+        int length = (int) a.length;
+        boolean visited[] = new boolean[length];
+        int index = 0;
+        int sequenceLength = 0;
+        for (int i = 0; i < length; i++) {
+            int prevIndex = index;
+            index = a[index].getNextIndex();
+            if (visited[index]) {
+                break;
+            }
+            sequenceLength++;
+            visited[index] = true;
+        }
+//        System.out.format("*** E[] Sequence length = %d (%7.5fx of %d)\n",
+//                sequenceLength, (sequenceLength * 1.0 / length), length);
+        return sequenceLength;
+    }
+
+    static int findSquenceLength(int[] a) {
+        int length = a.length;
+        boolean visited[] = new boolean[length];
+        int index = 0;
+        int sequenceLength = 0;
+//        System.out.println("\nArrays contents: ");
+//        for (int i = 0; i < length; i++) {
+//            System.out.print(i + "->" + a[i] + ",");
+//        }
+//        System.out.println("\nSequence through array:");
+        for (int i = 0; i < length; i++) {
+            int prevIndex = index;
+            index = a[index];
+            if (visited[index]) {
+                break;
+            }
+//            System.out.print(prevIndex + "->" + index + ",");
+            sequenceLength++;
+            visited[index] = true;
+        }
+//        System.out.format("*** int[] Sequence length = %d (%7.5fx of %d)\n",
+//                sequenceLength, (sequenceLength * 1.0 / length), length);
+        return sequenceLength;
     }
 }
