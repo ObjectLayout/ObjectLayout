@@ -4,11 +4,13 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
+import java.lang.reflect.Constructor;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
+import org.ObjectLayout.CtorAndArgs;
 import org.ObjectLayout.ReferenceArray;
 import org.ObjectLayout.StructuredArray;
 
@@ -19,6 +21,8 @@ public class BPlusTree<K, V> implements Iterable<Map.Entry<K, V>> {
     private final Leaf firstNode;
     private Node root;
     private int size;
+
+    private static final Object[] EMPTY_ARGS = {};
 
     public BPlusTree(int nodeSize) {
         this(nodeSize, null);
@@ -335,8 +339,16 @@ public class BPlusTree<K, V> implements Iterable<Map.Entry<K, V>> {
             size--;
         }
 
+        // Create CtorAndArgs<Leaf> and CtorAndArgs<Entry> instances with accessible constructors
+        // to enable construction of private Leaf and Entry classes. (Needed because Leaf and Entry
+        // are not public).
+        private static final CtorAndArgs<Leaf> leafCtorAndArgs =
+                new CtorAndArgs<Leaf>(CtorAndArgs.getAccesibleConstructor(Leaf.class), EMPTY_ARGS);
+        private static final CtorAndArgs<Entry> entryCtorAndArgs =
+                new CtorAndArgs<Entry>(CtorAndArgs.getAccesibleConstructor(Entry.class), EMPTY_ARGS);
+
         public static Leaf newInstance(int nodeSize) {
-            return newInstance(Leaf.class, Entry.class, nodeSize);
+            return newInstance(leafCtorAndArgs, entryCtorAndArgs, nodeSize);
         }
     }
     
@@ -749,9 +761,14 @@ public class BPlusTree<K, V> implements Iterable<Map.Entry<K, V>> {
             return branch;
         }
 
+        // Create an accessible Constructor<Branch> to enable instantiation of private Branch class
+        // (Needed because Branch is not public):
+        private static final Constructor<Branch> branchCtor =
+                CtorAndArgs.getAccesibleConstructor(Branch.class);
+
         private static Branch create(int nodeSize) {
             int length = (nodeSize * 2) + 1;
-            return ReferenceArray.newInstance(Branch.class, length);
+            return ReferenceArray.newInstance(length, branchCtor);
         }
     }
 

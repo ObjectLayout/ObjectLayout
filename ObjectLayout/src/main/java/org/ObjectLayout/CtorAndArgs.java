@@ -52,9 +52,6 @@ public class CtorAndArgs<T> {
             throw new IllegalArgumentException("argument types and values must be the same length");
         }
         Constructor<T> ctor = instanceClass.getDeclaredConstructor(constructorArgTypes);
-        if (!ctor.isAccessible()) {
-            ctor.setAccessible(true);
-        }
         setConstructor(ctor);
         setArgs(args);
     }
@@ -122,5 +119,43 @@ public class CtorAndArgs<T> {
      */
     public void setContextCookie(final Object contextCookie) {
         this.contextCookie = contextCookie;
+    }
+
+
+    /**
+     * Convenience method for getting an accessible constructor. Converts NoSuchMethodException
+     * to a RuntimeException, so that caller is not statically required to use a try...catch block.
+     *
+     * @param cls Class for which the constructor is looked up.
+     * @param <C> Class for which the constructor is looked up
+     * @return The requested constructor, with setAccessible(true)
+     */
+    public static <C> Constructor<C> getAccesibleConstructor(Class<C> cls) {
+        try {
+            Constructor<C> constructor = cls.getDeclaredConstructor();
+            constructor.setAccessible(true);
+            return constructor;
+        } catch (NoSuchMethodException ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
+    /**
+     * Convenience method for getting an accessible constructor. Converts NoSuchMethodException
+     * to a RuntimeException, so that caller is not statically required to use a try...catch block.
+     *
+     * @param cls Class for which the constructor is looked up.
+     * @param constructorArgTypes The argument types of the requested constructor
+     * @param <C> Class for which the constructor is looked up
+     * @return The requested constructor, with setAccessible(true)
+     */
+    public static <C> Constructor<C> getAccesibleConstructor(Class<C> cls, final Class[] constructorArgTypes) {
+        try {
+            Constructor<C> constructor = cls.getDeclaredConstructor(constructorArgTypes);
+            constructor.setAccessible(true);
+            return constructor;
+        } catch (NoSuchMethodException ex) {
+            throw new RuntimeException(ex);
+        }
     }
 }
