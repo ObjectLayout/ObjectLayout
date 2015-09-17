@@ -4,6 +4,8 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Constructor;
 import java.util.Comparator;
 import java.util.Iterator;
@@ -16,6 +18,9 @@ import org.ObjectLayout.StructuredArray;
 
 @SuppressWarnings("rawtypes")
 public class BPlusTree<K, V> implements Iterable<Map.Entry<K, V>> {
+
+    private static final MethodHandles.Lookup lookup = MethodHandles.lookup();
+
     private final int nodeSize;
     private final Comparator comparator;
     private final Leaf firstNode;
@@ -339,16 +344,8 @@ public class BPlusTree<K, V> implements Iterable<Map.Entry<K, V>> {
             size--;
         }
 
-        // Create CtorAndArgs<Leaf> and CtorAndArgs<Entry> instances with accessible constructors
-        // to enable construction of private Leaf and Entry classes. (Needed because Leaf and Entry
-        // are not public).
-        private static final CtorAndArgs<Leaf> leafCtorAndArgs =
-                new CtorAndArgs<Leaf>(CtorAndArgs.getAccesibleConstructor(Leaf.class), EMPTY_ARGS);
-        private static final CtorAndArgs<Entry> entryCtorAndArgs =
-                new CtorAndArgs<Entry>(CtorAndArgs.getAccesibleConstructor(Entry.class), EMPTY_ARGS);
-
         public static Leaf newInstance(int nodeSize) {
-            return newInstance(leafCtorAndArgs, entryCtorAndArgs, nodeSize);
+            return newInstance(lookup, Leaf.class, Entry.class, nodeSize);
         }
     }
     
@@ -761,14 +758,9 @@ public class BPlusTree<K, V> implements Iterable<Map.Entry<K, V>> {
             return branch;
         }
 
-        // Create an accessible Constructor<Branch> to enable instantiation of private Branch class
-        // (Needed because Branch is not public):
-        private static final Constructor<Branch> branchCtor =
-                CtorAndArgs.getAccesibleConstructor(Branch.class);
-
         private static Branch create(int nodeSize) {
             int length = (nodeSize * 2) + 1;
-            return ReferenceArray.newInstance(length, branchCtor);
+            return ReferenceArray.newInstance(lookup, Branch.class, length);
         }
     }
 
