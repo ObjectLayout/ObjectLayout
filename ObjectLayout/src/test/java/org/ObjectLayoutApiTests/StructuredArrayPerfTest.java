@@ -3,8 +3,12 @@
 * as explained at http://creativecommons.org/publicdomain/zero/1.0/
 */
 
-package org.ObjectLayout;
+package org.ObjectLayoutApiTests;
 
+import org.ObjectLayout.ConstructionContext;
+import org.ObjectLayout.CtorAndArgs;
+import org.ObjectLayout.CtorAndArgsProvider;
+import org.ObjectLayout.StructuredArray;
 import org.junit.Test;
 
 import java.lang.reflect.Constructor;

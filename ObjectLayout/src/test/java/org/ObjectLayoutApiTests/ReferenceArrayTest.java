@@ -1,8 +1,9 @@
-package org.ObjectLayout;
+package org.ObjectLayoutApiTests;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.*;
 
+import org.ObjectLayout.ReferenceArray;
 import org.junit.Test;
 
 public class ReferenceArrayTest {

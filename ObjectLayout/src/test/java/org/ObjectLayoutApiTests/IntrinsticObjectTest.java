@@ -3,8 +3,10 @@
  * as explained at http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-package org.ObjectLayout;
+package org.ObjectLayoutApiTests;
 
+import org.ObjectLayout.Intrinsic;
+import org.ObjectLayout.IntrinsicObjects;
 import org.junit.Test;
 
 import java.lang.invoke.MethodHandle;

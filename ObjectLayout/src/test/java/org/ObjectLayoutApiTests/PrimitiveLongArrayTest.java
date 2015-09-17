@@ -1,5 +1,6 @@
-package org.ObjectLayout;
+package org.ObjectLayoutApiTests;
 
+import org.ObjectLayout.*;
 import org.junit.Test;
 
 import java.lang.reflect.Constructor;
@@ -115,8 +116,8 @@ public class PrimitiveLongArrayTest {
         assertThat(a.get(1).getColor(), is("Yellow"));
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void testStructuredArrayOfColoredLongArrays_shouldFail() throws NoSuchMethodException {
+    @Test(expected = RuntimeException.class)
+    public void testStructuredArrayOfColoredLongArrays_shouldFail() {
         // Should fail to find default constructor:
         @SuppressWarnings("unchecked")
         StructuredArray<ColoredLongArray> a =
@@ -127,7 +128,7 @@ public class PrimitiveLongArrayTest {
     }
 
     @Test
-    public void testStructuredArrayOfColoredLongArraysWithVariableNames() throws NoSuchMethodException {
+    public void testStructuredArrayOfColoredLongArraysWithVariableNames() {
         @SuppressWarnings("unchecked")
         StructuredArray<ColoredLongArray> a =
                 new StructuredArrayBuilder(StructuredArray.class,
