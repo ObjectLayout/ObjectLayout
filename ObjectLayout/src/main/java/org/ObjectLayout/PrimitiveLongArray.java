@@ -5,6 +5,7 @@
 
 package org.ObjectLayout;
 
+import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Constructor;
 
 /**
@@ -103,7 +104,7 @@ public class PrimitiveLongArray extends AbstractPrimitiveLongArray {
      * @return a new instance of {@link PrimitiveLongArray} with the given length
      */
     public static PrimitiveLongArray newInstance(final long length) {
-        return AbstractPrimitiveArray._newInstance(PrimitiveLongArray.class, length);
+        return AbstractPrimitiveArray._newInstance(noLookup, PrimitiveLongArray.class, length);
     }
 
     /**
@@ -117,7 +118,23 @@ public class PrimitiveLongArray extends AbstractPrimitiveLongArray {
     public static <A extends PrimitiveLongArray> A newInstance(
             final Class<A> arrayClass,
             final long length) {
-        return AbstractPrimitiveArray._newInstance(arrayClass, length);
+        return AbstractPrimitiveArray._newInstance(noLookup, arrayClass, length);
+    }
+
+    /**
+     * Create a new instance of &ltA extends {@link PrimitiveLongArray}&gt with a given length.
+     *
+     * @param lookup The lookup object to use for accessing the array's constructor
+     * @param arrayClass The class of the array to be created (extends PrimitiveLongArray)
+     * @param length the length of the array.
+     * @param <A> The class of the array to be created (extends PrimitiveLongArray)
+     * @return a new instance of &ltA extends {@link PrimitiveLongArray}&gt with a given length
+     */
+    public static <A extends PrimitiveLongArray> A newInstance(
+            MethodHandles.Lookup lookup,
+            final Class<A> arrayClass,
+            final long length) {
+        return AbstractPrimitiveArray._newInstance(lookup, arrayClass, length);
     }
 
     /**
@@ -146,6 +163,21 @@ public class PrimitiveLongArray extends AbstractPrimitiveLongArray {
      * @throws NoSuchMethodException if &ltA&gt does not have a copy constructor
      */
     public static <A extends PrimitiveLongArray> A copyInstance(A source) throws NoSuchMethodException {
-        return AbstractPrimitiveArray._copyInstance(source);
+        return AbstractPrimitiveArray._copyInstance(noLookup, source);
+    }
+
+    /**
+     * Create a new &ltA extends {@link PrimitiveLongArray}&gt instance, using a copy constructor to
+     * replicate the contents of the given source array
+     * @param lookup The lookup object to use for accessing the array's constructor
+     * @param source The array to replicate
+     * @param <A> The class of the array to be created (extends PrimitiveLongArray)
+     * @return a new instance of &ltA extends {@link PrimitiveLongArray}&gt copied from the source array
+     * @throws NoSuchMethodException if &ltA&gt does not have a copy constructor
+     */
+    public static <A extends PrimitiveLongArray> A copyInstance(
+            MethodHandles.Lookup lookup,
+            A source) throws NoSuchMethodException {
+        return AbstractPrimitiveArray._copyInstance(lookup, source);
     }
 }

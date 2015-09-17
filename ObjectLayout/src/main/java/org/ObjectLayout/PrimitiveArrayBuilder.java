@@ -1,5 +1,6 @@
 package org.ObjectLayout;
 
+import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 
@@ -140,11 +141,13 @@ public class PrimitiveArrayBuilder<S extends AbstractPrimitiveArray> {
      * at the field described by the supplied intrinsicObjectModel, using the supplied constructor and arguments.
      */
     static <T extends AbstractPrimitiveArray> T constructPrimitiveArrayWithin(
+            MethodHandles.Lookup lookup,
             final Object containingObject,
             final AbstractIntrinsicObjectModel<T> intrinsicObjectModel,
             PrimitiveArrayBuilder<T> arrayBuilder)
             throws InstantiationException, IllegalAccessException, InvocationTargetException {
         return AbstractPrimitiveArray.constructPrimitiveArrayWithin(
+                lookup,
                 containingObject, intrinsicObjectModel,
                 arrayBuilder.getArrayModel().getLength(),
                 arrayBuilder.getArrayCtorAndArgs().getConstructor(),
