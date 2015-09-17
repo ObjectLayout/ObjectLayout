@@ -5,6 +5,8 @@
 
 package org.ObjectLayout;
 
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Constructor;
 
 /**
@@ -46,12 +48,43 @@ public class CtorAndArgs<T> {
      * @param args
      * @throws NoSuchMethodException
      */
-    public CtorAndArgs(final Class<T> instanceClass, final Class[] constructorArgTypes, final Object... args)
-            throws NoSuchMethodException {
+    public CtorAndArgs(
+            final Class<T> instanceClass,
+            final Class[] constructorArgTypes,
+            final Object... args) throws NoSuchMethodException {
         if (constructorArgTypes.length != args.length) {
             throw new IllegalArgumentException("argument types and values must be the same length");
         }
         Constructor<T> ctor = instanceClass.getDeclaredConstructor(constructorArgTypes);
+        setConstructor(ctor);
+        setArgs(args);
+    }
+
+    /**
+     * Create a {@link CtorAndArgs} instance for the given instanceClass, with a constructor
+     * identified by the constructorArgTypes, and using the args provides. The presumption is
+     * that types in args match those expected by constructor. Obviously exceptions may be
+     * generated at construction time if this is not the case.
+     *
+     * @param lookup
+     * @param instanceClass
+     * @param constructorArgTypes
+     * @param args
+     * @throws NoSuchMethodException
+     */
+    public CtorAndArgs(
+            MethodHandles.Lookup lookup,
+            final Class<T> instanceClass,
+            final Class[] constructorArgTypes,
+            final Object... args)  throws NoSuchMethodException, IllegalAccessException {
+        if (constructorArgTypes.length != args.length) {
+            throw new IllegalArgumentException("argument types and values must be the same length");
+        }
+        Constructor<T> ctor = instanceClass.getDeclaredConstructor(constructorArgTypes);
+        if (lookup != null) {
+            lookup.unreflectConstructor(ctor); // May throw IllegalAccessException. Proves we may setAccessible.
+            ctor.setAccessible(true);
+        }
         setConstructor(ctor);
         setArgs(args);
     }
@@ -64,6 +97,19 @@ public class CtorAndArgs<T> {
      */
     public CtorAndArgs(final Class<T> instanceClass) throws NoSuchMethodException {
         this(instanceClass, EMPTY_ARG_TYPES, EMPTY_ARGS);
+    }
+
+    /**
+     * Create a {@link CtorAndArgs} instance for the given instanceClass, using the default constructor (and no args)
+     *
+     * @param lookup
+     * @param instanceClass
+     * @throws NoSuchMethodException
+     */
+    public CtorAndArgs(
+            MethodHandles.Lookup lookup,
+            final Class<T> instanceClass) throws NoSuchMethodException, IllegalAccessException {
+        this(lookup, instanceClass, EMPTY_ARG_TYPES, EMPTY_ARGS);
     }
 
     /**
@@ -119,43 +165,5 @@ public class CtorAndArgs<T> {
      */
     public void setContextCookie(final Object contextCookie) {
         this.contextCookie = contextCookie;
-    }
-
-
-    /**
-     * Convenience method for getting an accessible constructor. Converts NoSuchMethodException
-     * to a RuntimeException, so that caller is not statically required to use a try...catch block.
-     *
-     * @param cls Class for which the constructor is looked up.
-     * @param <C> Class for which the constructor is looked up
-     * @return The requested constructor, with setAccessible(true)
-     */
-    public static <C> Constructor<C> getAccesibleConstructor(Class<C> cls) {
-        try {
-            Constructor<C> constructor = cls.getDeclaredConstructor();
-            constructor.setAccessible(true);
-            return constructor;
-        } catch (NoSuchMethodException ex) {
-            throw new RuntimeException(ex);
-        }
-    }
-
-    /**
-     * Convenience method for getting an accessible constructor. Converts NoSuchMethodException
-     * to a RuntimeException, so that caller is not statically required to use a try...catch block.
-     *
-     * @param cls Class for which the constructor is looked up.
-     * @param constructorArgTypes The argument types of the requested constructor
-     * @param <C> Class for which the constructor is looked up
-     * @return The requested constructor, with setAccessible(true)
-     */
-    public static <C> Constructor<C> getAccesibleConstructor(Class<C> cls, final Class[] constructorArgTypes) {
-        try {
-            Constructor<C> constructor = cls.getDeclaredConstructor(constructorArgTypes);
-            constructor.setAccessible(true);
-            return constructor;
-        } catch (NoSuchMethodException ex) {
-            throw new RuntimeException(ex);
-        }
     }
 }
