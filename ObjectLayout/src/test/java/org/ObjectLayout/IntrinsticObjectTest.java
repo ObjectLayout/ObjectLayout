@@ -7,6 +7,8 @@ package org.ObjectLayout;
 
 import org.junit.Test;
 
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Constructor;
 
 import static java.lang.Long.valueOf;
@@ -74,6 +76,8 @@ public class IntrinsticObjectTest {
      * BadContainerSuperPoint: Wrong size init for intrinsic object member
      */
     static class BadContainerSuperPoint {
+        static final MethodHandles.Lookup lookup = MethodHandles.lookup();
+
         static final Constructor<SuperPoint> constructor;
 
         static {
@@ -88,7 +92,7 @@ public class IntrinsticObjectTest {
         @SuppressWarnings("unchecked")
         @Intrinsic
         private final Point intrinsicPoint =
-                IntrinsicObjects.constructWithin(
+                IntrinsicObjects.constructWithin(lookup,
                         "intrinsicPoint", this, (Constructor<Point>) o, (Object[]) null);
 
         Point getPoint() {
@@ -106,7 +110,9 @@ public class IntrinsticObjectTest {
      * BadContainerNonPrivate: non @Intrinsic intrinsic object member construction attempt
      */
     static class BadContainerNonIntrinsic {
-        private final Point intrinsicPoint = IntrinsicObjects.constructWithin("intrinsicPoint", this);
+        static final MethodHandles.Lookup lookup = MethodHandles.lookup();
+
+        private final Point intrinsicPoint = IntrinsicObjects.constructWithin(lookup, "intrinsicPoint", this);
 
         Point getPoint() {
             return intrinsicPoint;
@@ -123,8 +129,10 @@ public class IntrinsticObjectTest {
      * BadContainerNonPrivate: non private intrinsic object member
      */
     static class BadContainerNonPrivate {
+        static final MethodHandles.Lookup lookup = MethodHandles.lookup();
+
         @Intrinsic
-        final Point intrinsicPoint = IntrinsicObjects.constructWithin("intrinsicPoint", this);
+        final Point intrinsicPoint = IntrinsicObjects.constructWithin(lookup, "intrinsicPoint", this);
 
         Point getPoint() {
             return intrinsicPoint;
@@ -141,8 +149,10 @@ public class IntrinsticObjectTest {
      * BadContainerNonFinal: non final intrinsic object member
      */
     static class BadContainerNonFinal {
+        static final MethodHandles.Lookup lookup = MethodHandles.lookup();
+
         @Intrinsic
-        private Point intrinsicPoint = IntrinsicObjects.constructWithin("intrinsicPoint", this);
+        private Point intrinsicPoint = IntrinsicObjects.constructWithin(lookup, "intrinsicPoint", this);
 
         Point getPoint() {
             return intrinsicPoint;
@@ -177,8 +187,9 @@ public class IntrinsticObjectTest {
      * BadContainerOtherMemberIsNull: Badly initialized but not accessed member (should still work, may be slower).
      */
     static class BadContainerOtherMemberIsNull {
+        static final MethodHandles.Lookup lookup = MethodHandles.lookup();
         @Intrinsic
-        private final Point intrinsicPoint1 = IntrinsicObjects.constructWithin("intrinsicPoint1", this);
+        private final Point intrinsicPoint1 = IntrinsicObjects.constructWithin(lookup, "intrinsicPoint1", this);
         @Intrinsic
         private final Point intrinsicPoint2 = null;
 
@@ -197,8 +208,10 @@ public class IntrinsticObjectTest {
      * BadContainerCrossAssignment: Badly initialized but not accessed member (should still work, may be slower).
      */
     static class BadContainerCrossAssignment {
+        static final MethodHandles.Lookup lookup = MethodHandles.lookup();
+
         @Intrinsic
-        private final Point intrinsicPoint1 = IntrinsicObjects.constructWithin("intrinsicPoint1", this);
+        private final Point intrinsicPoint1 = IntrinsicObjects.constructWithin(lookup, "intrinsicPoint1", this);
         @Intrinsic
         private final Point intrinsicPoint2 = intrinsicPoint1;
 
@@ -217,8 +230,10 @@ public class IntrinsticObjectTest {
      * BadContainerFieldName: Badly initialized member (using field name that doesn't exist).
      */
     static class BadContainerFieldName {
+        static final MethodHandles.Lookup lookup = MethodHandles.lookup();
+
         @Intrinsic
-        private final Point intrinsicPoint = IntrinsicObjects.constructWithin("someObject", this);
+        private final Point intrinsicPoint = IntrinsicObjects.constructWithin(lookup, "someObject", this);
 
         Point getPoint() {
             return intrinsicPoint;
@@ -236,8 +251,10 @@ public class IntrinsticObjectTest {
      * BadContainerFieldName: Badly initialized member (using field name that is not assignable from object).
      */
     static class BadContainerFieldType {
+        static final MethodHandles.Lookup lookup = MethodHandles.lookup();
+
         @Intrinsic
-        private final Point intrinsicPoint = IntrinsicObjects.constructWithin("someObject", this);
+        private final Point intrinsicPoint = IntrinsicObjects.constructWithin(lookup, "someObject", this);
         @Intrinsic
         private final long someObject = 0;
 
@@ -325,11 +342,14 @@ public class IntrinsticObjectTest {
      *
      */
     public static class Line {
+
+        static final MethodHandles.Lookup lookup = MethodHandles.lookup();
         /**
          * Simple Intrinsic Object declaration and initialization:
          */
         @Intrinsic
-        private final Point endPoint1 = IntrinsicObjects.constructWithin("endPoint1", this);
+//        private final Point endPoint1 = IntrinsicObjects.constructWithin("endPoint1", this);
+        private final Point endPoint1 = IntrinsicObjects.constructWithin(lookup, "endPoint1", this);
 
         /**
          * Declaration of an Intrinsic Object that will be initialized later during construction or other init code:
@@ -345,7 +365,7 @@ public class IntrinsticObjectTest {
             /**
              * Construction-time Initialization of IntrinsicObject:
              */
-            this.endPoint2 = IntrinsicObjects.constructWithin("endPoint2", this, xy_constructor, x2, y2);
+            this.endPoint2 = IntrinsicObjects.constructWithin(lookup, "endPoint2", this, xy_constructor, x2, y2);
 
             /**
              * Access to IntrinsicObject within constructor:
