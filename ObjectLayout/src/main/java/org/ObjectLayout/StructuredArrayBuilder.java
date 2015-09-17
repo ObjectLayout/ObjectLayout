@@ -410,8 +410,6 @@ public class StructuredArrayBuilder<S extends StructuredArray<T>, T> {
             }
         } catch (NoSuchMethodException ex) {
             throw new IllegalArgumentException("Failed to find constructor.", ex);
-        } catch (IllegalAccessException ex) {
-            throw new IllegalArgumentException("Failed access checks");
         }
     }
 

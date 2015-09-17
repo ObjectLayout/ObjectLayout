@@ -5,6 +5,7 @@
 
 package org.ObjectLayout;
 
+import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Constructor;
 
 /**
@@ -27,6 +28,7 @@ import java.lang.reflect.Constructor;
  * @param <T> type of the element occupying each array slot
  */
 class CopyCtorAndArgsProvider<T> implements CtorAndArgsProvider<T> {
+    private static final MethodHandles.Lookup noLookup = null;
 
     private final long sourceOffset;
     private final Constructor<T> copyConstructor;
@@ -38,8 +40,22 @@ class CopyCtorAndArgsProvider<T> implements CtorAndArgsProvider<T> {
      *
      * @throws NoSuchMethodException
      */
-    public CopyCtorAndArgsProvider(final Class<T> elementClass, CtorAndArgs<T> ctorAndArgs)
-            throws NoSuchMethodException {
+    public CopyCtorAndArgsProvider(
+            final Class<T> elementClass,
+            CtorAndArgs<T> ctorAndArgs) throws NoSuchMethodException {
+        this(noLookup, elementClass, ctorAndArgs);
+    }
+
+    /**
+     * Used to apply a copy constructor to a target array's elements, copying corresponding elements from a
+     * source array
+     *
+     * @throws NoSuchMethodException
+     */
+    public CopyCtorAndArgsProvider(
+            MethodHandles.Lookup lookup,
+            final Class<T> elementClass,
+            CtorAndArgs<T> ctorAndArgs) throws NoSuchMethodException {
         this(elementClass, 0, ctorAndArgs);
     }
 
@@ -50,11 +66,43 @@ class CopyCtorAndArgsProvider<T> implements CtorAndArgsProvider<T> {
      * @param sourceOffset The beginning index in the source from which to start copying
      * @throws NoSuchMethodException if a copy constructor is not found in element class
      */
-    public CopyCtorAndArgsProvider(final Class<T> elementClass, final long sourceOffset, CtorAndArgs<T> ctorAndArgs)
+    public CopyCtorAndArgsProvider(
+            final Class<T> elementClass,
+            final long sourceOffset,
+            CtorAndArgs<T> ctorAndArgs) throws NoSuchMethodException {
+        this(noLookup, elementClass, sourceOffset, ctorAndArgs);
+    }
+
+    /**
+     * Used to apply a copy constructor to a target array's elements, copying corresponding elements from a
+     * source array, starting at a given offset
+     *
+     * @param lookup
+     * @param elementClass
+     * @param sourceOffset The beginning index in the source from which to start copying
+     * @param ctorAndArgs
+     * @throws NoSuchMethodException if a copy constructor is not found in element class
+     */
+    public CopyCtorAndArgsProvider(
+            MethodHandles.Lookup lookup,
+            final Class<T> elementClass,
+            final long sourceOffset,
+            CtorAndArgs<T> ctorAndArgs)
             throws NoSuchMethodException {
-        this.sourceOffset = sourceOffset;
-        this.copyConstructor = elementClass.getDeclaredConstructor(elementClass);
-        this.ctorAndArgs = ctorAndArgs;
+        try {
+            this.sourceOffset = sourceOffset;
+            this.copyConstructor = elementClass.getDeclaredConstructor(elementClass);
+            if (lookup != null) {
+                if (!CtorAndArgs.belongsToThisPackage(elementClass)) {
+                    lookup.unreflectConstructor(copyConstructor); // May throw IllegalAccessException.
+                    // The fact the the provided lookup Proves we may setAccessible.
+                    copyConstructor.setAccessible(true);
+                }
+            }
+            this.ctorAndArgs = ctorAndArgs;
+        } catch (IllegalAccessException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     /**

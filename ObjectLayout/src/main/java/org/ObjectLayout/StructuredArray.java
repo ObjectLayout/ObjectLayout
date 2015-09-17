@@ -129,8 +129,8 @@ public class StructuredArray<T> extends AbstractStructuredArray<T> implements It
         try {
             CtorAndArgs<S> arrayCtorAndArgs = new CtorAndArgs<S>(lookup, arrayClass, EMPTY_ARG_TYPES, EMPTY_ARGS);
             return newInstance(lookup, arrayCtorAndArgs, elementClass, length);
-        } catch (NoSuchMethodException | IllegalAccessException ex) {
-            throw new RuntimeException(ex);
+        } catch (NoSuchMethodException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -272,8 +272,8 @@ public class StructuredArray<T> extends AbstractStructuredArray<T> implements It
         try {
             CtorAndArgs<S> arrayCtorAndArgs = new CtorAndArgs<S>(lookup, arrayClass, EMPTY_ARG_TYPES, EMPTY_ARGS);
             return instantiate(arrayCtorAndArgs, elementClass, length, ctorAndArgsProvider);
-        } catch (NoSuchMethodException | IllegalAccessException ex) {
-            throw new RuntimeException(ex);
+        } catch (NoSuchMethodException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -348,20 +348,13 @@ public class StructuredArray<T> extends AbstractStructuredArray<T> implements It
         final CtorAndArgs<T> copyCtorAndArgs;
         final Object[] args = new Object[1];
         try {
-            Constructor<T> copyCtor = elementClass.getConstructor(elementClass);
-            if (lookup != null) {
-                lookup.unreflectConstructor(copyCtor); // May throw IllegalAccessException. If not, ok to setAccessible.
-                copyCtor.setAccessible(true);
-            }
-            copyCtorAndArgs = new CtorAndArgs<T>(copyCtor, args);
-        } catch (NoSuchMethodException | IllegalAccessException ex) {
+            copyCtorAndArgs = new CtorAndArgs<T>(lookup, elementClass, new Class[] {elementClass}, args);
+        } catch (NoSuchMethodException ex) {
             throw new IllegalArgumentException("elementClass " + elementClass.getName() +
                     "does not have an accessible copy constructor. ", ex);
         }
 
         final Iterator<T> sourceIterator = sourceCollection.iterator();
-
-        // TODO? : Does arrayClass need to use a copy constructor?
 
         StructuredArrayBuilder<S, T> arrayBuilder = new StructuredArrayBuilder<S, T>(
                 lookup,
@@ -408,7 +401,25 @@ public class StructuredArray<T> extends AbstractStructuredArray<T> implements It
      */
     public static <S extends StructuredArray<T>, T> S copyInstance(
             final S source) throws NoSuchMethodException {
-        return copyInstance(source, 0, source.getLength());
+        return copyInstance(noLookup, source);
+    }
+
+    /**
+     * Copy a given array of elements to a newly created array. Copying of individual elements is done by using
+     * the <code>elementClass</code> copy constructor to construct the individual member elements of the new
+     * array based on the corresponding elements of the <code>source</code> array.
+     *
+     * @param lookup The lookup object to use when resolving constructors
+     * @param source The array to duplicate
+     * @param <S> The class of the array to be created
+     * @param <T> The class of the array elements
+     * @return The newly created array
+     * @throws NoSuchMethodException if any contained element class does not support a copy constructor
+     */
+    public static <S extends StructuredArray<T>, T> S copyInstance(
+            MethodHandles.Lookup lookup,
+            final S source) throws NoSuchMethodException {
+        return copyInstance(lookup, source, 0, source.getLength());
     }
 
     /**
@@ -428,7 +439,29 @@ public class StructuredArray<T> extends AbstractStructuredArray<T> implements It
             final S source,
             final long sourceOffset,
             final long count) throws NoSuchMethodException {
-        return copyInstance(source, new long[] {sourceOffset}, new long[] {count});
+        return copyInstance(noLookup, source, sourceOffset, count);
+    }
+
+    /**
+     * Copy a range from an array of elements to a newly created array. Copying of individual elements is done
+     * by using the <code>elementClass</code> copy constructor to construct the individual member elements of
+     * the new array based on the corresponding elements of the <code>source</code> array.
+     *
+     * @param lookup The lookup object to use when resolving constructors
+     * @param source The array to copy from
+     * @param sourceOffset offset index, indicating where the source region to be copied begins
+     * @param count the number of elements to copy
+     * @param <S> The class of the array to be created
+     * @param <T> The class of the array elements
+     * @return The newly created array
+     * @throws NoSuchMethodException if any contained element class does not support a copy constructor
+     */
+    public static <S extends StructuredArray<T>, T> S copyInstance(
+            MethodHandles.Lookup lookup,
+            final S source,
+            final long sourceOffset,
+            final long count) throws NoSuchMethodException {
+        return copyInstance(lookup, source, new long[]{sourceOffset}, new long[]{count});
     }
 
     /**
@@ -449,6 +482,32 @@ public class StructuredArray<T> extends AbstractStructuredArray<T> implements It
      */
     @SuppressWarnings("unchecked")
     public static <S extends StructuredArray<T>, T> S copyInstance(
+            final S source,
+            final long[] sourceOffsets,
+            final long[] counts) throws NoSuchMethodException {
+        return copyInstance(noLookup, source, sourceOffsets, counts);
+    }
+
+    /**
+     * Copy a range from an array of elements to a newly created array. Copying of individual elements is done
+     * by using the <code>elementClass</code> copy constructor to construct the individual member elements of
+     * the new array based on the corresponding elements of the <code>source</code> array.
+     * <p>
+     * This form is useful [only] for copying partial ranges from nested StructuredArrays.
+     * </p>
+     * @param lookup The lookup object to use when resolving constructors
+     * @param source The array to copy from
+     * @param sourceOffsets offset indexes, indicating where the source region to be copied begins at each
+     *                      StructuredArray nesting depth
+     * @param counts the number of elements to copy at each StructuredArray nesting depth
+     * @param <S> The class of the array to be created
+     * @param <T> The class of the array elements
+     * @return The newly created array
+     * @throws NoSuchMethodException if any contained element class does not support a copy constructor
+     */
+    @SuppressWarnings("unchecked")
+    public static <S extends StructuredArray<T>, T> S copyInstance(
+            MethodHandles.Lookup lookup,
             final S source,
             final long[] sourceOffsets,
             final long[] counts) throws NoSuchMethodException {
@@ -478,17 +537,19 @@ public class StructuredArray<T> extends AbstractStructuredArray<T> implements It
 
         final StructuredArrayModel<S, T> sourceArrayModel = (StructuredArrayModel<S, T>) source.getArrayModel();
         final Class<S> sourceArrayClass = sourceArrayModel.getArrayClass();
-        Constructor<S> arrayConstructor = sourceArrayClass.getDeclaredConstructor(sourceArrayClass);
+        CtorAndArgs<S> arrayCtorAndArgs =
+                new CtorAndArgs<S>(lookup, sourceArrayClass, new Class[] {sourceArrayClass}, source);
 
         final StructuredArrayBuilder<S, T> arrayBuilder =
-                createCopyingArrayBuilder(sourceArrayModel, sourceOffsets, 0, counts, 0).
-                        arrayCtorAndArgs(arrayConstructor, source).
+                createCopyingArrayBuilder(lookup, sourceArrayModel, sourceOffsets, 0, counts, 0).
+                        arrayCtorAndArgs(arrayCtorAndArgs).
                         contextCookie(source);
 
         return instantiate(arrayBuilder);
     }
 
     private static <S extends StructuredArray<T>, T> StructuredArrayBuilder<S, T> createCopyingArrayBuilder(
+            MethodHandles.Lookup lookup,
             final StructuredArrayModel<S, T> sourceArrayModel,
             final long[] sourceOffsets, final int offsetsIndex,
             final long[] counts, final int countsIndex) throws NoSuchMethodException {
@@ -498,30 +559,33 @@ public class StructuredArray<T> extends AbstractStructuredArray<T> implements It
         long sourceOffset = (offsetsIndex < sourceOffsets.length) ? sourceOffsets[offsetsIndex] : 0;
         long count = (countsIndex < counts.length) ? counts[countsIndex] : sourceArrayModel.getLength();
 
-        final CtorAndArgs<T> ctorAndArgs = new CtorAndArgs<T>(elementClass, new Class[] {elementClass}, new Object[1]);
+        final CtorAndArgs<T> ctorAndArgs =
+                new CtorAndArgs<T>(lookup, elementClass, new Class[] {elementClass}, new Object[1]);
         final CtorAndArgsProvider<T> elementCopyCtorAndArgsProvider =
-                new CopyCtorAndArgsProvider<T>(elementClass, sourceOffset, ctorAndArgs);
+                new CopyCtorAndArgsProvider<T>(lookup, elementClass, sourceOffset, ctorAndArgs);
 
         if (sourceArrayModel.getStructuredSubArrayModel() != null) {
             // This array contains another array:
             StructuredArrayBuilder subArrayBuilder =
-                    createCopyingArrayBuilder((StructuredArrayModel)sourceArrayModel.getStructuredSubArrayModel(),
+                    createCopyingArrayBuilder(lookup,
+                            (StructuredArrayModel)sourceArrayModel.getStructuredSubArrayModel(),
                             sourceOffsets, offsetsIndex + 1,
                             counts, countsIndex + 1);
-            return new StructuredArrayBuilder<S, T>(sourceArrayClass, subArrayBuilder, count).
+            return new StructuredArrayBuilder<S, T>(lookup, sourceArrayClass, subArrayBuilder, count).
                             elementCtorAndArgsProvider(elementCopyCtorAndArgsProvider).
                             resolve();
         } else if (sourceArrayModel.getPrimitiveSubArrayModel() != null) {
             // This array contains elements that are PrimitiveArrays:
             PrimitiveArrayModel model = (PrimitiveArrayModel) sourceArrayModel.getPrimitiveSubArrayModel();
             @SuppressWarnings("unchecked")
-            PrimitiveArrayBuilder subArrayBuilder = new PrimitiveArrayBuilder(model.getArrayClass(), model.getLength());
-            return new StructuredArrayBuilder<S, T>(sourceArrayClass, subArrayBuilder, count).
+            PrimitiveArrayBuilder subArrayBuilder =
+                    new PrimitiveArrayBuilder(model.getArrayClass(), model.getLength());
+            return new StructuredArrayBuilder<S, T>(lookup, sourceArrayClass, subArrayBuilder, count).
                     elementCtorAndArgsProvider(elementCopyCtorAndArgsProvider).
                     resolve();
         } else {
             // This is a leaf array (it's elements are regular objects):
-            return new StructuredArrayBuilder<S, T>(sourceArrayClass, elementClass, count).
+            return new StructuredArrayBuilder<S, T>(lookup, sourceArrayClass, elementClass, count).
                     elementCtorAndArgsProvider(elementCopyCtorAndArgsProvider).
                     resolve();
         }

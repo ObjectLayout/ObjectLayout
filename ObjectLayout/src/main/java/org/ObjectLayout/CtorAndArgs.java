@@ -19,6 +19,7 @@ import java.lang.reflect.Constructor;
 public class CtorAndArgs<T> {
     private static final Class[] EMPTY_ARG_TYPES = new Class[0];
     private static final Object[] EMPTY_ARGS = new Object[0];
+    private static final MethodHandles.Lookup noLookup = null;
 
     private Constructor<T> constructor;
     private Object[] args;
@@ -52,12 +53,7 @@ public class CtorAndArgs<T> {
             final Class<T> instanceClass,
             final Class[] constructorArgTypes,
             final Object... args) throws NoSuchMethodException {
-        if (constructorArgTypes.length != args.length) {
-            throw new IllegalArgumentException("argument types and values must be the same length");
-        }
-        Constructor<T> ctor = instanceClass.getDeclaredConstructor(constructorArgTypes);
-        setConstructor(ctor);
-        setArgs(args);
+        this(noLookup, instanceClass, constructorArgTypes, args);
     }
 
     /**
@@ -76,17 +72,25 @@ public class CtorAndArgs<T> {
             MethodHandles.Lookup lookup,
             final Class<T> instanceClass,
             final Class[] constructorArgTypes,
-            final Object... args)  throws NoSuchMethodException, IllegalAccessException {
-        if (constructorArgTypes.length != args.length) {
-            throw new IllegalArgumentException("argument types and values must be the same length");
+            final Object... args)  throws NoSuchMethodException {
+        try {
+            if (constructorArgTypes.length != args.length) {
+                throw new IllegalArgumentException("argument types and values must be the same length");
+            }
+            @SuppressWarnings("unchecked")
+            Constructor<T> ctor = instanceClass.getDeclaredConstructor(constructorArgTypes);
+            if (lookup != null) {
+                if (!belongsToThisPackage(ctor.getDeclaringClass())) {
+                    lookup.unreflectConstructor(ctor); // May throw IllegalAccessException.
+                    // The fact the the provided lookup Proves we may setAccessible.
+                    ctor.setAccessible(true);
+                }
+            }
+            setConstructor(ctor);
+            setArgs(args);
+        } catch (IllegalAccessException e) {
+            throw new RuntimeException(e);
         }
-        Constructor<T> ctor = instanceClass.getDeclaredConstructor(constructorArgTypes);
-        if (lookup != null) {
-            lookup.unreflectConstructor(ctor); // May throw IllegalAccessException. Proves we may setAccessible.
-            ctor.setAccessible(true);
-        }
-        setConstructor(ctor);
-        setArgs(args);
     }
 
     /**
@@ -108,7 +112,7 @@ public class CtorAndArgs<T> {
      */
     public CtorAndArgs(
             MethodHandles.Lookup lookup,
-            final Class<T> instanceClass) throws NoSuchMethodException, IllegalAccessException {
+            final Class<T> instanceClass) throws NoSuchMethodException {
         this(lookup, instanceClass, EMPTY_ARG_TYPES, EMPTY_ARGS);
     }
 
@@ -165,5 +169,28 @@ public class CtorAndArgs<T> {
      */
     public void setContextCookie(final Object contextCookie) {
         this.contextCookie = contextCookie;
+    }
+
+
+    private static final ClassLoader thisClassLoader =
+            CtorAndArgs.class.getClassLoader();
+    private static final int indexOfLastPeriodInThisPackageName =
+            CtorAndArgs.class.getName().lastIndexOf('.');
+    private static final String thisPackageName =
+            CtorAndArgs.class.getName().substring(0, indexOfLastPeriodInThisPackageName);
+
+    static boolean belongsToThisPackage(Class<?> cls) {
+        if (cls.getClassLoader() != thisClassLoader) {
+            return false;
+        }
+        if (cls.isArray()) {
+            return false; // Arrays are not in this class.
+        }
+        String className = cls.getName();
+        // See if length of package name differs:
+        if (className.lastIndexOf('.') != indexOfLastPeriodInThisPackageName) {
+            return false;
+        }
+        return className.startsWith(thisPackageName);
     }
 }
