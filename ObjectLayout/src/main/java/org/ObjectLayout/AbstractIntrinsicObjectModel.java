@@ -1,9 +1,8 @@
 package org.ObjectLayout;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Modifier;
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
+import java.lang.reflect.*;
 
 /**
  * This class contains the intrinsifiable portions of IntrinsicObjectModel behavior. JDK implementations
@@ -14,6 +13,7 @@ import java.lang.reflect.Modifier;
  */
 
 abstract class AbstractIntrinsicObjectModel<T>  {
+    MethodHandles.Lookup lookup;
     private final Field field;
     private final Class containingClass;
     private final Class<T> objectClass;
@@ -21,6 +21,7 @@ abstract class AbstractIntrinsicObjectModel<T>  {
     private final AbstractStructuredArrayModel structuredArrayModel;
 
     AbstractIntrinsicObjectModel(
+            MethodHandles.Lookup lookup,
             final Field field,
             final AbstractPrimitiveArrayModel primitiveArrayModel,
             final AbstractStructuredArrayModel structuredArrayModel) {
@@ -28,22 +29,38 @@ abstract class AbstractIntrinsicObjectModel<T>  {
         @SuppressWarnings("unchecked")
         Class<T> objectClass = (Class<T>) field.getType();
 
+        this.lookup = lookup;
         this.field = field;
         this.containingClass = field.getDeclaringClass();
         this.objectClass = objectClass;
         this.primitiveArrayModel = primitiveArrayModel;
         this.structuredArrayModel = structuredArrayModel;
 
-        field.setAccessible(true);
 
-        sanityCheckAtModelConstruction();
+        try {
+            // Only set field accessible if the caller actually has access to it:
+            // Since we cannot get a setter to a final (not asetAccessible) field with
+            // lookup.findSetter() or lookup.unreflectSetter, we derive the caller's
+            // access permission to the final field by proving that we can get a getter
+            // to it (which would not be possible if it were e.g. private and the caller
+            // was not the declaring class). Once we prove to ourselves that the
+            // caller is allowed to access the field, we make (our internal copy of)
+            // field setAccesible to allow overwriting of final fields...
+            MethodHandle getter = lookup.unreflectGetter(field); // May throw IllegalAccessException
+            field.setAccessible(true);
+        } catch (IllegalAccessException ex) {
+            throw new IllegalArgumentException(ex);
+        }
+
+
+        sanityCheckAtModelConstruction(lookup);
     }
 
     Class<T> getObjectClass() {
         return objectClass;
     }
 
-    private void sanityCheckAtModelConstruction() {
+    private void sanityCheckAtModelConstruction(MethodHandles.Lookup lookup) {
         if ((primitiveArrayModel != null) &&
                 !primitiveArrayModel._getArrayClass().equals(objectClass)) {
             throw new IllegalArgumentException("Generic object class \"" + objectClass +
@@ -75,25 +92,6 @@ abstract class AbstractIntrinsicObjectModel<T>  {
             throw new IllegalArgumentException(
                     "The field type \"" + field.getType().getName() + "\" does not match the " +
                             "specified objectClass \"" + objectClass.getName() + "\"");
-        }
-        // Verify that no other model for this field already exists:
-        for (Field field : containingClass.getDeclaredFields()) {
-            try {
-                if (Modifier.isStatic(field.getModifiers()) &&
-                        AbstractIntrinsicObjectModel.class.isAssignableFrom(field.getType())) {
-                    field.setAccessible(true);
-                    AbstractIntrinsicObjectModel model = (AbstractIntrinsicObjectModel) field.get(null /* static field */);
-                    if ((model != null ) &&
-                            (model.field.equals(field))) {
-                        throw new IllegalArgumentException("An IntrinsicObjectModel for the field \"" +
-                                field.getName() +
-                                "\" in class \"" +
-                                containingClass.getName() + "\" already exists");
-                    }
-                }
-            } catch (IllegalAccessException ex) {
-                throw new RuntimeException("Unexpected IllegalAccessException on accessible field: ", ex);
-            }
         }
     }
 
@@ -177,6 +175,8 @@ abstract class AbstractIntrinsicObjectModel<T>  {
             field.set(containingObject, intrinsicObject);
         } catch (IllegalAccessException e) {
             throw new IllegalStateException(e);
+        } catch (Throwable ex) {
+            throw new RuntimeException(ex);
         }
     }
 }

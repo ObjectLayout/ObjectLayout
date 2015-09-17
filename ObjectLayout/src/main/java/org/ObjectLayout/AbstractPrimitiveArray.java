@@ -5,6 +5,8 @@
 
 package org.ObjectLayout;
 
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -20,13 +22,16 @@ import java.lang.reflect.InvocationTargetException;
 
 public abstract class AbstractPrimitiveArray {
 
+    static final MethodHandles.Lookup noLookup = null;
+
     private final long length;
 
     static <A extends AbstractPrimitiveArray> A _newInstance(
+            MethodHandles.Lookup lookup,
             final Class<A> arrayClass,
             final long length) {
         try {
-            return instantiate(length, arrayClass.getDeclaredConstructor(), (Object[]) null);
+            return instantiate(lookup, length, arrayClass.getDeclaredConstructor(), (Object[]) null);
         } catch (NoSuchMethodException ex) {
             throw new RuntimeException(ex);
         }
@@ -39,11 +44,13 @@ public abstract class AbstractPrimitiveArray {
         return instantiate(length, arrayConstructor, arrayConstructorArgs);
     }
 
-    static <A extends AbstractPrimitiveArray> A _copyInstance(A source) throws NoSuchMethodException {
+    static <A extends AbstractPrimitiveArray> A _copyInstance(
+            MethodHandles.Lookup lookup,
+            A source) throws NoSuchMethodException {
         @SuppressWarnings("unchecked")
         final Class<A> sourceArrayClass = (Class<A>) source.getClass();
         Constructor<A> arrayConstructor = sourceArrayClass.getDeclaredConstructor(sourceArrayClass);
-        return instantiate(source._getLength(), arrayConstructor, source);
+        return instantiate(lookup, source._getLength(), arrayConstructor, source);
     }
 
     /**
@@ -51,14 +58,31 @@ public abstract class AbstractPrimitiveArray {
      * at the field described by the supplied intrinsicObjectModel, using the supplied constructor and arguments.
      */
     static <A extends AbstractPrimitiveArray> A constructPrimitiveArrayWithin(
+            MethodHandles.Lookup lookup,
             final Object containingObject,
             final AbstractIntrinsicObjectModel<A> intrinsicObjectModel,
             final long length,
             final Constructor<A> arrayConstructor,
             final Object... arrayConstructorArgs) {
-        A array = instantiate(length, arrayConstructor, arrayConstructorArgs);
+        A array = instantiate(lookup, length, arrayConstructor, arrayConstructorArgs);
         intrinsicObjectModel.directlyInitializeTargetField(containingObject, array);
         return array;
+    }
+
+    private static <A extends AbstractPrimitiveArray> A instantiate(
+            MethodHandles.Lookup lookup,
+            final long length,
+            final Constructor<A> arrayConstructor,
+            final Object... arrayConstructorArgs) {
+        try {
+            if (lookup != null) {
+                lookup.unreflectConstructor(arrayConstructor); // May throw IllegalAccessException
+                arrayConstructor.setAccessible(true);
+            }
+            return instantiate(length, arrayConstructor, arrayConstructorArgs);
+        } catch (IllegalAccessException ex) {
+            throw new RuntimeException(ex);
+        }
     }
 
     private static <A extends AbstractPrimitiveArray> A instantiate(
@@ -69,7 +93,6 @@ public abstract class AbstractPrimitiveArray {
         constructorMagic.setArrayConstructorArgs(length);
         try {
             constructorMagic.setActive(true);
-            arrayConstructor.setAccessible(true);
             return arrayConstructor.newInstance(arrayConstructorArgs);
         } catch (InstantiationException ex) {
             throw new RuntimeException(ex);

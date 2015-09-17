@@ -75,7 +75,6 @@ abstract class AbstractStructuredArray<T> {
 
         try {
             constructorMagic.setActive(true);
-            arrayConstructor.setAccessible(true);
             return arrayConstructor.newInstance(args);
         } catch (InstantiationException ex) {
             throw new RuntimeException(ex);
@@ -147,7 +146,6 @@ abstract class AbstractStructuredArray<T> {
         constructorMagic.setConstructionArgs(subArrayModel);
         try {
             constructorMagic.setActive(true);
-            subArrayConstructor.setAccessible(true);
             T subArray = subArrayConstructor.newInstance(args);
             storeElementInLocalStorageAtIndex(subArray, index);
         } catch (InstantiationException ex) {
@@ -178,7 +176,6 @@ abstract class AbstractStructuredArray<T> {
         constructorMagic.setConstructionArgs(subArrayModel);
         try {
             constructorMagic.setActive(true);
-            subArrayConstructor.setAccessible(true);
             T array = subArrayConstructor.newInstance(args);
             intrinsicObjectModel.directlyInitializeTargetField(containingObject, array);
             return array;
