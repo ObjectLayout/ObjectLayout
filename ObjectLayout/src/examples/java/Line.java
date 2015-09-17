@@ -6,6 +6,8 @@
 import org.ObjectLayout.Intrinsic;
 import org.ObjectLayout.IntrinsicObjects;
 
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Constructor;
 
 /**
@@ -29,11 +31,14 @@ import java.lang.reflect.Constructor;
  *
  */
 public class Line {
+
+    private static final MethodHandles.Lookup lookup = MethodHandles.lookup();
+
     /**
      * Simple intrinsic object declaration and initialization:
      */
     @Intrinsic
-    private final Point endPoint1 = IntrinsicObjects.constructWithin("endPoint1", this);
+    private final Point endPoint1 = IntrinsicObjects.constructWithin(lookup, "endPoint1", this);
 
     /**
      * Declaration of an intrinsic object field that will be initialized later during construction or other init code:
@@ -49,7 +54,7 @@ public class Line {
         /**
          * Construction-time Initialization of IntrinsicObject:
          */
-        this.endPoint2 = IntrinsicObjects.constructWithin("endPoint2", this, xy_constructor, x2, y2);
+        this.endPoint2 = IntrinsicObjects.constructWithin(lookup, "endPoint2", this, xy_constructor, x2, y2);
 
         /**
          * Access to IntrinsicObject within constructor:
