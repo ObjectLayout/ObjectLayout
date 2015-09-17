@@ -5,6 +5,7 @@
 
 package org.ObjectLayout;
 
+import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -43,7 +44,9 @@ import static java.lang.reflect.Modifier.*;
  */
 public class StructuredArray<T> extends AbstractStructuredArray<T> implements Iterable<T> {
 
+    private static final Class[] EMPTY_ARG_TYPES = new Class[0];
     private static final Object[] EMPTY_ARGS = new Object[0];
+    private static final MethodHandles.Lookup noLookup = null;
 
     final Field[] fields;
     final boolean hasFinalFields;
@@ -64,20 +67,28 @@ public class StructuredArray<T> extends AbstractStructuredArray<T> implements It
     public static <T> StructuredArray<T> newInstance(
             final Class<T> elementClass,
             final long length) {
-        try {
-            final CtorAndArgs<T> constantCtorAndArgs = new CtorAndArgs<T>(elementClass);
-            final CtorAndArgsProvider<T> ctorAndArgsProvider =
-                    new CtorAndArgsProvider<T>() {
-                        @Override
-                        public CtorAndArgs<T> getForContext(ConstructionContext<T> context)
-                                throws NoSuchMethodException {
-                            return constantCtorAndArgs;
-                        }
-                    };
-            return instantiate(elementClass, length, ctorAndArgsProvider);
-        } catch (NoSuchMethodException ex) {
-            throw new RuntimeException(ex);
-        }
+        @SuppressWarnings("unchecked")
+        StructuredArray<T> instance = newInstance(StructuredArray.class, elementClass, length);
+        return instance;
+    }
+
+    /**
+     * Create an array of <code>length</code> elements, each containing an element object of
+     * type <code>elementClass</code>. Using the <code>elementClass</code>'s default constructor.
+     *
+     * @param lookup The lookup object to use when resolving constructors
+     * @param elementClass of each element in the array
+     * @param length of the array to create
+     * @param <T> The class of the array elements
+     * @return The newly created array
+     */
+    public static <T> StructuredArray<T> newInstance(
+            MethodHandles.Lookup lookup,
+            final Class<T> elementClass,
+            final long length) {
+        @SuppressWarnings("unchecked")
+        StructuredArray<T> instance = newInstance(lookup, StructuredArray.class, elementClass, length);
+        return instance;
     }
 
     /**
@@ -95,11 +106,30 @@ public class StructuredArray<T> extends AbstractStructuredArray<T> implements It
             final Class<S> arrayClass,
             final Class<T> elementClass,
             final long length) {
+        return newInstance(noLookup, arrayClass, elementClass, length);
+    }
+
+    /**
+     * Create an <code>arrayClass</code> array of <code>length</code> elements of
+     * type <code>elementClass</code>. Using the <code>elementClass</code>'s default constructor.
+     *
+     * @param lookup The lookup object to use when resolving constructors
+     * @param arrayClass of the array to create
+     * @param elementClass of each element in the array
+     * @param length of the array to create
+     * @param <S> The class of the array to be created
+     * @param <T> The class of the array elements
+     * @return The newly created array
+     */
+    public static <S extends StructuredArray<T>, T> S newInstance(
+            MethodHandles.Lookup lookup,
+            final Class<S> arrayClass,
+            final Class<T> elementClass,
+            final long length) {
         try {
-            Constructor<S> ctor = arrayClass.getDeclaredConstructor();
-            CtorAndArgs<S> arrayCtorAndArgs = new CtorAndArgs<S>(ctor, EMPTY_ARGS);
-            return newInstance(arrayCtorAndArgs, elementClass, length);
-        } catch (NoSuchMethodException ex) {
+            CtorAndArgs<S> arrayCtorAndArgs = new CtorAndArgs<S>(lookup, arrayClass, EMPTY_ARG_TYPES, EMPTY_ARGS);
+            return newInstance(lookup, arrayCtorAndArgs, elementClass, length);
+        } catch (NoSuchMethodException | IllegalAccessException ex) {
             throw new RuntimeException(ex);
         }
     }
@@ -119,11 +149,57 @@ public class StructuredArray<T> extends AbstractStructuredArray<T> implements It
             final CtorAndArgs<S> arrayCtorAndArgs,
             final Class<T> elementClass,
             final long length) {
+        return newInstance(noLookup, arrayCtorAndArgs, elementClass, length);
+    }
+
+    /**
+     * Create an <code>arrayCtorAndArgs.getConstructor().getDeclaringClass()</code> array of <code>length</code>
+     * elements of type <code>elementClass</code>. Use <code>elementClass</code>'s default constructor.
+     *
+     * @param lookup The lookup object to use when resolving constructors
+     * @param arrayCtorAndArgs for creating the array
+     * @param elementClass of each element in the array
+     * @param length of the array to create
+     * @param <S> The class of the array to be created
+     * @param <T> The class of the array elements
+     * @return The newly created array
+     */
+    public static <S extends StructuredArray<T>, T> S newInstance(
+            MethodHandles.Lookup lookup,
+            final CtorAndArgs<S> arrayCtorAndArgs,
+            final Class<T> elementClass,
+            final long length) {
         StructuredArrayBuilder<S, T> arrayBuilder = new StructuredArrayBuilder<S, T>(
+                lookup,
                 arrayCtorAndArgs.getConstructor().getDeclaringClass(),
                 elementClass,
                 length).
                 arrayCtorAndArgs(arrayCtorAndArgs).
+                resolve();
+        return instantiate(arrayBuilder);
+    }
+
+    /**
+     * Create an <code>arrayCtorAndArgs.getConstructor().getDeclaringClass()</code> array of <code>length</code>
+     * elements of type <code>elementClass</code>. Use <code>elementClass</code>'s default constructor.
+     *
+     * @param arrayCtorAndArgs for creating the array
+     * @param elementCtorAndArgs of each element in the array
+     * @param length of the array to create
+     * @param <S> The class of the array to be created
+     * @param <T> The class of the array elements
+     * @return The newly created array
+     */
+    public static <S extends StructuredArray<T>, T> S newInstance(
+            final CtorAndArgs<S> arrayCtorAndArgs,
+            final CtorAndArgs<T> elementCtorAndArgs,
+            final long length) {
+        StructuredArrayBuilder<S, T> arrayBuilder = new StructuredArrayBuilder<S, T>(
+                arrayCtorAndArgs.getConstructor().getDeclaringClass(),
+                elementCtorAndArgs.getConstructor().getDeclaringClass(),
+                length).
+                arrayCtorAndArgs(arrayCtorAndArgs).
+                elementCtorAndArgs(elementCtorAndArgs).
                 resolve();
         return instantiate(arrayBuilder);
     }
@@ -169,15 +245,37 @@ public class StructuredArray<T> extends AbstractStructuredArray<T> implements It
             final Class<T> elementClass,
             final long length,
             final CtorAndArgsProvider<T> ctorAndArgsProvider) {
+        return newInstance(noLookup, arrayClass, elementClass, length, ctorAndArgsProvider);
+    }
+
+    /**
+     * Create an <code>arrayClass</code> array of <code>length</code> elements, each containing an element object of
+     * type <code>elementClass</code>. Use constructor and arguments supplied (on a potentially
+     * per element index basis) by the specified <code>ctorAndArgsProvider</code> to construct and initialize
+     * each element.
+     *
+     * @param lookup The lookup object to use when resolving constructors
+     * @param arrayClass of the array to create.
+     * @param elementClass of each element in the array
+     * @param length of the array to create
+     * @param ctorAndArgsProvider produces element constructors [potentially] on a per element basis
+     * @param <S> The class of the array to be created
+     * @param <T> The class of the array elements
+     * @return The newly created array
+     */
+    public static <S extends StructuredArray<T>, T> S newInstance(
+            MethodHandles.Lookup lookup,
+            final Class<S> arrayClass,
+            final Class<T> elementClass,
+            final long length,
+            final CtorAndArgsProvider<T> ctorAndArgsProvider) {
         try {
-            Constructor<S> ctor = arrayClass.getDeclaredConstructor();
-            CtorAndArgs<S> arrayCtorAndArgs = new CtorAndArgs<S>(ctor, EMPTY_ARGS);
+            CtorAndArgs<S> arrayCtorAndArgs = new CtorAndArgs<S>(lookup, arrayClass, EMPTY_ARG_TYPES, EMPTY_ARGS);
             return instantiate(arrayCtorAndArgs, elementClass, length, ctorAndArgsProvider);
-        } catch (NoSuchMethodException ex) {
+        } catch (NoSuchMethodException | IllegalAccessException ex) {
             throw new RuntimeException(ex);
         }
     }
-
 
     /**
      * Create an <code>arrayCtorAndArgs.getConstructor().getDeclaringClass()</code> array of <code>length</code>
@@ -205,16 +303,36 @@ public class StructuredArray<T> extends AbstractStructuredArray<T> implements It
         }
     }
 
-
     /**
      * Create a &ltS extends StructuredArray&ltT&gt&gt array instance with elements copied from a source
      * collection.
+     * @param arrayClass of the array to create.
+     * @param elementClass of each element in the array
      * @param sourceCollection provides details for building the array
      * @param <S> The class of the array to be created
      * @param <T> The class of the array elements
      * @return The newly created array
      */
     public static <S extends StructuredArray<T>, T> S newInstance(
+            final Class<S> arrayClass,
+            final Class<T> elementClass,
+            final Collection<T> sourceCollection) {
+        return newInstance(noLookup, arrayClass, elementClass, sourceCollection);
+    }
+
+    /**
+     * Create a &ltS extends StructuredArray&ltT&gt&gt array instance with elements copied from a source
+     * collection.
+     * @param lookup The lookup object to use when resolving constructors
+     * @param arrayClass of the array to create.
+     * @param elementClass of each element in the array
+     * @param sourceCollection provides details for building the array
+     * @param <S> The class of the array to be created
+     * @param <T> The class of the array elements
+     * @return The newly created array
+     */
+    public static <S extends StructuredArray<T>, T> S newInstance(
+            MethodHandles.Lookup lookup,
             final Class<S> arrayClass,
             final Class<T> elementClass,
             final Collection<T> sourceCollection) {
@@ -231,15 +349,22 @@ public class StructuredArray<T> extends AbstractStructuredArray<T> implements It
         final Object[] args = new Object[1];
         try {
             Constructor<T> copyCtor = elementClass.getConstructor(elementClass);
+            if (lookup != null) {
+                lookup.unreflectConstructor(copyCtor); // May throw IllegalAccessException. If not, ok to setAccessible.
+                copyCtor.setAccessible(true);
+            }
             copyCtorAndArgs = new CtorAndArgs<T>(copyCtor, args);
-        } catch (NoSuchMethodException e) {
+        } catch (NoSuchMethodException | IllegalAccessException ex) {
             throw new IllegalArgumentException("elementClass " + elementClass.getName() +
-                    "does not have a copy constructor. ", e);
+                    "does not have an accessible copy constructor. ", ex);
         }
 
         final Iterator<T> sourceIterator = sourceCollection.iterator();
 
+        // TODO? : Does arrayClass need to use a copy constructor?
+
         StructuredArrayBuilder<S, T> arrayBuilder = new StructuredArrayBuilder<S, T>(
+                lookup,
                 arrayClass,
                 elementClass,
                 length).

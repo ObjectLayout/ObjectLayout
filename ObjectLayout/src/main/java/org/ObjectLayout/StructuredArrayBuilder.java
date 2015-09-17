@@ -1,5 +1,7 @@
 package org.ObjectLayout;
 
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Constructor;
 
 /**
@@ -82,6 +84,10 @@ public class StructuredArrayBuilder<S extends StructuredArray<T>, T> {
     private static final Class[] EMPTY_ARG_TYPES = new Class[0];
     private static final Object[] EMPTY_ARGS = new Object[0];
 
+    private static final MethodHandles.Lookup noLookup = null;
+
+    private MethodHandles.Lookup lookup = null;
+
     private CtorAndArgs<S> arrayCtorAndArgs;
     private final StructuredArrayModel<S, T> arrayModel;
 
@@ -106,10 +112,31 @@ public class StructuredArrayBuilder<S extends StructuredArray<T>, T> {
     public StructuredArrayBuilder(final Class<S> arrayClass,
                                   final Class<T> elementClass,
                                   final long length) {
+        this(noLookup, arrayClass, elementClass, length);
+    }
+
+    /**
+     * Constructs a new {@link StructuredArrayBuilder} object for creating arrays of type S with
+     * elements of type T, and the given length.
+     *
+     * Note: This constructor form cannot be used with an element type T that extends StructuredArray. Use the
+     * constructor form {@link StructuredArrayBuilder#StructuredArrayBuilder(Class, StructuredArrayBuilder, long)}
+     * to create builders that instantiate nested StructuredArrays.
+     *
+     * @param lookup The lookup object to use for accessing constructors when resolving this builder
+     * @param arrayClass The class of the array to be built by this builder
+     * @param elementClass The class of elements in the array to be built by this builder
+     * @param length The length of the array to be build by this builder
+     */
+    public StructuredArrayBuilder(MethodHandles.Lookup lookup,
+                                  final Class<S> arrayClass,
+                                  final Class<T> elementClass,
+                                  final long length) {
         if (elementClass.isAssignableFrom(StructuredArray.class)) {
             throw new IllegalArgumentException("Cannot use this constructor form for nested StructuredArrays. " +
                     "Use the StructuredArrayBuilder(arrayClass, subArrayBuilder, length) form instead.");
         }
+        this.lookup = lookup;
         this.arrayModel = new StructuredArrayModel<S, T>(arrayClass, elementClass, length){};
         this.structuredSubArrayBuilder = null;
         this.primitiveSubArrayBuilder = null;
@@ -121,6 +148,18 @@ public class StructuredArrayBuilder<S extends StructuredArray<T>, T> {
      * @param arrayModel The model of the array to be built by this builder
      */
     public StructuredArrayBuilder(final StructuredArrayModel<S, T> arrayModel) {
+        this(noLookup, arrayModel);
+    }
+
+    /**
+     * Constructs a new {@link StructuredArrayBuilder} object for creating arrays of the given array model.
+     *
+     * @param lookup The lookup object to use for accessing constructors when resolving this builder
+     * @param arrayModel The model of the array to be built by this builder
+     */
+    public StructuredArrayBuilder(MethodHandles.Lookup lookup,
+                                  final StructuredArrayModel<S, T> arrayModel) {
+        this.lookup = lookup;
         this.arrayModel = arrayModel;
         this.structuredSubArrayBuilder = null;
         this.primitiveSubArrayBuilder = null;
@@ -139,8 +178,30 @@ public class StructuredArrayBuilder<S extends StructuredArray<T>, T> {
      * @param <E> The element class in the subArray.
      */
     public <A extends StructuredArray<E>, E> StructuredArrayBuilder(final Class<S> arrayClass,
-                                      final StructuredArrayBuilder<A, E> subArrayBuilder,
-                                      final long length) {
+                                                                    final StructuredArrayBuilder<A, E> subArrayBuilder,
+                                                                    final long length) {
+        this(noLookup, arrayClass, subArrayBuilder, length);
+    }
+
+    /**
+     * Constructs a new {@link StructuredArrayBuilder} object for creating an array of type S with
+     * elements of type T, and the given length. Used when T extends StructuredArray, such that the
+     * arrays instantiated by this builder would include nested StructuredArrays.
+     *
+     * @param lookup The lookup object to use for accessing constructors when resolving this builder
+     * @param arrayClass The class of the array to be built by this builder
+     * @param subArrayBuilder The builder used for creating individual array elements (which are themselves
+     *                        StructuredArrays)
+     * @param length The length of the array to be build by this builder
+     * @param <A> The class or the subArray (should match T for the StructuredArrayBuilder)
+     * @param <E> The element class in the subArray.
+     */
+    public <A extends StructuredArray<E>, E> StructuredArrayBuilder(
+            MethodHandles.Lookup lookup,
+            final Class<S> arrayClass,
+            final StructuredArrayBuilder<A, E> subArrayBuilder,
+            final long length) {
+        this.lookup = lookup;
         this.arrayModel =
                 new StructuredArrayModel<S, T>(
                         arrayClass,
@@ -163,8 +224,28 @@ public class StructuredArrayBuilder<S extends StructuredArray<T>, T> {
      * @param <A> The class in the subArray (should match T for the StructuredArrayBuilder)
      */
     public <A extends AbstractPrimitiveByteArray> StructuredArrayBuilder(final Class<S> arrayClass,
-                                  final PrimitiveArrayBuilder<A> subArrayBuilder,
-                                  final long length) {
+                                                                         final PrimitiveArrayBuilder<A> subArrayBuilder,
+                                                                         final long length) {
+        this(noLookup, arrayClass, subArrayBuilder, length);
+    }
+
+    /**
+     * Constructs a new {@link StructuredArrayBuilder} object for creating an array of type S with
+     * elements of type T, and the given length. Used when T extends PrimitiveArray, such that the
+     * arrays instantiated by this builder would include elements that are PrimitiveArrays.
+     *
+     * @param arrayClass The class of the array to be built by this builder
+     * @param subArrayBuilder The builder used for creating individual array elements (which are themselves
+     *                        subclassable PrimitiveArrays)
+     * @param length The length of the array to be build by this builder
+     * @param <A> The class in the subArray (should match T for the StructuredArrayBuilder)
+     */
+    public <A extends AbstractPrimitiveByteArray> StructuredArrayBuilder(
+            MethodHandles.Lookup lookup,
+            final Class<S> arrayClass,
+            final PrimitiveArrayBuilder<A> subArrayBuilder,
+            final long length) {
+        this.lookup = lookup;
         this.arrayModel =
                 new StructuredArrayModel<S, T>(
                         arrayClass,
@@ -278,7 +359,8 @@ public class StructuredArrayBuilder<S extends StructuredArray<T>, T> {
     private void resolve(boolean resolveArrayCtorAndArgs) throws IllegalStateException {
         try {
             if ((arrayCtorAndArgs == null) && resolveArrayCtorAndArgs) {
-                this.arrayCtorAndArgs = new CtorAndArgs<S>(arrayModel.getArrayClass(), EMPTY_ARG_TYPES, EMPTY_ARGS);
+                this.arrayCtorAndArgs =
+                        new CtorAndArgs<S>(lookup, arrayModel.getArrayClass(), EMPTY_ARG_TYPES, EMPTY_ARGS);
             }
 
             if (elementCtorAndArgsProvider == null) {
@@ -310,7 +392,7 @@ public class StructuredArrayBuilder<S extends StructuredArray<T>, T> {
                     elementCtorAndArgsProvider = subArrayCtorAndArgsProvider;
                 } else {
                     // Use the default constructor:
-                    final CtorAndArgs<T> constantCtorAndArgs = new CtorAndArgs<T>(arrayModel.getElementClass());
+                    final CtorAndArgs<T> constantCtorAndArgs = new CtorAndArgs<T>(lookup, arrayModel.getElementClass());
                     elementCtorAndArgsProvider =
                             new CtorAndArgsProvider<T>() {
                                 @Override
@@ -328,6 +410,8 @@ public class StructuredArrayBuilder<S extends StructuredArray<T>, T> {
             }
         } catch (NoSuchMethodException ex) {
             throw new IllegalArgumentException("Failed to find constructor.", ex);
+        } catch (IllegalAccessException ex) {
+            throw new IllegalArgumentException("Failed access checks");
         }
     }
 
