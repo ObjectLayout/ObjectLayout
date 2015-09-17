@@ -7,6 +7,8 @@
 import org.ObjectLayout.Intrinsic;
 import org.ObjectLayout.IntrinsicObjects;
 
+import java.lang.invoke.MethodHandles;
+
 /**
  * A simple Octagon class example with an intrinsic StructuredArray of Points. Demonstrates use of
  * {@link org.ObjectLayout.IntrinsicObjectModel} members and their initialization, when the
@@ -14,11 +16,14 @@ import org.ObjectLayout.IntrinsicObjects;
  *
  */
 public class Octagon {
+
+    private static final MethodHandles.Lookup lookup = MethodHandles.lookup();
+
     /**
      * Intrinsic object declaration and initialization for a StructuredArray member:
      */
     @Intrinsic(length = 8)
-    private final PointArray points = IntrinsicObjects.constructWithin("points", this);
+    private final PointArray points = IntrinsicObjects.constructWithin(lookup, "points", this);
 
     private final String color;
 

@@ -6,19 +6,24 @@
 import org.ObjectLayout.Intrinsic;
 import org.ObjectLayout.IntrinsicObjects;
 
+import java.lang.invoke.MethodHandles;
+
 /**
  * A simple Line class example with two intrinsic Point end point objects. Demonstrates use of
  * {@link org.ObjectLayout.Intrinsic} and {@link org.ObjectLayout.IntrinsicObjects}
  *
  */
 public class SimpleLine {
+
+    private static final MethodHandles.Lookup lookup = MethodHandles.lookup();
+
     /**
      * Simple intrinsic object declaration and initialization:
      */
     @Intrinsic
-    private final Point endPoint1 = IntrinsicObjects.constructWithin("endPoint1", this);
+    private final Point endPoint1 = IntrinsicObjects.constructWithin(lookup, "endPoint1", this);
     @Intrinsic
-    private final Point endPoint2 = IntrinsicObjects.constructWithin("endPoint2", this);
+    private final Point endPoint2 = IntrinsicObjects.constructWithin(lookup, "endPoint2", this);
 
     public SimpleLine() {
         this(0, 0, 0, 0);
