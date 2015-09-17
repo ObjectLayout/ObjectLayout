@@ -5,8 +5,6 @@
 
 package org.ObjectLayout;
 
-import com.sun.istack.internal.NotNull;
-
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
