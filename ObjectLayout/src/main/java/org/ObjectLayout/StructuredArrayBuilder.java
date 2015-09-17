@@ -1,6 +1,5 @@
 package org.ObjectLayout;
 
-import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Constructor;
 
@@ -203,7 +202,7 @@ public class StructuredArrayBuilder<S extends StructuredArray<T>, T> {
             final long length) {
         this.lookup = lookup;
         this.arrayModel =
-                new StructuredArrayModel<S, T>(
+                new StructuredArrayModel<>(
                         arrayClass,
                         subArrayBuilder.getArrayModel(),
                         length
@@ -247,7 +246,7 @@ public class StructuredArrayBuilder<S extends StructuredArray<T>, T> {
             final long length) {
         this.lookup = lookup;
         this.arrayModel =
-                new StructuredArrayModel<S, T>(
+                new StructuredArrayModel<>(
                         arrayClass,
                         subArrayBuilder.getArrayModel(),
                         length
@@ -313,7 +312,7 @@ public class StructuredArrayBuilder<S extends StructuredArray<T>, T> {
      * @return The builder
      */
     public StructuredArrayBuilder<S, T> elementCtorAndArgs(final Constructor<T> constructor, final Object... args) {
-        return elementCtorAndArgs(new CtorAndArgs<T>(constructor, args));
+        return elementCtorAndArgs(new CtorAndArgs<>(constructor, args));
     }
 
     /**
@@ -339,7 +338,7 @@ public class StructuredArrayBuilder<S extends StructuredArray<T>, T> {
      * @return The builder
      */
     public StructuredArrayBuilder<S, T> arrayCtorAndArgs(final Constructor<S> constructor, final Object... args) {
-        this.arrayCtorAndArgs = new CtorAndArgs<S>(constructor, args);
+        this.arrayCtorAndArgs = new CtorAndArgs<>(constructor, args);
         return this;
     }
 
@@ -356,60 +355,56 @@ public class StructuredArrayBuilder<S extends StructuredArray<T>, T> {
         return this;
     }
 
-    private void resolve(boolean resolveArrayCtorAndArgs) throws IllegalStateException {
-        try {
-            if ((arrayCtorAndArgs == null) && resolveArrayCtorAndArgs) {
-                this.arrayCtorAndArgs =
-                        new CtorAndArgs<S>(lookup, arrayModel.getArrayClass(), EMPTY_ARG_TYPES, EMPTY_ARGS);
-            }
+    private void resolve(boolean resolveArrayCtorAndArgs) {
+        if ((arrayCtorAndArgs == null) && resolveArrayCtorAndArgs) {
+            this.arrayCtorAndArgs =
+                    new CtorAndArgs<>(lookup, arrayModel.getArrayClass(), EMPTY_ARG_TYPES, EMPTY_ARGS);
+        }
 
-            if (elementCtorAndArgsProvider == null) {
-                if ((structuredSubArrayBuilder != null) &&
-                        (structuredSubArrayBuilder.arrayCtorAndArgs != null)) {
-                    // Use the CtorAndArgs provided for subArray elements:
-                    @SuppressWarnings("unchecked")
-                    CtorAndArgsProvider<T> subArrayCtorAndArgsProvider =
-                            new CtorAndArgsProvider<T>() {
-                                @Override
-                                public CtorAndArgs<T> getForContext(
-                                        ConstructionContext<T> context) throws NoSuchMethodException {
-                                    return structuredSubArrayBuilder.arrayCtorAndArgs;
-                                }
-                            };
-                    elementCtorAndArgsProvider = subArrayCtorAndArgsProvider;
-                } else if ((primitiveSubArrayBuilder != null) &&
-                        (primitiveSubArrayBuilder.getArrayCtorAndArgs() != null)) {
-                    // Use the CtorAndArgs provided for subArray elements:
-                    @SuppressWarnings("unchecked")
-                    CtorAndArgsProvider<T> subArrayCtorAndArgsProvider =
-                            new CtorAndArgsProvider<T>() {
-                                @Override
-                                public CtorAndArgs<T> getForContext(
-                                        ConstructionContext<T> context) throws NoSuchMethodException {
-                                    return primitiveSubArrayBuilder.getArrayCtorAndArgs();
-                                }
-                            };
-                    elementCtorAndArgsProvider = subArrayCtorAndArgsProvider;
-                } else {
-                    // Use the default constructor:
-                    final CtorAndArgs<T> constantCtorAndArgs = new CtorAndArgs<T>(lookup, arrayModel.getElementClass());
-                    elementCtorAndArgsProvider =
-                            new CtorAndArgsProvider<T>() {
-                                @Override
-                                public CtorAndArgs<T> getForContext(
-                                        ConstructionContext<T> context) throws NoSuchMethodException {
-                                    return constantCtorAndArgs;
-                                }
-                            };
-                }
+        if (elementCtorAndArgsProvider == null) {
+            if ((structuredSubArrayBuilder != null) &&
+                    (structuredSubArrayBuilder.arrayCtorAndArgs != null)) {
+                // Use the CtorAndArgs provided for subArray elements:
+                @SuppressWarnings("unchecked")
+                CtorAndArgsProvider<T> subArrayCtorAndArgsProvider =
+                        new CtorAndArgsProvider<T>() {
+                            @Override
+                            public CtorAndArgs<T> getForContext(
+                                    ConstructionContext<T> context) throws NoSuchMethodException {
+                                return structuredSubArrayBuilder.arrayCtorAndArgs;
+                            }
+                        };
+                elementCtorAndArgsProvider = subArrayCtorAndArgsProvider;
+            } else if ((primitiveSubArrayBuilder != null) &&
+                    (primitiveSubArrayBuilder.getArrayCtorAndArgs() != null)) {
+                // Use the CtorAndArgs provided for subArray elements:
+                @SuppressWarnings("unchecked")
+                CtorAndArgsProvider<T> subArrayCtorAndArgsProvider =
+                        new CtorAndArgsProvider<T>() {
+                            @Override
+                            public CtorAndArgs<T> getForContext(
+                                    ConstructionContext<T> context) throws NoSuchMethodException {
+                                return primitiveSubArrayBuilder.getArrayCtorAndArgs();
+                            }
+                        };
+                elementCtorAndArgsProvider = subArrayCtorAndArgsProvider;
+            } else {
+                // Use the default constructor:
+                final CtorAndArgs<T> constantCtorAndArgs = new CtorAndArgs<>(lookup, arrayModel.getElementClass());
+                elementCtorAndArgsProvider =
+                        new CtorAndArgsProvider<T>() {
+                            @Override
+                            public CtorAndArgs<T> getForContext(
+                                    ConstructionContext<T> context) throws NoSuchMethodException {
+                                return constantCtorAndArgs;
+                            }
+                        };
             }
+        }
 
-            if (structuredSubArrayBuilder != null) {
-                // recurse through subArray builders and resolve them too:
-                structuredSubArrayBuilder.resolve(false);
-            }
-        } catch (NoSuchMethodException ex) {
-            throw new IllegalArgumentException("Failed to find constructor.", ex);
+        if (structuredSubArrayBuilder != null) {
+            // recurse through subArray builders and resolve them too:
+            structuredSubArrayBuilder.resolve(false);
         }
     }
 
@@ -422,7 +417,7 @@ public class StructuredArrayBuilder<S extends StructuredArray<T>, T> {
      * @throws IllegalArgumentException if the array constructor or element constructor fail to resolve given
      * the current information in the builder
      */
-    public StructuredArrayBuilder<S, T> resolve() throws IllegalArgumentException {
+    public StructuredArrayBuilder<S, T> resolve() {
         resolve(true);
         return this;
     }

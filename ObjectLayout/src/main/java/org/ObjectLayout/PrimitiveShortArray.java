@@ -142,6 +142,21 @@ public class PrimitiveShortArray extends AbstractPrimitiveShortArray {
      * array constructor, and array constructor arguments.
      *
      * @param length The length of the array.
+     * @param arrayCtorAndArgs for creating the array
+     * @param <A> The class of the array to be created (extends PrimitiveShortArray)
+     * @return a new instance of &ltA extends {@link PrimitiveShortArray}&gt
+     */
+    public static <A extends PrimitiveShortArray> A newInstance(
+            final CtorAndArgs<A> arrayCtorAndArgs,
+            final long length) {
+        return AbstractPrimitiveArray._newInstance(arrayCtorAndArgs, length);
+    }
+
+    /**
+     * Create a new instance of &ltA extends {@link PrimitiveShortArray}&gt with a given length,
+     * array constructor, and array constructor arguments.
+     *
+     * @param length The length of the array.
      * @param arrayConstructor The array constructor to use
      * @param arrayConstructorArgs The arguments to pass to the array constructor
      * @param <A> The class of the array to be created (extends PrimitiveShortArray)

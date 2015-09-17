@@ -37,26 +37,20 @@ class CopyCtorAndArgsProvider<T> implements CtorAndArgsProvider<T> {
     /**
      * Used to apply a copy constructor to a target array's elements, copying corresponding elements from a
      * source array
-     *
-     * @throws NoSuchMethodException
      */
     public CopyCtorAndArgsProvider(
-            final Class<T> elementClass,
-            CtorAndArgs<T> ctorAndArgs) throws NoSuchMethodException {
-        this(noLookup, elementClass, ctorAndArgs);
+            final Class<T> elementClass) throws NoSuchMethodException {
+        this(noLookup, elementClass);
     }
 
     /**
      * Used to apply a copy constructor to a target array's elements, copying corresponding elements from a
      * source array
-     *
-     * @throws NoSuchMethodException
      */
     public CopyCtorAndArgsProvider(
             MethodHandles.Lookup lookup,
-            final Class<T> elementClass,
-            CtorAndArgs<T> ctorAndArgs) throws NoSuchMethodException {
-        this(elementClass, 0, ctorAndArgs);
+            final Class<T> elementClass) {
+        this(lookup, elementClass, 0);
     }
 
     /**
@@ -64,45 +58,28 @@ class CopyCtorAndArgsProvider<T> implements CtorAndArgsProvider<T> {
      * source array, starting at a given offset
      *
      * @param sourceOffset The beginning index in the source from which to start copying
-     * @throws NoSuchMethodException if a copy constructor is not found in element class
      */
     public CopyCtorAndArgsProvider(
             final Class<T> elementClass,
-            final long sourceOffset,
-            CtorAndArgs<T> ctorAndArgs) throws NoSuchMethodException {
-        this(noLookup, elementClass, sourceOffset, ctorAndArgs);
+            final long sourceOffset) {
+        this(noLookup, elementClass, sourceOffset);
     }
 
     /**
      * Used to apply a copy constructor to a target array's elements, copying corresponding elements from a
      * source array, starting at a given offset
      *
-     * @param lookup
-     * @param elementClass
+     * @param lookup The lookup object to use when resolving constructors
+     * @param elementClass The element class to which the copy constructor belongs
      * @param sourceOffset The beginning index in the source from which to start copying
-     * @param ctorAndArgs
-     * @throws NoSuchMethodException if a copy constructor is not found in element class
      */
     public CopyCtorAndArgsProvider(
             MethodHandles.Lookup lookup,
             final Class<T> elementClass,
-            final long sourceOffset,
-            CtorAndArgs<T> ctorAndArgs)
-            throws NoSuchMethodException {
-        try {
+            final long sourceOffset) {
             this.sourceOffset = sourceOffset;
-            this.copyConstructor = elementClass.getDeclaredConstructor(elementClass);
-            if (lookup != null) {
-                if (!CtorAndArgs.belongsToThisPackage(elementClass)) {
-                    lookup.unreflectConstructor(copyConstructor); // May throw IllegalAccessException.
-                    // The fact the the provided lookup Proves we may setAccessible.
-                    copyConstructor.setAccessible(true);
-                }
-            }
-            this.ctorAndArgs = ctorAndArgs;
-        } catch (IllegalAccessException e) {
-            throw new RuntimeException(e);
-        }
+            this.ctorAndArgs = new CtorAndArgs<>(lookup, elementClass, new Class[] {elementClass}, new Object[1]);
+            this.copyConstructor = ctorAndArgs.getConstructor(); // Remember it so we can overwrite back each time.
     }
 
     /**
@@ -111,10 +88,9 @@ class CopyCtorAndArgsProvider<T> implements CtorAndArgsProvider<T> {
      *
      * @param context The construction context (index, containing array, etc.) of the element to be constructed.
      * @return {@link CtorAndArgs} instance to used in element construction
-     * @throws NoSuchMethodException if expected constructor is not found in element class
      */
     @Override
-    public CtorAndArgs<T> getForContext(final ConstructionContext context) throws NoSuchMethodException {
+    public CtorAndArgs<T> getForContext(final ConstructionContext context) {
 
         // Find source array for this context:
         @SuppressWarnings("unchecked")

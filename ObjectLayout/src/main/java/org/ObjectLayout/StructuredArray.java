@@ -5,6 +5,8 @@
 
 package org.ObjectLayout;
 
+import com.sun.istack.internal.NotNull;
+
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
@@ -126,12 +128,8 @@ public class StructuredArray<T> extends AbstractStructuredArray<T> implements It
             final Class<S> arrayClass,
             final Class<T> elementClass,
             final long length) {
-        try {
-            CtorAndArgs<S> arrayCtorAndArgs = new CtorAndArgs<S>(lookup, arrayClass, EMPTY_ARG_TYPES, EMPTY_ARGS);
+            CtorAndArgs<S> arrayCtorAndArgs = new CtorAndArgs<>(lookup, arrayClass, EMPTY_ARG_TYPES, EMPTY_ARGS);
             return newInstance(lookup, arrayCtorAndArgs, elementClass, length);
-        } catch (NoSuchMethodException e) {
-            throw new RuntimeException(e);
-        }
     }
 
     /**
@@ -169,7 +167,7 @@ public class StructuredArray<T> extends AbstractStructuredArray<T> implements It
             final CtorAndArgs<S> arrayCtorAndArgs,
             final Class<T> elementClass,
             final long length) {
-        StructuredArrayBuilder<S, T> arrayBuilder = new StructuredArrayBuilder<S, T>(
+        StructuredArrayBuilder<S, T> arrayBuilder = new StructuredArrayBuilder<>(
                 lookup,
                 arrayCtorAndArgs.getConstructor().getDeclaringClass(),
                 elementClass,
@@ -194,7 +192,7 @@ public class StructuredArray<T> extends AbstractStructuredArray<T> implements It
             final CtorAndArgs<S> arrayCtorAndArgs,
             final CtorAndArgs<T> elementCtorAndArgs,
             final long length) {
-        StructuredArrayBuilder<S, T> arrayBuilder = new StructuredArrayBuilder<S, T>(
+        StructuredArrayBuilder<S, T> arrayBuilder = new StructuredArrayBuilder<>(
                 arrayCtorAndArgs.getConstructor().getDeclaringClass(),
                 elementCtorAndArgs.getConstructor().getDeclaringClass(),
                 length).
@@ -219,11 +217,7 @@ public class StructuredArray<T> extends AbstractStructuredArray<T> implements It
             final Class<T> elementClass,
             final CtorAndArgsProvider<T> ctorAndArgsProvider,
             final long length) {
-        try {
             return instantiate(elementClass, length, ctorAndArgsProvider);
-        } catch (NoSuchMethodException ex) {
-            throw new RuntimeException(ex);
-        }
     }
 
     /**
@@ -269,12 +263,8 @@ public class StructuredArray<T> extends AbstractStructuredArray<T> implements It
             final Class<T> elementClass,
             final long length,
             final CtorAndArgsProvider<T> ctorAndArgsProvider) {
-        try {
-            CtorAndArgs<S> arrayCtorAndArgs = new CtorAndArgs<S>(lookup, arrayClass, EMPTY_ARG_TYPES, EMPTY_ARGS);
-            return instantiate(arrayCtorAndArgs, elementClass, length, ctorAndArgsProvider);
-        } catch (NoSuchMethodException e) {
-            throw new RuntimeException(e);
-        }
+        CtorAndArgs<S> arrayCtorAndArgs = new CtorAndArgs<>(lookup, arrayClass, EMPTY_ARG_TYPES, EMPTY_ARGS);
+        return instantiate(arrayCtorAndArgs, elementClass, length, ctorAndArgsProvider);
     }
 
     /**
@@ -296,11 +286,7 @@ public class StructuredArray<T> extends AbstractStructuredArray<T> implements It
             final Class<T> elementClass,
             final long length,
             final CtorAndArgsProvider<T> ctorAndArgsProvider) {
-        try {
-            return instantiate(arrayCtorAndArgs, elementClass, length, ctorAndArgsProvider);
-        } catch (NoSuchMethodException ex) {
-            throw new RuntimeException(ex);
-        }
+        return instantiate(arrayCtorAndArgs, elementClass, length, ctorAndArgsProvider);
     }
 
     /**
@@ -348,15 +334,15 @@ public class StructuredArray<T> extends AbstractStructuredArray<T> implements It
         final CtorAndArgs<T> copyCtorAndArgs;
         final Object[] args = new Object[1];
         try {
-            copyCtorAndArgs = new CtorAndArgs<T>(lookup, elementClass, new Class[] {elementClass}, args);
-        } catch (NoSuchMethodException ex) {
-            throw new IllegalArgumentException("elementClass " + elementClass.getName() +
-                    "does not have an accessible copy constructor. ", ex);
+            copyCtorAndArgs = new CtorAndArgs<>(lookup, elementClass, new Class[] {elementClass}, args);
+        } catch (RuntimeException ex) {
+            throw new IllegalArgumentException("Failed to locate copy constructor and args for elementClass " +
+                    elementClass.getName() + ".", ex);
         }
 
         final Iterator<T> sourceIterator = sourceCollection.iterator();
 
-        StructuredArrayBuilder<S, T> arrayBuilder = new StructuredArrayBuilder<S, T>(
+        StructuredArrayBuilder<S, T> arrayBuilder = new StructuredArrayBuilder<>(
                 lookup,
                 arrayClass,
                 elementClass,
@@ -364,8 +350,7 @@ public class StructuredArray<T> extends AbstractStructuredArray<T> implements It
                 elementCtorAndArgsProvider(
                         new CtorAndArgsProvider<T>() {
                             @Override
-                            public CtorAndArgs<T> getForContext(
-                                    ConstructionContext<T> context) throws NoSuchMethodException {
+                            public CtorAndArgs<T> getForContext(ConstructionContext<T> context) {
                                 args[0] = sourceIterator.next();
                                 return copyCtorAndArgs.setArgs(args);
                             }
@@ -397,10 +382,9 @@ public class StructuredArray<T> extends AbstractStructuredArray<T> implements It
      * @param <S> The class of the array to be created
      * @param <T> The class of the array elements
      * @return The newly created array
-     * @throws NoSuchMethodException if any contained element class does not support a copy constructor
      */
     public static <S extends StructuredArray<T>, T> S copyInstance(
-            final S source) throws NoSuchMethodException {
+            final S source) {
         return copyInstance(noLookup, source);
     }
 
@@ -414,11 +398,10 @@ public class StructuredArray<T> extends AbstractStructuredArray<T> implements It
      * @param <S> The class of the array to be created
      * @param <T> The class of the array elements
      * @return The newly created array
-     * @throws NoSuchMethodException if any contained element class does not support a copy constructor
      */
     public static <S extends StructuredArray<T>, T> S copyInstance(
             MethodHandles.Lookup lookup,
-            final S source) throws NoSuchMethodException {
+            final S source) {
         return copyInstance(lookup, source, 0, source.getLength());
     }
 
@@ -433,12 +416,11 @@ public class StructuredArray<T> extends AbstractStructuredArray<T> implements It
      * @param <S> The class of the array to be created
      * @param <T> The class of the array elements
      * @return The newly created array
-     * @throws NoSuchMethodException if any contained element class does not support a copy constructor
      */
     public static <S extends StructuredArray<T>, T> S copyInstance(
             final S source,
             final long sourceOffset,
-            final long count) throws NoSuchMethodException {
+            final long count) {
         return copyInstance(noLookup, source, sourceOffset, count);
     }
 
@@ -454,13 +436,12 @@ public class StructuredArray<T> extends AbstractStructuredArray<T> implements It
      * @param <S> The class of the array to be created
      * @param <T> The class of the array elements
      * @return The newly created array
-     * @throws NoSuchMethodException if any contained element class does not support a copy constructor
      */
     public static <S extends StructuredArray<T>, T> S copyInstance(
             MethodHandles.Lookup lookup,
             final S source,
             final long sourceOffset,
-            final long count) throws NoSuchMethodException {
+            final long count) {
         return copyInstance(lookup, source, new long[]{sourceOffset}, new long[]{count});
     }
 
@@ -478,13 +459,12 @@ public class StructuredArray<T> extends AbstractStructuredArray<T> implements It
      * @param <S> The class of the array to be created
      * @param <T> The class of the array elements
      * @return The newly created array
-     * @throws NoSuchMethodException if any contained element class does not support a copy constructor
      */
     @SuppressWarnings("unchecked")
     public static <S extends StructuredArray<T>, T> S copyInstance(
             final S source,
             final long[] sourceOffsets,
-            final long[] counts) throws NoSuchMethodException {
+            final long[] counts) {
         return copyInstance(noLookup, source, sourceOffsets, counts);
     }
 
@@ -503,14 +483,13 @@ public class StructuredArray<T> extends AbstractStructuredArray<T> implements It
      * @param <S> The class of the array to be created
      * @param <T> The class of the array elements
      * @return The newly created array
-     * @throws NoSuchMethodException if any contained element class does not support a copy constructor
      */
     @SuppressWarnings("unchecked")
     public static <S extends StructuredArray<T>, T> S copyInstance(
             MethodHandles.Lookup lookup,
             final S source,
             final long[] sourceOffsets,
-            final long[] counts) throws NoSuchMethodException {
+            final long[] counts) {
         if (sourceOffsets.length != counts.length) {
             throw new IllegalArgumentException("sourceOffsets.length must match counts.length");
         }
@@ -538,7 +517,7 @@ public class StructuredArray<T> extends AbstractStructuredArray<T> implements It
         final StructuredArrayModel<S, T> sourceArrayModel = (StructuredArrayModel<S, T>) source.getArrayModel();
         final Class<S> sourceArrayClass = sourceArrayModel.getArrayClass();
         CtorAndArgs<S> arrayCtorAndArgs =
-                new CtorAndArgs<S>(lookup, sourceArrayClass, new Class[] {sourceArrayClass}, source);
+                new CtorAndArgs<>(lookup, sourceArrayClass, new Class[] {sourceArrayClass}, source);
 
         final StructuredArrayBuilder<S, T> arrayBuilder =
                 createCopyingArrayBuilder(lookup, sourceArrayModel, sourceOffsets, 0, counts, 0).
@@ -552,17 +531,15 @@ public class StructuredArray<T> extends AbstractStructuredArray<T> implements It
             MethodHandles.Lookup lookup,
             final StructuredArrayModel<S, T> sourceArrayModel,
             final long[] sourceOffsets, final int offsetsIndex,
-            final long[] counts, final int countsIndex) throws NoSuchMethodException {
+            final long[] counts, final int countsIndex) {
         final Class<S> sourceArrayClass = sourceArrayModel.getArrayClass();
         final Class<T> elementClass = sourceArrayModel.getElementClass();
 
         long sourceOffset = (offsetsIndex < sourceOffsets.length) ? sourceOffsets[offsetsIndex] : 0;
         long count = (countsIndex < counts.length) ? counts[countsIndex] : sourceArrayModel.getLength();
 
-        final CtorAndArgs<T> ctorAndArgs =
-                new CtorAndArgs<T>(lookup, elementClass, new Class[] {elementClass}, new Object[1]);
         final CtorAndArgsProvider<T> elementCopyCtorAndArgsProvider =
-                new CopyCtorAndArgsProvider<T>(lookup, elementClass, sourceOffset, ctorAndArgs);
+                new CopyCtorAndArgsProvider<>(lookup, elementClass, sourceOffset);
 
         if (sourceArrayModel.getStructuredSubArrayModel() != null) {
             // This array contains another array:
@@ -571,21 +548,28 @@ public class StructuredArray<T> extends AbstractStructuredArray<T> implements It
                             (StructuredArrayModel)sourceArrayModel.getStructuredSubArrayModel(),
                             sourceOffsets, offsetsIndex + 1,
                             counts, countsIndex + 1);
-            return new StructuredArrayBuilder<S, T>(lookup, sourceArrayClass, subArrayBuilder, count).
+            @SuppressWarnings("unchecked")
+            StructuredArrayBuilder<S, T> builder =
+                    new StructuredArrayBuilder<>(lookup, sourceArrayClass, subArrayBuilder, count).
                             elementCtorAndArgsProvider(elementCopyCtorAndArgsProvider).
                             resolve();
+            return builder;
         } else if (sourceArrayModel.getPrimitiveSubArrayModel() != null) {
             // This array contains elements that are PrimitiveArrays:
             PrimitiveArrayModel model = (PrimitiveArrayModel) sourceArrayModel.getPrimitiveSubArrayModel();
             @SuppressWarnings("unchecked")
             PrimitiveArrayBuilder subArrayBuilder =
                     new PrimitiveArrayBuilder(model.getArrayClass(), model.getLength());
-            return new StructuredArrayBuilder<S, T>(lookup, sourceArrayClass, subArrayBuilder, count).
+            @SuppressWarnings("unchecked")
+            StructuredArrayBuilder<S, T> builder =
+                    new StructuredArrayBuilder<>(lookup, sourceArrayClass, subArrayBuilder, count).
                     elementCtorAndArgsProvider(elementCopyCtorAndArgsProvider).
                     resolve();
+            return builder;
+
         } else {
             // This is a leaf array (it's elements are regular objects):
-            return new StructuredArrayBuilder<S, T>(lookup, sourceArrayClass, elementClass, count).
+            return new StructuredArrayBuilder<>(lookup, sourceArrayClass, elementClass, count).
                     elementCtorAndArgsProvider(elementCopyCtorAndArgsProvider).
                     resolve();
         }
@@ -594,7 +578,7 @@ public class StructuredArray<T> extends AbstractStructuredArray<T> implements It
     private static <T> StructuredArray<T> instantiate(
             final Class<T> elementClass,
             final long length,
-            final CtorAndArgsProvider<T> ctorAndArgsProvider) throws NoSuchMethodException {
+            final CtorAndArgsProvider<T> ctorAndArgsProvider) {
         @SuppressWarnings("unchecked")
         StructuredArrayBuilder<StructuredArray<T>, T> arrayBuilder =
                 new StructuredArrayBuilder(StructuredArray.class, elementClass, length).
@@ -606,7 +590,7 @@ public class StructuredArray<T> extends AbstractStructuredArray<T> implements It
             final CtorAndArgs<S> arrayCtorAndArgs,
             final Class<T> elementClass,
             final long length,
-            final CtorAndArgsProvider<T> ctorAndArgsProvider) throws NoSuchMethodException {
+            final CtorAndArgsProvider<T> ctorAndArgsProvider) {
         @SuppressWarnings("unchecked")
         StructuredArrayBuilder<S, T> arrayBuilder =
                 new StructuredArrayBuilder(arrayCtorAndArgs.getConstructor().getDeclaringClass(), elementClass, length).
@@ -618,7 +602,7 @@ public class StructuredArray<T> extends AbstractStructuredArray<T> implements It
 
     private static <S extends StructuredArray<T>, T> S instantiate(
             final StructuredArrayBuilder<S, T> arrayBuilder) {
-        ConstructionContext<T> context = new ConstructionContext<T>(arrayBuilder.getContextCookie());
+        ConstructionContext<T> context = new ConstructionContext<>(arrayBuilder.getContextCookie());
         ConstructorMagic constructorMagic = getConstructorMagic();
         constructorMagic.setConstructionArgs(arrayBuilder, context);
         try {
@@ -752,7 +736,7 @@ public class StructuredArray<T> extends AbstractStructuredArray<T> implements It
     private void populateStructuredSubArray(final ConstructionContext<T> context,
                                             StructuredArrayBuilder subArrayBuilder,
                                             final CtorAndArgs<T> subArrayCtorAndArgs) {
-        ConstructionContext<T> subArrayContext = new ConstructionContext<T>(subArrayCtorAndArgs.getContextCookie());
+        ConstructionContext<T> subArrayContext = new ConstructionContext<>(subArrayCtorAndArgs.getContextCookie());
         subArrayContext.setContainingContext(context);
         ConstructorMagic constructorMagic = getConstructorMagic();
         constructorMagic.setConstructionArgs(subArrayBuilder, subArrayContext);
@@ -889,13 +873,13 @@ public class StructuredArray<T> extends AbstractStructuredArray<T> implements It
             throw new IllegalStateException(
                     "Cannot make Collection from array with more than Integer.MAX_VALUE elements (" + length + ")");
         }
-        return new CollectionWrapper<T>(this);
+        return new CollectionWrapper<>(this);
     }
 
-    class CollectionWrapper<T> implements Collection<T> {
-        StructuredArray<T> array;
+    class CollectionWrapper<E> implements Collection<E> {
+        StructuredArray<E> array;
 
-        CollectionWrapper(StructuredArray<T> array) {
+        CollectionWrapper(StructuredArray<E> array) {
             this.array = array;
         }
 
@@ -911,7 +895,7 @@ public class StructuredArray<T> extends AbstractStructuredArray<T> implements It
 
         @Override
         public boolean contains(Object o) {
-            for (T element : array) {
+            for (E element : array) {
                 if (element == o) {
                     return true;
                 }
@@ -923,7 +907,7 @@ public class StructuredArray<T> extends AbstractStructuredArray<T> implements It
          * {@inheritDoc}
          */
         @Override
-        public Iterator<T> iterator() {
+        public Iterator<E> iterator() {
             return array.iterator();
         }
 
@@ -954,7 +938,7 @@ public class StructuredArray<T> extends AbstractStructuredArray<T> implements It
         }
 
         @Override
-        public boolean add(T t) {
+        public boolean add(E e) {
             throw new UnsupportedOperationException("StructuredArrays are immutable collections");
         }
 
@@ -974,7 +958,7 @@ public class StructuredArray<T> extends AbstractStructuredArray<T> implements It
         }
 
         @Override
-        public boolean addAll(Collection<? extends T> c) {
+        public boolean addAll(Collection<? extends E> c) {
             throw new UnsupportedOperationException("StructuredArrays are immutable collections");
         }
 

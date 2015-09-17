@@ -5,7 +5,6 @@
 
 package org.ObjectLayout;
 
-import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
@@ -35,6 +34,12 @@ public abstract class AbstractPrimitiveArray {
         } catch (NoSuchMethodException ex) {
             throw new RuntimeException(ex);
         }
+    }
+
+    static <A extends AbstractPrimitiveArray> A _newInstance(
+            final CtorAndArgs<A> arrayCtorAndArgs,
+            final long length) {
+        return instantiate(length, arrayCtorAndArgs.getConstructor(), arrayCtorAndArgs.getArgs());
     }
 
     static <A extends AbstractPrimitiveArray> A _newInstance(
@@ -94,11 +99,7 @@ public abstract class AbstractPrimitiveArray {
         try {
             constructorMagic.setActive(true);
             return arrayConstructor.newInstance(arrayConstructorArgs);
-        } catch (InstantiationException ex) {
-            throw new RuntimeException(ex);
-        } catch (IllegalAccessException ex) {
-            throw new RuntimeException(ex);
-        } catch (InvocationTargetException ex) {
+        } catch (InstantiationException | IllegalAccessException | InvocationTargetException ex) {
             throw new RuntimeException(ex);
         } finally {
             constructorMagic.setActive(false);
@@ -143,7 +144,7 @@ public abstract class AbstractPrimitiveArray {
         private long length = 0;
     }
 
-    private static final ThreadLocal<ConstructorMagic> threadLocalConstructorMagic = new ThreadLocal<ConstructorMagic>();
+    private static final ThreadLocal<ConstructorMagic> threadLocalConstructorMagic = new ThreadLocal<>();
 
     private static ConstructorMagic getConstructorMagic() {
         ConstructorMagic constructorMagic = threadLocalConstructorMagic.get();

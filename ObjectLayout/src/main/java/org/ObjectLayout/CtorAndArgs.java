@@ -5,7 +5,6 @@
 
 package org.ObjectLayout;
 
-import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Constructor;
 
@@ -44,15 +43,14 @@ public class CtorAndArgs<T> {
      * that types in args match those expected by constructor. Obviously exceptions may be
      * generated at construction time if this is not the case.
      *
-     * @param instanceClass
-     * @param constructorArgTypes
-     * @param args
-     * @throws NoSuchMethodException
+     * @param instanceClass The class which the constructor in this {@link CtorAndArgs} will instantiate
+     * @param constructorArgTypes The argument types expected by the constructor
+     * @param args constructor arguments to be indicated in this {@link CtorAndArgs}
      */
     public CtorAndArgs(
             final Class<T> instanceClass,
             final Class[] constructorArgTypes,
-            final Object... args) throws NoSuchMethodException {
+            final Object... args) {
         this(noLookup, instanceClass, constructorArgTypes, args);
     }
 
@@ -62,17 +60,16 @@ public class CtorAndArgs<T> {
      * that types in args match those expected by constructor. Obviously exceptions may be
      * generated at construction time if this is not the case.
      *
-     * @param lookup
-     * @param instanceClass
-     * @param constructorArgTypes
-     * @param args
-     * @throws NoSuchMethodException
+     * @param lookup The lookup object to use when resolving constructors
+     * @param instanceClass The class which the constructor in this {@link CtorAndArgs} will instantiate
+     * @param constructorArgTypes The argument types expected by the constructor
+     * @param args constructor arguments to be indicated in this {@link CtorAndArgs}
      */
     public CtorAndArgs(
             MethodHandles.Lookup lookup,
             final Class<T> instanceClass,
             final Class[] constructorArgTypes,
-            final Object... args)  throws NoSuchMethodException {
+            final Object... args) {
         try {
             if (constructorArgTypes.length != args.length) {
                 throw new IllegalArgumentException("argument types and values must be the same length");
@@ -88,7 +85,7 @@ public class CtorAndArgs<T> {
             }
             setConstructor(ctor);
             setArgs(args);
-        } catch (IllegalAccessException e) {
+        } catch (NoSuchMethodException | IllegalAccessException e) {
             throw new RuntimeException(e);
         }
     }
@@ -96,23 +93,21 @@ public class CtorAndArgs<T> {
     /**
      * Create a {@link CtorAndArgs} instance for the given instanceClass, using the default constructor (and no args)
      *
-     * @param instanceClass
-     * @throws NoSuchMethodException
+     * @param instanceClass The class which the constructor in this {@link CtorAndArgs} will instantiate
      */
-    public CtorAndArgs(final Class<T> instanceClass) throws NoSuchMethodException {
+    public CtorAndArgs(final Class<T> instanceClass) {
         this(instanceClass, EMPTY_ARG_TYPES, EMPTY_ARGS);
     }
 
     /**
      * Create a {@link CtorAndArgs} instance for the given instanceClass, using the default constructor (and no args)
      *
-     * @param lookup
-     * @param instanceClass
-     * @throws NoSuchMethodException
+     * @param lookup The lookup object to use when resolving constructors
+     * @param instanceClass The class which the constructor in this {@link CtorAndArgs} will instantiate
      */
     public CtorAndArgs(
             MethodHandles.Lookup lookup,
-            final Class<T> instanceClass) throws NoSuchMethodException {
+            final Class<T> instanceClass) {
         this(lookup, instanceClass, EMPTY_ARG_TYPES, EMPTY_ARGS);
     }
 

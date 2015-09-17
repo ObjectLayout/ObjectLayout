@@ -343,14 +343,13 @@ public class IntrinsticObjectTest {
      * This class demonstrates
      *
      */
-    public static class Line {
+    private static class Line {
 
         static final MethodHandles.Lookup lookup = MethodHandles.lookup();
         /**
          * Simple Intrinsic Object declaration and initialization:
          */
         @Intrinsic
-//        private final Point endPoint1 = IntrinsicObjects.constructWithin("endPoint1", this);
         private final Point endPoint1 = IntrinsicObjects.constructWithin(lookup, "endPoint1", this);
 
         /**
