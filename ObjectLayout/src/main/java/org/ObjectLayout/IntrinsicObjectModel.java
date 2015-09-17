@@ -5,6 +5,8 @@
 
 package org.ObjectLayout;
 
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -20,10 +22,11 @@ import java.lang.reflect.InvocationTargetException;
 final class IntrinsicObjectModel<T> extends AbstractIntrinsicObjectModel<T> {
 
     IntrinsicObjectModel(
+            MethodHandles.Lookup lookup,
             Field field,
             final PrimitiveArrayModel primitiveArrayModel,
             final StructuredArrayModel structuredArrayModel) {
-        super(field, primitiveArrayModel, structuredArrayModel);
+        super(lookup, field, primitiveArrayModel, structuredArrayModel);
     }
 
     /**
@@ -238,7 +241,7 @@ final class IntrinsicObjectModel<T> extends AbstractIntrinsicObjectModel<T> {
             IntrinsicObjectModel<AbstractPrimitiveArray> model = (IntrinsicObjectModel<AbstractPrimitiveArray>) this;
             @SuppressWarnings("unchecked")
             T intrinsicInstance =
-                    (T) PrimitiveArrayBuilder.constructPrimitiveArrayWithin(containingObject, model, builder);
+                    (T) PrimitiveArrayBuilder.constructPrimitiveArrayWithin(lookup, containingObject, model, builder);
             return intrinsicInstance;
         } catch (InstantiationException ex) {
             throw new RuntimeException(ex);

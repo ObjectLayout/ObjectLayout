@@ -5,6 +5,8 @@
 
 package org.ObjectLayout;
 
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
@@ -51,14 +53,16 @@ public final class IntrinsicObjects {
      * The field specified in {@code fieldName} must be annotated with {@link org.ObjectLayout.Intrinsic @Intrisic},
      * and must be declared private and final.
      *
+     * @param lookup The lookup object to use for accessing the field
      * @param fieldName The name of the field within the containing object
      * @param containingObject The object instance that will contain this intrinsic object
      * @return A reference to the the newly constructed intrinsic object
      */
     public static <T> T constructWithin(
+            MethodHandles.Lookup lookup,
             final String fieldName,
             final Object containingObject) {
-        IntrinsicObjectModel<T> model = lookupModelFor(fieldName, containingObject);
+        IntrinsicObjectModel<T> model = lookupModelFor(lookup, fieldName, containingObject);
         return model.constructWithin(containingObject);
     }
 
@@ -69,6 +73,7 @@ public final class IntrinsicObjects {
      * The field specified in {@code fieldName} must be annotated with {@link org.ObjectLayout.Intrinsic @Intrisic},
      * and must be declared private and final.
      *
+     * @param lookup The lookup object to use for accessing the field
      * @param fieldName The name of the field within the containing object
      * @param containingObject The object instance that will contain this intrinsic object
      * @param objectConstructor The constructor to be used in constructing the intrinsic object instance
@@ -76,11 +81,12 @@ public final class IntrinsicObjects {
      * @return A reference to the the newly constructed intrinsic object
      */
     public static <T> T constructWithin(
+            MethodHandles.Lookup lookup,
             final String fieldName,
             final Object containingObject,
             final Constructor<T> objectConstructor,
             final Object... args) {
-        IntrinsicObjectModel<T> model = lookupModelFor(fieldName, containingObject);
+        IntrinsicObjectModel<T> model = lookupModelFor(lookup, fieldName, containingObject);
         return model.constructWithin(containingObject, objectConstructor, args);
     }
 
@@ -91,6 +97,7 @@ public final class IntrinsicObjects {
      * The field specified in {@code fieldName} must be annotated with {@link org.ObjectLayout.Intrinsic @Intrisic},
      * and must be declared private and final.
      *
+     * @param lookup The lookup object to use for accessing the field
      * @param fieldName The name of the field within the containing object
      * @param containingObject The object instance that will contain this intrinsic object
      * @param objectCtorAndArgs The constructor and arguments to be used in constructing the
@@ -98,10 +105,11 @@ public final class IntrinsicObjects {
      * @return A reference to the the newly constructed intrinsic object
      */
     public static <T> T constructWithin(
+            MethodHandles.Lookup lookup,
             final String fieldName,
             final Object containingObject,
             final CtorAndArgs<T> objectCtorAndArgs) {
-        IntrinsicObjectModel<T> model = lookupModelFor(fieldName, containingObject);
+        IntrinsicObjectModel<T> model = lookupModelFor(lookup, fieldName, containingObject);
         return model.constructWithin(containingObject, objectCtorAndArgs);
     }
 
@@ -113,16 +121,18 @@ public final class IntrinsicObjects {
      * The field specified in {@code fieldName} must be annotated with {@link org.ObjectLayout.Intrinsic @Intrisic},
      * and must be declared private and final.
      *
+     * @param lookup The lookup object to use for accessing the field
      * @param fieldName The name of the field within the containing object
      * @param containingObject The object instance that will contain this intrinsic object
      * @param arrayBuilder The {@link StructuredArrayBuilder} instance to be used in constructing the array
      * @return A reference to the the newly constructed intrinsic object
      */
     public static <T> T constructWithin(
+            MethodHandles.Lookup lookup,
             final String fieldName,
             final Object containingObject,
             final StructuredArrayBuilder arrayBuilder) {
-        IntrinsicObjectModel<T> model = lookupModelFor(fieldName, containingObject);
+        IntrinsicObjectModel<T> model = lookupModelFor(lookup, fieldName, containingObject);
         return model.constructWithin(containingObject, arrayBuilder);
     }
 
@@ -134,16 +144,18 @@ public final class IntrinsicObjects {
      * The field specified in {@code fieldName} must be annotated with {@link org.ObjectLayout.Intrinsic @Intrisic},
      * and must be declared private and final.
      *
+     * @param lookup The lookup object to use for accessing the field
      * @param fieldName The name of the field within the containing object
      * @param containingObject The object instance that will contain this intrinsic object
      * @param arrayBuilder The {@link PrimitiveArrayBuilder} instance to be used in constructing the array
      * @return A reference to the the newly constructed intrinsic object
      */
     public static <T> T constructWithin(
+            MethodHandles.Lookup lookup,
             final String fieldName,
             final Object containingObject,
             final PrimitiveArrayBuilder arrayBuilder) {
-        IntrinsicObjectModel<T> model = lookupModelFor(fieldName, containingObject);
+        IntrinsicObjectModel<T> model = lookupModelFor(lookup, fieldName, containingObject);
         return model.constructWithin(containingObject, arrayBuilder);
     }
 
@@ -152,36 +164,40 @@ public final class IntrinsicObjects {
             new ConcurrentHashMap<Class, HashMap<String, IntrinsicObjectModel>>();
 
     private static
-    HashMap<String, IntrinsicObjectModel> lookupModelsByFieldNameForClass(Object containingObject) {
+    HashMap<String, IntrinsicObjectModel> lookupModelsByFieldNameForClass(
+            MethodHandles.Lookup lookup,
+            Object containingObject) {
         Class c = containingObject.getClass();
         HashMap<String, IntrinsicObjectModel> modelsByFieldName =
                 modelsByClass.get(c);
         if (modelsByFieldName == null) {
             modelsByFieldName = new HashMap<String, IntrinsicObjectModel>();
             // Populate modelsByString hash map with all @Intrinsic fields found in the class:
-            populateWithClassIntrinsicModels(containingObject, modelsByFieldName);
+            populateWithClassIntrinsicModels(lookup, containingObject, modelsByFieldName);
             modelsByClass.put(c, modelsByFieldName);
         }
         return modelsByFieldName;
     }
 
     private static <T> void populateWithClassIntrinsicModels(
+            MethodHandles.Lookup lookup,
             Object containingObject,
             HashMap<String, IntrinsicObjectModel> modelsByFieldName) {
         Class c = containingObject.getClass();
         for (Field field : c.getDeclaredFields()) {
             if (field.getAnnotation(Intrinsic.class) != null) {
-                IntrinsicObjectModel<T> objectModel = createModel(field);
+                IntrinsicObjectModel<T> objectModel = createModel(lookup, field);
                 modelsByFieldName.put(field.getName(), objectModel);
             }
         }
     }
 
     private static <T> IntrinsicObjectModel<T> lookupModelFor(
+            MethodHandles.Lookup lookup,
             String fieldName,
             Object containingObject) {
         HashMap<String, IntrinsicObjectModel> modelsByFieldName =
-                lookupModelsByFieldNameForClass(containingObject);
+                lookupModelsByFieldNameForClass(lookup, containingObject);
         @SuppressWarnings("unchecked")
         IntrinsicObjectModel<T> objectModel =
                 (IntrinsicObjectModel<T>) modelsByFieldName.get(fieldName);
@@ -192,7 +208,7 @@ public final class IntrinsicObjects {
         return objectModel;
     }
 
-    private static <T> IntrinsicObjectModel<T> createModel(Field field) {
+    private static <T> IntrinsicObjectModel<T> createModel(MethodHandles.Lookup lookup, Field field) {
         @SuppressWarnings("unchecked")
         Class<T> objectClass = (Class<T>) field.getType();
         Class containingClass = field.getDeclaringClass();
@@ -217,6 +233,7 @@ public final class IntrinsicObjects {
 
         IntrinsicObjectModel<T> objectModel =
                 new IntrinsicObjectModel<T>(
+                        lookup,
                         field,
                         primitiveArrayModel,
                         structuredArrayModel
