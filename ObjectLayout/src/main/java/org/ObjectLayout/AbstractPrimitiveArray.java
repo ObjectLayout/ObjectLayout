@@ -80,13 +80,16 @@ public abstract class AbstractPrimitiveArray {
             final Constructor<A> arrayConstructor,
             final Object... arrayConstructorArgs) {
         try {
-            preInstantiation(lookup, length, arrayConstructor, arrayConstructorArgs);
-            return arrayConstructor.newInstance(arrayConstructorArgs);
-        } catch (InstantiationException | IllegalAccessException | InvocationTargetException ex) {
+            if (lookup != null) {
+                if (!CtorAndArgs.belongsToThisPackage(arrayConstructor.getDeclaringClass())) {
+                    lookup.unreflectConstructor(arrayConstructor); // May throw IllegalAccessException
+                    arrayConstructor.setAccessible(true);
+                }
+            }
+        } catch (IllegalAccessException ex) {
             throw new RuntimeException(ex);
-        } finally {
-            postInstantiation();
         }
+        return instantiate(length, arrayConstructor, arrayConstructorArgs);
     }
 
     private static <A extends AbstractPrimitiveArray> A instantiate(
@@ -101,22 +104,6 @@ public abstract class AbstractPrimitiveArray {
         } finally {
             postInstantiation();
         }
-    }
-
-    static <A extends AbstractPrimitiveArray> void preInstantiation(
-            MethodHandles.Lookup lookup,
-            final long length,
-            final Constructor<A> arrayConstructor,
-            final Object... arrayConstructorArgs) {
-        try {
-            if (lookup != null) {
-                lookup.unreflectConstructor(arrayConstructor); // May throw IllegalAccessException
-                arrayConstructor.setAccessible(true);
-            }
-        } catch (IllegalAccessException ex) {
-            throw new RuntimeException(ex);
-        }
-        preInstantiation(length, arrayConstructor, arrayConstructorArgs);
     }
 
     static <A extends AbstractPrimitiveArray> void preInstantiation(
