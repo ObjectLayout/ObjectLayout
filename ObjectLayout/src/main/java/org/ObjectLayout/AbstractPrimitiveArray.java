@@ -80,13 +80,12 @@ public abstract class AbstractPrimitiveArray {
             final Constructor<A> arrayConstructor,
             final Object... arrayConstructorArgs) {
         try {
-            if (lookup != null) {
-                lookup.unreflectConstructor(arrayConstructor); // May throw IllegalAccessException
-                arrayConstructor.setAccessible(true);
-            }
-            return instantiate(length, arrayConstructor, arrayConstructorArgs);
-        } catch (IllegalAccessException ex) {
+            preInstantiation(lookup, length, arrayConstructor, arrayConstructorArgs);
+            return arrayConstructor.newInstance(arrayConstructorArgs);
+        } catch (InstantiationException | IllegalAccessException | InvocationTargetException ex) {
             throw new RuntimeException(ex);
+        } finally {
+            postInstantiation();
         }
     }
 
@@ -94,16 +93,55 @@ public abstract class AbstractPrimitiveArray {
             final long length,
             final Constructor<A> arrayConstructor,
             final Object... arrayConstructorArgs) {
-        ConstructorMagic constructorMagic = getConstructorMagic();
-        constructorMagic.setArrayConstructorArgs(length);
         try {
-            constructorMagic.setActive(true);
+            preInstantiation(length, arrayConstructor, arrayConstructorArgs);
             return arrayConstructor.newInstance(arrayConstructorArgs);
         } catch (InstantiationException | IllegalAccessException | InvocationTargetException ex) {
             throw new RuntimeException(ex);
         } finally {
-            constructorMagic.setActive(false);
+            postInstantiation();
         }
+    }
+
+    static <A extends AbstractPrimitiveArray> void preInstantiation(
+            MethodHandles.Lookup lookup,
+            final long length,
+            final Constructor<A> arrayConstructor,
+            final Object... arrayConstructorArgs) {
+        try {
+            if (lookup != null) {
+                lookup.unreflectConstructor(arrayConstructor); // May throw IllegalAccessException
+                arrayConstructor.setAccessible(true);
+            }
+        } catch (IllegalAccessException ex) {
+            throw new RuntimeException(ex);
+        }
+        preInstantiation(length, arrayConstructor, arrayConstructorArgs);
+    }
+
+    static <A extends AbstractPrimitiveArray> void preInstantiation(
+            final long length,
+            final Constructor<A> arrayConstructor,
+            final Object... arrayConstructorArgs) {
+        ConstructorMagic constructorMagic = getConstructorMagic();
+        constructorMagic.setArrayConstructorArgs(length);
+        constructorMagic.setActive(true);
+    }
+
+    static void postInstantiation() {
+        ConstructorMagic constructorMagic = getConstructorMagic();
+        constructorMagic.setActive(false);
+    }
+
+    public static void installPrimitiveArrayLength(final long length) {
+        ConstructorMagic constructorMagic = getConstructorMagic();
+        if (constructorMagic == null) {
+            throw new IllegalArgumentException(
+                    "PrimitiveArray must not be directly instantiated with a constructor." +
+                            " Use newInstance(...) instead.");
+        }
+        constructorMagic.setArrayConstructorArgs(length);
+        constructorMagic.setActive(true);
     }
 
     AbstractPrimitiveArray() {
