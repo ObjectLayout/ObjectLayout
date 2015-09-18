@@ -133,17 +133,6 @@ public abstract class AbstractPrimitiveArray {
         constructorMagic.setActive(false);
     }
 
-    public static void installPrimitiveArrayLength(final long length) {
-        ConstructorMagic constructorMagic = getConstructorMagic();
-        if (constructorMagic == null) {
-            throw new IllegalArgumentException(
-                    "PrimitiveArray must not be directly instantiated with a constructor." +
-                            " Use newInstance(...) instead.");
-        }
-        constructorMagic.setArrayConstructorArgs(length);
-        constructorMagic.setActive(true);
-    }
-
     AbstractPrimitiveArray() {
         checkConstructorMagic();
         ConstructorMagic constructorMagic = getConstructorMagic();
