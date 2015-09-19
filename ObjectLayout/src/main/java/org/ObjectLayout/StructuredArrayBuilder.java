@@ -4,7 +4,7 @@ import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Constructor;
 
 /**
- * A builder used for instantiating a {@link StructuredArray}&ltT&gt
+ * A builder used for instantiating a {@link StructuredArray}&lt;T&gt;
  * <p>
  * {@link org.ObjectLayout.StructuredArrayBuilder} follows the commonly used builder pattern, and is useful for
  * capturing the instantiation parameters of {@link StructuredArray}s.
@@ -16,30 +16,30 @@ import java.lang.reflect.Constructor;
  * containing array, and arbitrary data passed in a contextCookie) into account.
  * </p>
  * A simple example of using a {@link org.ObjectLayout.StructuredArrayBuilder} to instantiate a StructuredArray is:
- * <p><blockquote><pre>
- * StructuredArray&ltMyElementClass&gt array =
+ * <blockquote><pre>
+ * StructuredArray&lt;MyElementClass&gt; array =
  *      new StructuredArrayBuilder(StructuredArray.class, MyElementClass.class, length).
  *          build();
- * </pre></blockquote></p>
+ * </pre></blockquote>
  * <p>
  * An example of passing specific (but identical) construction arguments to element constructors is:
- * <p><blockquote><pre>
- * Constructor&ltMyElementClass&gt constructor = MyElementClass.class.getConstructor(int.Class, int.Class);
+ * <blockquote><pre>
+ * Constructor&lt;MyElementClass&gt; constructor = MyElementClass.class.getConstructor(int.Class, int.Class);
  *
- * StructuredArray&ltMyElementClass&gt array =
+ * StructuredArray&lt;MyElementClass&gt; array =
  *      new StructuredArrayBuilder(
  *          StructuredArray.class,
  *          MyElementClass.class,
  *          length).
  *          elementCtorAndArgs(constructor, initArg1, initArg2).
  *          build();
- * </pre></blockquote></p>
+ * </pre></blockquote>
  * Some examples of providing per-element construction parameters that depend on construction context include:
- * <p><blockquote><pre>
- * Constructor&ltMyElementClass&gt constructor = MyElementClass.class.getConstructor(long.Class, long.Class);
+ * <blockquote><pre>
+ * Constructor&lt;MyElementClass&gt; constructor = MyElementClass.class.getConstructor(long.Class, long.Class);
  *
  * // Using a pre-constructed elementCtorAndArgsProvider:
- * StructuredArray&ltMyElementClass&gt array =
+ * StructuredArray&lt;MyElementClass&gt; array =
  *      new StructuredArrayBuilder(
  *          StructuredArray.class,
  *          MyElementClass.class,
@@ -48,19 +48,19 @@ import java.lang.reflect.Constructor;
  *          build();
  *
  * // Using a Lambda expression for elementCtorAndArgsProvider:
- * StructuredArray&ltMyElementClass&gt array2 =
+ * StructuredArray&lt;MyElementClass&gt; array2 =
  *      new StructuredArrayBuilder(
  *          StructuredArray.class,
  *          MyElementClass.class,
  *          length).
  *          elementCtorAndArgsProvider(
- *              context -> new CtorAndArgs&ltMyElementClass&gt(
+ *              context -&gt; new CtorAndArgs&lt;MyElementClass&gt;(
  *                  constructor, context.getIndex(), context.getIndex() * 2)
  *          ).
  *          build();
  *
  * // Using an anonymous class for elementCtorAndArgsProvider:
- * StructuredArray&ltMyElementClass&gt array3 =
+ * StructuredArray&lt;MyElementClass&gt; array3 =
  *      new StructuredArrayBuilder(
  *          StructuredArray.class,
  *          MyElementClass.class,
@@ -74,7 +74,7 @@ import java.lang.reflect.Constructor;
  *              }
  *          ).
  *          build();
- * </pre></blockquote></p>
+ * </pre></blockquote>
  *
  * @param <S> The class of the StructuredArray that is to be instantiated by the builder
  * @param <T> The class of the elements in the StructuredArray that is to be instantiated the builder
@@ -233,6 +233,7 @@ public class StructuredArrayBuilder<S extends StructuredArray<T>, T> {
      * elements of type T, and the given length. Used when T extends PrimitiveArray, such that the
      * arrays instantiated by this builder would include elements that are PrimitiveArrays.
      *
+     * @param lookup The lookup object to use for accessing constructors when resolving this builder
      * @param arrayClass The class of the array to be built by this builder
      * @param subArrayBuilder The builder used for creating individual array elements (which are themselves
      *                        subclassable PrimitiveArrays)

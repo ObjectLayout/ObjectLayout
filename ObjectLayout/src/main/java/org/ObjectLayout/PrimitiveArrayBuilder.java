@@ -5,7 +5,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 
 /**
- * A builder used for instantiating a {@link AbstractPrimitiveArray}&ltT&gt
+ * A builder used for instantiating a {@link AbstractPrimitiveArray}&lt;T&gt;
  * <p>
  * {@link org.ObjectLayout.PrimitiveArrayBuilder} follows the commonly used builder pattern, and is useful for
  * capturing the instantiation parameters of {@link org.ObjectLayout.StructuredArray}s.
@@ -17,23 +17,23 @@ import java.lang.reflect.InvocationTargetException;
  * containing array, and arbitrary data passed in a contextCookie) into account.
  * </p>
  * A simple example of using a {@link org.ObjectLayout.PrimitiveArrayBuilder} to instantiate a PrimitiveLongArray is:
- * <p><blockquote><pre>
- * StructuredArray&ltMyElementClass&gt array =
+ * <blockquote><pre>
+ * StructuredArray&lt;MyElementClass&gt; array =
  *      new PrimitiveArrayBuilder(PrimitiveLongArray.class, length).
  *          build();
- * </pre></blockquote></p>
+ * </pre></blockquote>
  * <p>
  * An example of passing specific construction arguments to the array constructor is:
- * <p><blockquote><pre>
- * Constructor&ltMyArrayClass&gt constructor = MyArrayClass.class.getConstructor(int.Class, int.Class);
+ * <blockquote><pre>
+ * Constructor&lt;MyArrayClass&gt; constructor = MyArrayClass.class.getConstructor(int.Class, int.Class);
  *
- * StructuredArray&ltMyElementClass&gt array =
+ * StructuredArray&lt;MyElementClass&gt; array =
  *      new PrimitiveArrayBuilder(
  *          MyArrayClass.class,
  *          length).
  *          arrayCtorAndArgs(constructor, initArg1, initArg2).
  *          build();
- * </pre></blockquote></p>
+ * </pre></blockquote>
  *
  * @param <S> The class of the PrimitiveArray that is to be instantiated by the builder
  */

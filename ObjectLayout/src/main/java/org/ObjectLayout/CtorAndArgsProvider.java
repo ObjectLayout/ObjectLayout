@@ -8,7 +8,6 @@ package org.ObjectLayout;
 /**
  * A functional interface for providing a constructor and arguments given a construction context (index, etc.).
  * Used for providing element construction information in StructuredArrays.
- * </p>
  *
  * @param <T> type of the element occupying each array slot.
  */

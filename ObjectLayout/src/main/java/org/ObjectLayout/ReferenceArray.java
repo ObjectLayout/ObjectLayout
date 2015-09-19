@@ -101,11 +101,11 @@ public class ReferenceArray<T> extends AbstractReferenceArray<T> {
     }
 
     /**
-     * Create a new instance of ReferenceArray&ltT&gt with a given length.
+     * Create a new instance of ReferenceArray&lt;T&gt; with a given length.
      *
      * @param length the length of the array
      * @param <T> the reference type
-     * @return A newly created ReferenceArray&ltT&gt
+     * @return A newly created ReferenceArray&lt;T&gt;
      */
     public static <T> ReferenceArray<T> newInstance(final long length) {
         @SuppressWarnings("unchecked")
@@ -114,13 +114,13 @@ public class ReferenceArray<T> extends AbstractReferenceArray<T> {
     }
 
     /**
-     * Create a new instance of &ltA extends {@link ReferenceArray}&ltT&gt&gt with a given length.
+     * Create a new instance of &lt;A extends {@link ReferenceArray}&lt;T&gt;&gt; with a given length.
      *
-     * @param arrayClass The class of the array to be created (extends ReferenceArray&ltT&gt)
+     * @param arrayClass The class of the array to be created (extends ReferenceArray&lt;T&gt;)
      * @param length the length of the array.
      * @param <T> the reference type
-     * @param <A> The class of the array to be created (extends ReferenceArray&ltT&gt)
-     * @return a new instance of &ltA extends {@link ReferenceArray}&ltT&gt&gt with a given length
+     * @param <A> The class of the array to be created (extends ReferenceArray&lt;T&gt;)
+     * @return a new instance of &lt;A extends {@link ReferenceArray}&lt;T&gt;&gt; with a given length
      */
     public static <T, A extends ReferenceArray<T>> A newInstance(
             final Class<A> arrayClass,
@@ -129,14 +129,14 @@ public class ReferenceArray<T> extends AbstractReferenceArray<T> {
     }
 
     /**
-     * Create a new instance of &ltA extends {@link ReferenceArray}&ltT&gt&gt with a given length.
+     * Create a new instance of &lt;A extends {@link ReferenceArray}&lt;T&gt;&gt; with a given length.
      *
      * @param lookup The lookup object to use for accessing the array's constructor
-     * @param arrayClass The class of the array to be created (extends ReferenceArray&ltT&gt)
+     * @param arrayClass The class of the array to be created (extends ReferenceArray&lt;T&gt;)
      * @param length the length of the array.
      * @param <T> the reference type
-     * @param <A> The class of the array to be created (extends ReferenceArray&ltT&gt)
-     * @return a new instance of &ltA extends {@link ReferenceArray}&ltT&gt&gt with a given length
+     * @param <A> The class of the array to be created (extends ReferenceArray&lt;T&gt;)
+     * @return a new instance of &lt;A extends {@link ReferenceArray}&lt;T&gt;&gt; with a given length
      */
     public static <T, A extends ReferenceArray<T>> A newInstance(
             MethodHandles.Lookup lookup,
@@ -146,13 +146,13 @@ public class ReferenceArray<T> extends AbstractReferenceArray<T> {
     }
 
     /**
-     * Create a new instance of &ltA extends {@link ReferenceArray}&gt with a given length,
+     * Create a new instance of &lt;A extends {@link ReferenceArray}&gt; with a given length,
      * array constructor, and array constructor arguments.
      *
      * @param length The length of the array.
      * @param arrayCtorAndArgs for creating the array
      * @param <A> The class of the array to be created (extends ReferenceArray)
-     * @return a new instance of &ltA extends {@link ReferenceArray}&gt
+     * @return a new instance of &lt;A extends {@link ReferenceArray}&gt;
      */
     public static <A extends ReferenceArray> A newInstance(
             final CtorAndArgs<A> arrayCtorAndArgs,
@@ -161,15 +161,15 @@ public class ReferenceArray<T> extends AbstractReferenceArray<T> {
     }
 
     /**
-     * Create a new instance of &ltA extends {@link ReferenceArray}&ltT&gt&gt with a given length,
+     * Create a new instance of &lt;A extends {@link ReferenceArray}&lt;T&gt;&gt; with a given length,
      * array constructor, and array constructor arguments.
      *
      * @param length The length of the array.
      * @param arrayConstructor The array constructor to use
      * @param arrayConstructorArgs The arguments to pass to the array constructor
      * @param <T> the reference type
-     * @param <A> The class of the array to be created (extends ReferenceArray&ltT&gt)
-     * @return a new instance of &ltA extends {@link ReferenceArray}&ltT&gt&gt
+     * @param <A> The class of the array to be created (extends ReferenceArray&lt;T&gt;)
+     * @return a new instance of &lt;A extends {@link ReferenceArray}&lt;T&gt;&gt;
      */
     public static <T, A extends ReferenceArray<T>> A newInstance(
             final long length,
@@ -179,25 +179,27 @@ public class ReferenceArray<T> extends AbstractReferenceArray<T> {
     }
 
     /**
-     * Create a new &ltA extends {@link ReferenceArray}&ltT&gt&gt instance, using a copy constructor to
+     * Create a new &lt;A extends {@link ReferenceArray}&lt;T&gt;&gt; instance, using a copy constructor to
      * replicate the contents of the given source array
      * @param source The array to replicate
-     * @param <A> The class of the array to be created (extends ReferenceArray&ltT&gt)
-     * @return a new instance of &ltA extends {@link ReferenceArray}&ltT&gt&gt copied from the source array
-     * @throws NoSuchMethodException if &ltA&gt does not have a copy constructor
+     * @param <A> The class of the array to be created (extends ReferenceArray&lt;T&gt;)
+     * @param <T> The class of the element in the array to be created
+     * @return a new instance of &lt;A extends {@link ReferenceArray}&lt;T&gt;&gt; copied from the source array
+     * @throws NoSuchMethodException if &lt;A&gt; does not have a copy constructor
      */
     public static <T, A extends ReferenceArray<T>> A copyInstance(A source) throws NoSuchMethodException {
         return AbstractPrimitiveArray._copyInstance(noLookup, source);
     }
 
     /**
-     * Create a new &ltA extends {@link ReferenceArray}&ltT&gt&gt instance, using a copy constructor to
+     * Create a new &lt;A extends {@link ReferenceArray}&lt;T&gt;&gt; instance, using a copy constructor to
      * replicate the contents of the given source array
      * @param lookup The lookup object to use for accessing the array's constructor
      * @param source The array to replicate
-     * @param <A> The class of the array to be created (extends ReferenceArray&ltT&gt)
-     * @return a new instance of &ltA extends {@link ReferenceArray}&ltT&gt&gt copied from the source array
-     * @throws NoSuchMethodException if &ltA&gt does not have a copy constructor
+     * @param <A> The class of the array to be created (extends ReferenceArray&lt;T&gt;)
+     * @param <T> The class of the element in the array to be created
+     * @return a new instance of &lt;A extends {@link ReferenceArray}&lt;T&gt;&gt; copied from the source array
+     * @throws NoSuchMethodException if &lt;A&gt; does not have a copy constructor
      */
     public static <T, A extends ReferenceArray<T>> A copyInstance(
             MethodHandles.Lookup lookup,

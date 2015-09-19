@@ -196,7 +196,10 @@ abstract class AbstractStructuredArray<T> {
      * OPTIMIZATION NOTE: Optimized JDK implementations may replace this implementation with a
      * faster access form (e.g. they may be able to derive the element reference directly from the
      * structuredArray reference without requiring a de-reference).
-     */
+     *
+     * @param index of the element to retrieve.
+     * @return a reference to the indexed element.
+     * */
     T get(final int index) {
         return intAddressableElements[index];
     }
@@ -207,6 +210,9 @@ abstract class AbstractStructuredArray<T> {
      * OPTIMIZATION NOTE: Optimized JDK implementations may replace this implementation with a
      * faster access form (e.g. they may be able to derive the element reference directly from the
      * structuredArray reference without requiring a de-reference).
+     *
+     * @param index of the element to retrieve.
+     * @return a reference to the indexed element.
      */
     T get(final long index) {
         if (index < Integer.MAX_VALUE) {

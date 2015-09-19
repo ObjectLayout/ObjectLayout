@@ -288,7 +288,7 @@ public class StructuredArray<T> extends AbstractStructuredArray<T> implements It
     }
 
     /**
-     * Create a &ltS extends StructuredArray&ltT&gt&gt array instance with elements copied from a source
+     * Create a &lt;S extends StructuredArray&lt;T&gt;&gt; array instance with elements copied from a source
      * collection.
      * @param arrayClass of the array to create.
      * @param elementClass of each element in the array
@@ -305,7 +305,7 @@ public class StructuredArray<T> extends AbstractStructuredArray<T> implements It
     }
 
     /**
-     * Create a &ltS extends StructuredArray&ltT&gt&gt array instance with elements copied from a source
+     * Create a &lt;S extends StructuredArray&lt;T&gt;&gt; array instance with elements copied from a source
      * collection.
      * @param lookup The lookup object to use when resolving constructors
      * @param arrayClass of the array to create.
@@ -359,7 +359,7 @@ public class StructuredArray<T> extends AbstractStructuredArray<T> implements It
     }
 
     /**
-     * Create a &ltS extends StructuredArray&ltT&gt&gt array instance according to the details provided in the
+     * Create a &lt;S extends StructuredArray&lt;T&gt;&gt; array instance according to the details provided in the
      * arrayBuilder.
      * @param arrayBuilder provides details for building the array
      * @param <S> The class of the array to be created

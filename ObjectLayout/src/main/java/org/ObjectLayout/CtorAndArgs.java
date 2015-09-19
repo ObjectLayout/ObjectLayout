@@ -123,6 +123,7 @@ public class CtorAndArgs<T> {
      * {@link CtorAndArgs} objects to avoid re-allocation. E.g. in copy construction loops.
      *
      * @param constructor Constructor to be indicated in this CtorAndArgs
+     * @return the {@link CtorAndArgs} instance operated on
      */
     public final CtorAndArgs<T> setConstructor(final Constructor<T> constructor) {
         if (null == constructor) {
@@ -144,6 +145,7 @@ public class CtorAndArgs<T> {
      * {@link CtorAndArgs} objects to avoid re-allocation. E.g. in copy construction loops.
      *
      * @param args constructor arguments to be indicated in this {@link CtorAndArgs}
+     * @return the {@link CtorAndArgs} instance operated on
      */
     public final CtorAndArgs<T> setArgs(final Object... args) {
         this.args = args;

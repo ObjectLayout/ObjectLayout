@@ -5,7 +5,6 @@
 
 package org.ObjectLayout;
 
-import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -26,19 +25,30 @@ import java.util.concurrent.ConcurrentHashMap;
  * initialize intrinsic objects associated with specific instance fields that are declared as
  * {@link org.ObjectLayout.Intrinsic @Intrisic} in their containing class.
  * <p>
- * An example of declaring an intrinsic object is:
- * <p><blockquote><pre>
+ * Some example of declaring an intrinsic object include:
+ * <blockquote><pre>
  * public class Line {
+ *     private static final MethodHandles.Lookup lookup = MethodHandles.lookup();
  *     //
  *     // Simple intrinsic object declaration and initialization:
  *     //
  *     {@literal @}Intrinsic
- *     private final Point endPoint1 = IntrinsicObjects.constructWithin("endPoint1", this);
+ *     private final Point endPoint1 = IntrinsicObjects.constructWithin(lookup, "endPoint1", this);
  *     {@literal @}Intrinsic
- *     private final Point endPoint2 = IntrinsicObjects.constructWithin("endPoint2", this);
+ *     private final Point endPoint2 = IntrinsicObjects.constructWithin(lookup, "endPoint2", this);
  *     ...
  * }
- * </pre></blockquote></p>
+ *
+ * public class Octagon {
+ *     private static final MethodHandles.Lookup lookup = MethodHandles.lookup();
+ *     //
+ *     // Intrinsic object declaration and initialization for a StructuredArray member:
+ *     //
+ *     {@literal @}Intrinsic(length = 8)
+ *     private final StructuredArray&lt;Point&gt; points = IntrinsicObjects.constructWithin(lookup, "points", this);
+ *     ...
+ * }
+ * </pre></blockquote>
  *
  */
 public final class IntrinsicObjects {
@@ -56,6 +66,7 @@ public final class IntrinsicObjects {
      * @param lookup The lookup object to use for accessing the field
      * @param fieldName The name of the field within the containing object
      * @param containingObject The object instance that will contain this intrinsic object
+     * @param <T> The type of the intrinsic object being constructed
      * @return A reference to the the newly constructed intrinsic object
      */
     public static <T> T constructWithin(
@@ -78,6 +89,7 @@ public final class IntrinsicObjects {
      * @param containingObject The object instance that will contain this intrinsic object
      * @param objectConstructor The constructor to be used in constructing the intrinsic object instance
      * @param args the arguments to be used with the objectConstructor
+     * @param <T> The type of the intrinsic object being constructed
      * @return A reference to the the newly constructed intrinsic object
      */
     public static <T> T constructWithin(
@@ -102,6 +114,7 @@ public final class IntrinsicObjects {
      * @param containingObject The object instance that will contain this intrinsic object
      * @param objectCtorAndArgs The constructor and arguments to be used in constructing the
      *                          intrinsic object instance
+     * @param <T> The type of the intrinsic object being constructed
      * @return A reference to the the newly constructed intrinsic object
      */
     public static <T> T constructWithin(
@@ -125,6 +138,7 @@ public final class IntrinsicObjects {
      * @param fieldName The name of the field within the containing object
      * @param containingObject The object instance that will contain this intrinsic object
      * @param arrayBuilder The {@link StructuredArrayBuilder} instance to be used in constructing the array
+     * @param <T> The type of the intrinsic object being constructed
      * @return A reference to the the newly constructed intrinsic object
      */
     public static <T> T constructWithin(
@@ -148,6 +162,7 @@ public final class IntrinsicObjects {
      * @param fieldName The name of the field within the containing object
      * @param containingObject The object instance that will contain this intrinsic object
      * @param arrayBuilder The {@link PrimitiveArrayBuilder} instance to be used in constructing the array
+     * @param <T> The type of the intrinsic object being constructed
      * @return A reference to the the newly constructed intrinsic object
      */
     public static <T> T constructWithin(

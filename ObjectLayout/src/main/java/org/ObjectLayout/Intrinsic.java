@@ -9,6 +9,8 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.lang.invoke.MethodHandles;
+
 
 /**
  * The {@link org.ObjectLayout.Intrinsic @Intrisic} annotation defines a declared object field to be
@@ -18,17 +20,18 @@ import java.lang.annotation.Target;
  * must be declared private and final.
  * <p>
  * Fields annotated with {@link org.ObjectLayout.Intrinsic @Intrisic} SHOULD be initialized using
- * one of the {@link IntrinsicObjects#constructWithin(String, Object) IntrinsicObjects.constructWithin()}
+ * one of the {@link IntrinsicObjects#constructWithin(MethodHandles.Lookup, String, Object)
+ * IntrinsicObjects.constructWithin()}
  * variants.
  * <p>
  * An {@link org.ObjectLayout.Intrinsic @Intrisic} field that is NOT initialized using one of
- * the {@link IntrinsicObjects#constructWithin(String, Object) IntrinsicObjects.constructWithin()}
- * variants may not be treated as intrinsic, may result in slower access behaviors,
- * and may generate compile-time warnings.
+ * the {@link IntrinsicObjects#constructWithin(MethodHandles.Lookup, String, Object)
+ * IntrinsicObjects.constructWithin()} variants may not be treated as intrinsic, may result in slower
+ * access behaviors, and may generate compile-time warnings.
  *
  * <p>
  * An example of declaring an intrinsic object is:
- * <p><blockquote><pre>
+ * <blockquote><pre>
  * public class Line {
  *     //
  *     // Simple intrinsic object declaration and initialization:
@@ -39,7 +42,7 @@ import java.lang.annotation.Target;
  *     private final Point endPoint2 = IntrinsicObjects.constructWithin("endPoint2", this);
  *     ...
  * }
- * </pre></blockquote></p>
+ * </pre></blockquote>
  *
  */
 

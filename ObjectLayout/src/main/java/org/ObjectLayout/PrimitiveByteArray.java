@@ -108,12 +108,12 @@ public class PrimitiveByteArray extends AbstractPrimitiveByteArray {
     }
 
     /**
-     * Create a new instance of &ltA extends {@link PrimitiveByteArray}&gt with a given length.
+     * Create a new instance of &lt;A extends {@link PrimitiveByteArray}&gt; with a given length.
      *
      * @param arrayClass The class of the array to be created (extends PrimitiveByteArray)
      * @param length the length of the array.
      * @param <A> The class of the array to be created (extends PrimitiveByteArray)
-     * @return a new instance of &ltA extends {@link PrimitiveByteArray}&gt with a given length
+     * @return a new instance of &lt;A extends {@link PrimitiveByteArray}&gt; with a given length
      */
     public static <A extends PrimitiveByteArray> A newInstance(
             final Class<A> arrayClass,
@@ -122,13 +122,13 @@ public class PrimitiveByteArray extends AbstractPrimitiveByteArray {
     }
 
     /**
-     * Create a new instance of &ltA extends {@link PrimitiveByteArray}&gt with a given length.
+     * Create a new instance of &lt;A extends {@link PrimitiveByteArray}&gt; with a given length.
      *
      * @param lookup The lookup object to use for accessing the array's constructor
      * @param arrayClass The class of the array to be created (extends PrimitiveByteArray)
      * @param length the length of the array.
      * @param <A> The class of the array to be created (extends PrimitiveByteArray)
-     * @return a new instance of &ltA extends {@link PrimitiveByteArray}&gt with a given length
+     * @return a new instance of &lt;A extends {@link PrimitiveByteArray}&gt; with a given length
      */
     public static <A extends PrimitiveByteArray> A newInstance(
             MethodHandles.Lookup lookup,
@@ -138,13 +138,13 @@ public class PrimitiveByteArray extends AbstractPrimitiveByteArray {
     }
 
     /**
-     * Create a new instance of &ltA extends {@link PrimitiveByteArray}&gt with a given length,
+     * Create a new instance of &lt;A extends {@link PrimitiveByteArray}&gt; with a given length,
      * array constructor, and array constructor arguments.
      *
      * @param length The length of the array.
      * @param arrayCtorAndArgs for creating the array
      * @param <A> The class of the array to be created (extends PrimitiveByteArray)
-     * @return a new instance of &ltA extends {@link PrimitiveByteArray}&gt
+     * @return a new instance of &lt;A extends {@link PrimitiveByteArray}&gt;
      */
     public static <A extends PrimitiveByteArray> A newInstance(
             final CtorAndArgs<A> arrayCtorAndArgs,
@@ -153,14 +153,14 @@ public class PrimitiveByteArray extends AbstractPrimitiveByteArray {
     }
 
     /**
-     * Create a new instance of &ltA extends {@link PrimitiveByteArray}&gt with a given length,
+     * Create a new instance of &lt;A extends {@link PrimitiveByteArray}&gt; with a given length,
      * array constructor, and array constructor arguments.
      *
      * @param length The length of the array.
      * @param arrayConstructor The array constructor to use
      * @param arrayConstructorArgs The arguments to pass to the array constructor
      * @param <A> The class of the array to be created (extends PrimitiveByteArray)
-     * @return a new instance of &ltA extends {@link PrimitiveByteArray}&gt
+     * @return a new instance of &lt;A extends {@link PrimitiveByteArray}&gt;
      */
     public static <A extends PrimitiveByteArray> A newInstance(
             final long length,
@@ -170,25 +170,25 @@ public class PrimitiveByteArray extends AbstractPrimitiveByteArray {
     }
 
     /**
-     * Create a new &ltA extends {@link PrimitiveByteArray}&gt instance, using a copy constructor to
+     * Create a new &lt;A extends {@link PrimitiveByteArray}&gt; instance, using a copy constructor to
      * replicate the contents of the given source array
      * @param source The array to replicate
      * @param <A> The class of the array to be created (extends PrimitiveByteArray)
-     * @return a new instance of &ltA extends {@link PrimitiveByteArray}&gt copied from the source array
-     * @throws NoSuchMethodException if &ltA&gt does not have a copy constructor
+     * @return a new instance of &lt;A extends {@link PrimitiveByteArray}&gt; copied from the source array
+     * @throws NoSuchMethodException if &lt;A&gt; does not have a copy constructor
      */
     public static <A extends PrimitiveByteArray> A copyInstance(A source) throws NoSuchMethodException {
         return AbstractPrimitiveArray._copyInstance(noLookup, source);
     }
 
     /**
-     * Create a new &ltA extends {@link PrimitiveByteArray}&gt instance, using a copy constructor to
+     * Create a new &lt;A extends {@link PrimitiveByteArray}&gt; instance, using a copy constructor to
      * replicate the contents of the given source array
      * @param lookup The lookup object to use for accessing the array's constructor
      * @param source The array to replicate
      * @param <A> The class of the array to be created (extends PrimitiveByteArray)
-     * @return a new instance of &ltA extends {@link PrimitiveByteArray}&gt copied from the source array
-     * @throws NoSuchMethodException if &ltA&gt does not have a copy constructor
+     * @return a new instance of &lt;A extends {@link PrimitiveByteArray}&gt; copied from the source array
+     * @throws NoSuchMethodException if &lt;A&gt; does not have a copy constructor
      */
     public static <A extends PrimitiveByteArray> A copyInstance(
             MethodHandles.Lookup lookup,
