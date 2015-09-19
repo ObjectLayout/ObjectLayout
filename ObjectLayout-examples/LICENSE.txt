@@ -1,0 +1,2 @@
+Please view the LICENSE or LICENSE.txt files in the individual source 
+directories and subdirectories for license details.
