@@ -1,17 +1,17 @@
-/*
+package org.ObjectLayout.examples;/*
  * Written by Gil Tene and Martin Thompson, and released to the public domain,
  * as explained at http://creativecommons.org/publicdomain/zero/1.0/
  */
 
 import org.ObjectLayout.StructuredArray;
+import org.ObjectLayout.examples.StructuredArrayOfAtomicLong;
+import org.hamcrest.CoreMatchers;
+import org.junit.Assert;
 import org.junit.Test;
 
 import java.util.concurrent.atomic.AtomicLong;
 
 import static java.lang.Long.valueOf;
-import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
 
 public class StructuredArrayOfAtomicLongTest {
 
@@ -40,7 +40,7 @@ public class StructuredArrayOfAtomicLongTest {
         long index = 0;
         for (final AtomicLong atomicLong : array) {
             indexSum += index++;
-            assertThat(valueOf(atomicLong.get()), is(valueOf(indexSum)));
+            Assert.assertThat(valueOf(atomicLong.get()), CoreMatchers.is(valueOf(indexSum)));
             sum += indexSum;
             elementCount++;
         }
@@ -52,9 +52,9 @@ public class StructuredArrayOfAtomicLongTest {
             elementCount2++;
         }
 
-        assertThat(valueOf(elementCount), is(valueOf(array.getLength())));
-        assertThat(valueOf(sum), is(valueOf(sum2)));
-        assertThat(valueOf(elementCount), is(valueOf(elementCount2)));
+        Assert.assertThat(valueOf(elementCount), CoreMatchers.is(valueOf(array.getLength())));
+        Assert.assertThat(valueOf(sum), CoreMatchers.is(valueOf(sum2)));
+        Assert.assertThat(valueOf(elementCount), CoreMatchers.is(valueOf(elementCount2)));
     }
 
     @Test
@@ -71,7 +71,7 @@ public class StructuredArrayOfAtomicLongTest {
         while (iter.hasNext()) {
             final AtomicLong atomicLong = iter.next();
             indexSum += index++;
-            assertThat(valueOf(atomicLong.get()), is(valueOf(indexSum)));
+            Assert.assertThat(valueOf(atomicLong.get()), CoreMatchers.is(valueOf(indexSum)));
         }
 
         iter.reset();
@@ -79,10 +79,10 @@ public class StructuredArrayOfAtomicLongTest {
         while (iter.hasNext()) {
             final AtomicLong atomicLong = iter.next();
             indexSum += index++;
-            assertThat(valueOf(atomicLong.get()), is(valueOf(indexSum)));
+            Assert.assertThat(valueOf(atomicLong.get()), CoreMatchers.is(valueOf(indexSum)));
         }
 
-        assertThat(valueOf(index), is(valueOf(length)));
+        Assert.assertThat(valueOf(index), CoreMatchers.is(valueOf(length)));
     }
 
     @Test(expected = ArrayIndexOutOfBoundsException.class)
@@ -112,9 +112,9 @@ public class StructuredArrayOfAtomicLongTest {
 
         StructuredArray.shallowCopy(array, 4, array, 3, 2, false);
 
-        assertThat(valueOf(array.get(3).get()), is(valueOf(4)));
-        assertThat(valueOf(array.get(4).get()), is(valueOf(5)));
-        assertThat(valueOf(array.get(5).get()), is(valueOf(5)));
+        Assert.assertThat(valueOf(array.get(3).get()), CoreMatchers.is(valueOf(4)));
+        Assert.assertThat(valueOf(array.get(4).get()), CoreMatchers.is(valueOf(5)));
+        Assert.assertThat(valueOf(array.get(5).get()), CoreMatchers.is(valueOf(5)));
     }
 
     @Test
@@ -127,9 +127,9 @@ public class StructuredArrayOfAtomicLongTest {
 
         StructuredArray.shallowCopy(array, 5, array, 6, 2, false);
 
-        assertThat(valueOf(array.get(5).get()), is(valueOf(5)));
-        assertThat(valueOf(array.get(6).get()), is(valueOf(5)));
-        assertThat(valueOf(array.get(7).get()), is(valueOf(6)));
+        Assert.assertThat(valueOf(array.get(5).get()), CoreMatchers.is(valueOf(5)));
+        Assert.assertThat(valueOf(array.get(6).get()), CoreMatchers.is(valueOf(5)));
+        Assert.assertThat(valueOf(array.get(7).get()), CoreMatchers.is(valueOf(6)));
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -144,14 +144,15 @@ public class StructuredArrayOfAtomicLongTest {
 
     private void assertCorrectVariableInitialisation(final long length,
                                              final StructuredArrayOfAtomicLong array) {
-        assertThat(valueOf(array.getLength()), is(valueOf(length)));
-        assertTrue(array.getElementClass() == AtomicLong.class);
+        Assert.assertThat(valueOf(array.getLength()), CoreMatchers.is(valueOf(length)));
+        Assert.assertTrue(array.getElementClass() == AtomicLong.class);
 
         long indexSum = 0;
 
         for (long index = 0; index < length; index++) {
             indexSum += index;
-            assertThat("index: " + index + ": ", valueOf(array.get(index).get()), is(valueOf(indexSum)));
+            Assert.assertThat("index: " + index + ": ", valueOf(array.get(index).get()), CoreMatchers.is(valueOf
+                    (indexSum)));
         }
     }
 

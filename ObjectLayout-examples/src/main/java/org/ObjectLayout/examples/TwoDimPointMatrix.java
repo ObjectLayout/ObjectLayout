@@ -1,3 +1,5 @@
+package org.ObjectLayout.examples;
+
 import org.ObjectLayout.*;
 
 import java.lang.reflect.Constructor;

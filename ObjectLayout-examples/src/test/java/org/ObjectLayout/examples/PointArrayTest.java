@@ -1,9 +1,13 @@
-/*
+package org.ObjectLayout.examples;/*
  * Written by Gil Tene, and released to the public domain,
  * as explained at http://creativecommons.org/publicdomain/zero/1.0/
  */
 
 import org.ObjectLayout.*;
+import org.ObjectLayout.examples.Point;
+import org.ObjectLayout.examples.PointArray;
+import org.hamcrest.CoreMatchers;
+import org.junit.Assert;
 import org.junit.Test;
 
 import static java.lang.Long.valueOf;
@@ -33,13 +37,13 @@ public class PointArrayTest {
                         lengths[0]
                 ).build();
 
-        assertThat(valueOf(array.getLength()), is(lengths[0]));
-        assertThat(valueOf(array.get(0).getLength()), is(lengths[1]));
-        assertThat(valueOf(array.get(0).get(0).getLength()), is(lengths[2]));
+        Assert.assertThat(valueOf(array.getLength()), CoreMatchers.is(lengths[0]));
+        Assert.assertThat(valueOf(array.get(0).getLength()), CoreMatchers.is(lengths[1]));
+        Assert.assertThat(valueOf(array.get(0).get(0).getLength()), CoreMatchers.is(lengths[2]));
 
-        assertTrue(array.getElementClass().isAssignableFrom(StructuredArray.class));
-        assertTrue(array.get(0).getElementClass().isAssignableFrom(PointArray.class));
-        assertTrue(array.get(0).get(0).getElementClass() == Point.class);
+        Assert.assertTrue(array.getElementClass().isAssignableFrom(StructuredArray.class));
+        Assert.assertTrue(array.get(0).getElementClass().isAssignableFrom(PointArray.class));
+        Assert.assertTrue(array.get(0).get(0).getElementClass() == Point.class);
     }
 
     @Test
@@ -47,8 +51,8 @@ public class PointArrayTest {
         long length = 9L;
         PointArray array = PointArray.newInstance(length);
 
-        assertThat(valueOf(array.getLength()), is(valueOf(length)));
-        assertTrue(array.getElementClass() == Point.class);
+        Assert.assertThat(valueOf(array.getLength()), CoreMatchers.is(valueOf(length)));
+        Assert.assertTrue(array.getElementClass() == Point.class);
     }
 
     @Test
@@ -61,8 +65,8 @@ public class PointArrayTest {
                         length
                 ).build();
 
-        assertThat(valueOf(array.getLength()), is(valueOf(length)));
-        assertTrue(array.getElementClass() == Point.class);
+        Assert.assertThat(valueOf(array.getLength()), CoreMatchers.is(valueOf(length)));
+        Assert.assertTrue(array.getElementClass() == Point.class);
     }
 
     @Test
@@ -156,8 +160,8 @@ public class PointArrayTest {
             final long index = iter.getCursor();
             final Point point = iter.next();
 
-            assertThat(valueOf(point.getX()), is(valueOf(index)));
-            assertThat(valueOf(point.getY()), is(valueOf(index * 2)));
+            Assert.assertThat(valueOf(point.getX()), CoreMatchers.is(valueOf(index)));
+            Assert.assertThat(valueOf(point.getY()), CoreMatchers.is(valueOf(index * 2)));
             sum += index;
             elementCount++;
         }
@@ -169,9 +173,9 @@ public class PointArrayTest {
             elementCount2++;
         }
 
-        assertThat(valueOf(elementCount), is(valueOf(array.getLength())));
-        assertThat(valueOf(sum), is(valueOf(sum2)));
-        assertThat(valueOf(elementCount), is(valueOf(elementCount2)));
+        Assert.assertThat(valueOf(elementCount), CoreMatchers.is(valueOf(array.getLength())));
+        Assert.assertThat(valueOf(sum), CoreMatchers.is(valueOf(sum2)));
+        Assert.assertThat(valueOf(elementCount), CoreMatchers.is(valueOf(elementCount2)));
     }
 
     @Test
@@ -187,8 +191,8 @@ public class PointArrayTest {
         while (iter.hasNext()) {
             final long index = iter.getCursor();
             final Point point = iter.next();
-            assertThat(valueOf(point.getX()), is(valueOf(index)));
-            assertThat(valueOf(point.getY()), is(valueOf(index * 2)));
+            Assert.assertThat(valueOf(point.getX()), CoreMatchers.is(valueOf(index)));
+            Assert.assertThat(valueOf(point.getY()), CoreMatchers.is(valueOf(index * 2)));
             i++;
         }
 
@@ -197,12 +201,12 @@ public class PointArrayTest {
         while (iter.hasNext()) {
             final long index = iter.getCursor();
             final Point point = iter.next();
-            assertThat(valueOf(point.getX()), is(valueOf(index)));
-            assertThat(valueOf(point.getY()), is(valueOf(index * 2)));
+            Assert.assertThat(valueOf(point.getX()), CoreMatchers.is(valueOf(index)));
+            Assert.assertThat(valueOf(point.getY()), CoreMatchers.is(valueOf(index * 2)));
             i++;
         }
 
-        assertThat(valueOf(i), is(valueOf(length)));
+        Assert.assertThat(valueOf(i), CoreMatchers.is(valueOf(length)));
     }
 
     @Test
@@ -212,8 +216,8 @@ public class PointArrayTest {
         final PointArray sourceArray =
                 PointArray.newInstance(length, ctorAndArgsProvider);
 
-        assertThat(valueOf(sourceArray.getLength()), is(valueOf(length)));
-        assertTrue(sourceArray.getElementClass() == Point.class);
+        Assert.assertThat(valueOf(sourceArray.getLength()), CoreMatchers.is(valueOf(length)));
+        Assert.assertTrue(sourceArray.getElementClass() == Point.class);
 
         final PointArray newArray =
                 (PointArray) StructuredArray.copyInstance(sourceArray);
@@ -239,10 +243,10 @@ public class PointArrayTest {
         StructuredArray<PointArray> subArray1 = sourceArray.get(0);
         PointArray subArray2 = subArray1.get(0);
 
-        assertThat(valueOf(sourceArray.getLength()), is(valueOf(lengths[0])));
-        assertThat(valueOf(subArray1.getLength()), is(valueOf(lengths[1])));
-        assertThat(valueOf(subArray2.getLength()), is(valueOf(lengths[2])));
-        assertTrue(subArray2.getElementClass() == Point.class);
+        Assert.assertThat(valueOf(sourceArray.getLength()), CoreMatchers.is(valueOf(lengths[0])));
+        Assert.assertThat(valueOf(subArray1.getLength()), CoreMatchers.is(valueOf(lengths[1])));
+        Assert.assertThat(valueOf(subArray2.getLength()), CoreMatchers.is(valueOf(lengths[2])));
+        Assert.assertTrue(subArray2.getElementClass() == Point.class);
 
         final StructuredArray<StructuredArray<PointArray>> newArray =
                 StructuredArray.copyInstance(sourceArray);
@@ -268,10 +272,10 @@ public class PointArrayTest {
         StructuredArray<PointArray> subArray1 = sourceArray.get(0);
         PointArray subArray2 = subArray1.get(0);
 
-        assertThat(valueOf(sourceArray.getLength()), is(valueOf(lengths[0])));
-        assertThat(valueOf(subArray1.getLength()), is(valueOf(lengths[1])));
-        assertThat(valueOf(subArray2.getLength()), is(valueOf(lengths[2])));
-        assertTrue(subArray2.getElementClass() == Point.class);
+        Assert.assertThat(valueOf(sourceArray.getLength()), CoreMatchers.is(valueOf(lengths[0])));
+        Assert.assertThat(valueOf(subArray1.getLength()), CoreMatchers.is(valueOf(lengths[1])));
+        Assert.assertThat(valueOf(subArray2.getLength()), CoreMatchers.is(valueOf(lengths[2])));
+        Assert.assertTrue(subArray2.getElementClass() == Point.class);
 
         long[] offsets = {2, 2, 2};
         long[] counts = {13, 5, 3};
@@ -311,9 +315,9 @@ public class PointArrayTest {
 
         StructuredArray.shallowCopy(array, 4, array, 3, 2, false);
 
-        assertThat(valueOf(array.get(3).getX()), is(valueOf(4)));
-        assertThat(valueOf(array.get(4).getX()), is(valueOf(5)));
-        assertThat(valueOf(array.get(5).getX()), is(valueOf(5)));
+        Assert.assertThat(valueOf(array.get(3).getX()), CoreMatchers.is(valueOf(4)));
+        Assert.assertThat(valueOf(array.get(4).getX()), CoreMatchers.is(valueOf(5)));
+        Assert.assertThat(valueOf(array.get(5).getX()), CoreMatchers.is(valueOf(5)));
     }
 
     @Test
@@ -326,9 +330,9 @@ public class PointArrayTest {
 
         StructuredArray.shallowCopy(array, 5, array, 6, 2, false);
 
-        assertThat(valueOf(array.get(5).getX()), is(valueOf(5)));
-        assertThat(valueOf(array.get(6).getX()), is(valueOf(5)));
-        assertThat(valueOf(array.get(7).getX()), is(valueOf(6)));
+        Assert.assertThat(valueOf(array.get(5).getX()), CoreMatchers.is(valueOf(5)));
+        Assert.assertThat(valueOf(array.get(6).getX()), CoreMatchers.is(valueOf(5)));
+        Assert.assertThat(valueOf(array.get(7).getX()), CoreMatchers.is(valueOf(6)));
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -345,13 +349,13 @@ public class PointArrayTest {
                                                   final StructuredArray array) {
         StructuredArray a = array;
         for (int i = 0; i < lengths.length - 1; i++) {
-            assertThat(valueOf(a.getLength()), is(valueOf(lengths[i])));
+            Assert.assertThat(valueOf(a.getLength()), CoreMatchers.is(valueOf(lengths[i])));
             a = (StructuredArray) a.get(0);
         }
         PointArray ap = (PointArray) a;
-        assertThat(valueOf(ap.getLength()), is(valueOf(lengths[lengths.length - 1])));
+        Assert.assertThat(valueOf(ap.getLength()), CoreMatchers.is(valueOf(lengths[lengths.length - 1])));
 
-        assertTrue(ap.getElementClass() == Point.class);
+        Assert.assertTrue(ap.getElementClass() == Point.class);
 
         long totalElementCount = 1;
         for (long l : lengths) {
@@ -371,8 +375,8 @@ public class PointArrayTest {
             ap = (PointArray) a;
             Point point = ap.get(cursors[cursors.length - 1]);
 
-            assertThat(valueOf(point.getX()), is(valueOf(expectedX)));
-            assertThat(valueOf(point.getY()), is(valueOf(expectedY)));
+            Assert.assertThat(valueOf(point.getX()), CoreMatchers.is(valueOf(expectedX)));
+            Assert.assertThat(valueOf(point.getY()), CoreMatchers.is(valueOf(expectedY)));
 
             // Increment cursors from inner-most dimension out:
             for (int cursorDimension = cursors.length - 1; cursorDimension >= 0; cursorDimension--) {
@@ -395,13 +399,13 @@ public class PointArrayTest {
                                              final StructuredArray array, long indexOffset) {
         StructuredArray a = array;
         for (int i = 0; i < lengths.length - 1; i++) {
-            assertThat(valueOf(a.getLength()), is(valueOf(lengths[i])));
+            Assert.assertThat(valueOf(a.getLength()), CoreMatchers.is(valueOf(lengths[i])));
             a = (StructuredArray) a.get(0);
         }
         PointArray ap = (PointArray) a;
-        assertThat(valueOf(ap.getLength()), is(valueOf(lengths[lengths.length - 1])));
+        Assert.assertThat(valueOf(ap.getLength()), CoreMatchers.is(valueOf(lengths[lengths.length - 1])));
 
-        assertTrue(ap.getElementClass() == Point.class);
+        Assert.assertTrue(ap.getElementClass() == Point.class);
 
         long totalElementCount = 1;
         for (long l : lengths) {
@@ -428,10 +432,10 @@ public class PointArrayTest {
                 cursorsString += index + ",";
             }
 
-            assertThat("elementCountToCursor: " + elementCountToCursor + " cursors: " + cursorsString,
-                    valueOf(point.getX()), is(valueOf(indexSum)));
-            assertThat("elementCountToCursor: " + elementCountToCursor + " cursors: " + cursorsString,
-                    valueOf(point.getY()), is(valueOf(indexSum * 2)));
+            Assert.assertThat("elementCountToCursor: " + elementCountToCursor + " cursors: " + cursorsString,
+                    valueOf(point.getX()), CoreMatchers.is(valueOf(indexSum)));
+            Assert.assertThat("elementCountToCursor: " + elementCountToCursor + " cursors: " + cursorsString,
+                    valueOf(point.getY()), CoreMatchers.is(valueOf(indexSum * 2)));
 
             // Increment cursors from inner-most dimension out:
             for (int cursorDimension = cursors.length - 1; cursorDimension >= 0; cursorDimension--) {

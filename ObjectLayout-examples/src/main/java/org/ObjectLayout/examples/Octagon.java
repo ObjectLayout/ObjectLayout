@@ -1,4 +1,4 @@
-/*
+package org.ObjectLayout.examples;/*
  * Written by Gil Tene, and released to the public domain,
  * as explained at http://creativecommons.org/publicdomain/zero/1.0/
  */
@@ -10,7 +10,7 @@ import org.ObjectLayout.IntrinsicObjects;
 import java.lang.invoke.MethodHandles;
 
 /**
- * A simple Octagon class example with an intrinsic StructuredArray of Points. Demonstrates use of
+ * A simple org.ObjectLayout.examples.Octagon class example with an intrinsic StructuredArray of Points. Demonstrates use of
  * {@link org.ObjectLayout.IntrinsicObjectModel} members and their initialization, when the
  * intrinsic member is a StructuredArray.
  *

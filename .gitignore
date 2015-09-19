@@ -3,9 +3,7 @@ target
 out
 classes
 gh-pages
-ObjectLayout-parent.iml
-ObjectLayout.iml
-ObjectLayout-benchmarks.iml
+*.iml
 .classpath
 .project
 .settings

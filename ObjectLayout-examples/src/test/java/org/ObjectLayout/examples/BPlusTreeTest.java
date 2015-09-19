@@ -1,19 +1,19 @@
-/*
+package org.ObjectLayout.examples;/*
  * Written by Gil Tene, Martin Thompson and Michael Barker, and released 
  * to the public domain, as explained at:
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
 import static java.util.Arrays.sort;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.nullValue;
-import static org.junit.Assert.assertThat;
 
 import java.util.Iterator;
 import java.util.Map.Entry;
 import java.util.Random;
 import java.util.TreeMap;
 
+import org.ObjectLayout.examples.BPlusTree;
+import org.hamcrest.CoreMatchers;
+import org.junit.Assert;
 import org.junit.Test;
 
 public class BPlusTreeTest {
@@ -30,10 +30,10 @@ public class BPlusTreeTest {
 
         tree.put(21, 21);
 
-        assertThat(tree.get(49), is(nullValue()));
-        assertThat(tree.get(50), is((Object) 50));
-        assertThat(tree.get(51), is(nullValue()));
-        assertThat(tree.get(21), is((Object) 21));
+        Assert.assertThat(tree.get(49), CoreMatchers.is(CoreMatchers.nullValue()));
+        Assert.assertThat(tree.get(50), CoreMatchers.is((Object) 50));
+        Assert.assertThat(tree.get(51), CoreMatchers.is(CoreMatchers.nullValue()));
+        Assert.assertThat(tree.get(21), CoreMatchers.is((Object) 21));
     }
 
     @Test
@@ -47,20 +47,20 @@ public class BPlusTreeTest {
         TreeMap<Integer, Integer> treeMap = new TreeMap<Integer, Integer>();
         putAll(treeMap, values);
 
-        assertThat(tree.size(), is(treeMap.size()));
-        assertThat(count(tree), is(treeMap.size()));
+        Assert.assertThat(tree.size(), CoreMatchers.is(treeMap.size()));
+        Assert.assertThat(count(tree), CoreMatchers.is(treeMap.size()));
 
         int count = 0;
         for (int value : values) {
-            assertThat("{" + count + "}", tree.get(value),
-                    is(treeMap.get(value)));
+            Assert.assertThat("{" + count + "}", tree.get(value),
+                    CoreMatchers.is(treeMap.get(value)));
             Integer removed = tree.remove(value);
             Integer mapRemoved = treeMap.remove(value);
 
-            assertThat("{" + count + "}", removed, is(mapRemoved));
-            assertThat("{" + count + "}", tree.size(), is(treeMap.size()));
-            assertThat("{" + count + "}", count(tree), is(treeMap.size()));
-            assertThat("{" + count + "}", tree.get(value), is(nullValue()));
+            Assert.assertThat("{" + count + "}", removed, CoreMatchers.is(mapRemoved));
+            Assert.assertThat("{" + count + "}", tree.size(), CoreMatchers.is(treeMap.size()));
+            Assert.assertThat("{" + count + "}", count(tree), CoreMatchers.is(treeMap.size()));
+            Assert.assertThat("{" + count + "}", tree.get(value), CoreMatchers.is(CoreMatchers.nullValue()));
 
             count++;
         }
@@ -85,8 +85,8 @@ public class BPlusTreeTest {
 
         for (int value : values) {
             int removed = tree.remove(value);
-            assertThat(removed, is(value));
-            assertThat(tree.size(), is(--size));
+            Assert.assertThat(removed, CoreMatchers.is(value));
+            Assert.assertThat(tree.size(), CoreMatchers.is(--size));
         }
     }
 
@@ -99,8 +99,8 @@ public class BPlusTreeTest {
 
         for (int value : values) {
             int removed = tree.remove(value);
-            assertThat(removed, is(value));
-            assertThat(tree.size(), is(--size));
+            Assert.assertThat(removed, CoreMatchers.is(value));
+            Assert.assertThat(tree.size(), CoreMatchers.is(--size));
         }
     }
 
@@ -114,8 +114,8 @@ public class BPlusTreeTest {
 
         for (int value : reverse(values)) {
             int removed = tree.remove(value);
-            assertThat(removed, is(value));
-            assertThat(tree.size(), is(--size));
+            Assert.assertThat(removed, CoreMatchers.is(value));
+            Assert.assertThat(tree.size(), CoreMatchers.is(--size));
         }
     }
 
@@ -157,7 +157,7 @@ public class BPlusTreeTest {
         }
 
         for (int value : values) {
-            assertThat(tree.get(value), is((Object) value));
+            Assert.assertThat(tree.get(value), CoreMatchers.is((Object) value));
         }
     }
 
@@ -175,7 +175,7 @@ public class BPlusTreeTest {
 
     private static void assertGet(BPlusTree<Integer, Integer> tree, int[] values) {
         for (int value : values) {
-            assertThat(tree.get(value), is((Object) value));
+            Assert.assertThat(tree.get(value), CoreMatchers.is((Object) value));
         }
     }
 

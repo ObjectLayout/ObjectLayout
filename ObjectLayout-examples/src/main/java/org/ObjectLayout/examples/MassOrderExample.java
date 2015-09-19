@@ -1,4 +1,4 @@
-/*
+package org.ObjectLayout.examples;/*
  * Written by Michael Barker, and released to the public domain,
  * as explained at http://creativecommons.org/publicdomain/zero/1.0/
  */

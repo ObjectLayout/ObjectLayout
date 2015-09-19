@@ -1,4 +1,4 @@
-/*
+package org.ObjectLayout.examples;/*
  * Written by Gil Tene, and released to the public domain,
  * as explained at http://creativecommons.org/publicdomain/zero/1.0/
  */
@@ -6,12 +6,11 @@
 import org.ObjectLayout.Intrinsic;
 import org.ObjectLayout.IntrinsicObjects;
 
-import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Constructor;
 
 /**
- * A simple Line class example with two intrinsic Point end point objects. Demonstrates use of
+ * A simple org.ObjectLayout.examples.Line class example with two intrinsic org.ObjectLayout.examples.Point end point objects. Demonstrates use of
  * {@link org.ObjectLayout.IntrinsicObjectModel}
  * members and their initialization, either at field initialization or during construction.
  *

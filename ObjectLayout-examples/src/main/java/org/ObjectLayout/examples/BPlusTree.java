@@ -1,18 +1,15 @@
-/*
+package org.ObjectLayout.examples;/*
  * Written by Gil Tene, Martin Thompson and Michael Barker, and released 
  * to the public domain, as explained at:
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
-import java.lang.reflect.Constructor;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
-import org.ObjectLayout.CtorAndArgs;
 import org.ObjectLayout.ReferenceArray;
 import org.ObjectLayout.StructuredArray;
 
@@ -807,7 +804,7 @@ public class BPlusTree<K, V> implements Iterable<Map.Entry<K, V>> {
 
     @Override
     public String toString() {
-        return "BPlusTree [nodeSize=" + nodeSize + ", comparator=" + comparator
+        return "org.ObjectLayout.examples.BPlusTree [nodeSize=" + nodeSize + ", comparator=" + comparator
                 + ", root=" + root + "]";
     }
 
