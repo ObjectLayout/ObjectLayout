@@ -42,7 +42,7 @@
         </dependency>
         <dependency>
             <groupId>org.objectlayout</groupId>
-            <artifactId>ObjectLayout-benchmarks</artifactId>
+            <artifactId>ObjectLayout-examples</artifactId>
             <version>${project.version}</version>
         </dependency>
     </dependencies>
