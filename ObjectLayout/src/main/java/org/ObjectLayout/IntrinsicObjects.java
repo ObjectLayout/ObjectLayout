@@ -14,16 +14,16 @@ import java.util.HashMap;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Intrinsic objects (declared with the {@link org.ObjectLayout.Intrinsic @Intrisic} annotation) may have
+ * Intrinsic objects (declared with the {@link org.ObjectLayout.Intrinsic @Intrinsic} annotation) may have
  * their layout within the containing object instance optimized by JDK implementations, such that access
  * to their content is faster, and avoids certain de-referencing steps.
  * <p>
  * The {@link org.ObjectLayout.IntrinsicObjects} class provides static methods for constructing objects
- * that are {@link org.ObjectLayout.Intrinsic @Intrisic} to their containing class. Calls to
+ * that are {@link org.ObjectLayout.Intrinsic @Intrinsic} to their containing class. Calls to
  * {@link org.ObjectLayout.IntrinsicObjects#constructWithin
  * constructWithin(String fieldName, Object containingObject)} (and variants) are used to construct and
  * initialize intrinsic objects associated with specific instance fields that are declared as
- * {@link org.ObjectLayout.Intrinsic @Intrisic} in their containing class.
+ * {@link org.ObjectLayout.Intrinsic @Intrinsic} in their containing class.
  * <p>
  * Some example of declaring an intrinsic object include:
  * <blockquote><pre>
@@ -60,7 +60,7 @@ public final class IntrinsicObjects {
     /**
      * Construct an intrinsic object at the given field within the containing object, using a default constructor.
      * <p>
-     * The field specified in {@code fieldName} must be annotated with {@link org.ObjectLayout.Intrinsic @Intrisic},
+     * The field specified in {@code fieldName} must be annotated with {@link org.ObjectLayout.Intrinsic @Intrinsic},
      * and must be declared private and final.
      *
      * @param lookup The lookup object to use for accessing the field
@@ -81,7 +81,7 @@ public final class IntrinsicObjects {
      * Construct an intrinsic object at the given field within the containing object, using the given
      * constructor and arguments.
      * <p>
-     * The field specified in {@code fieldName} must be annotated with {@link org.ObjectLayout.Intrinsic @Intrisic},
+     * The field specified in {@code fieldName} must be annotated with {@link org.ObjectLayout.Intrinsic @Intrinsic},
      * and must be declared private and final.
      *
      * @param lookup The lookup object to use for accessing the field
@@ -106,7 +106,7 @@ public final class IntrinsicObjects {
      * Construct an intrinsic object at the given field within the containing object, using the
      * constructor and arguments supplied in the given objectCtorAndArgs argument.
      * <p>
-     * The field specified in {@code fieldName} must be annotated with {@link org.ObjectLayout.Intrinsic @Intrisic},
+     * The field specified in {@code fieldName} must be annotated with {@link org.ObjectLayout.Intrinsic @Intrinsic},
      * and must be declared private and final.
      *
      * @param lookup The lookup object to use for accessing the field
@@ -131,7 +131,7 @@ public final class IntrinsicObjects {
      * supplied {@link StructuredArrayBuilder}. This form of constructWithin() can only be used
      * to construct intrinsic objects that derive from {@link org.ObjectLayout.StructuredArray}.
      * <p>
-     * The field specified in {@code fieldName} must be annotated with {@link org.ObjectLayout.Intrinsic @Intrisic},
+     * The field specified in {@code fieldName} must be annotated with {@link org.ObjectLayout.Intrinsic @Intrinsic},
      * and must be declared private and final.
      *
      * @param lookup The lookup object to use for accessing the field
@@ -155,7 +155,7 @@ public final class IntrinsicObjects {
      * supplied {@link PrimitiveArrayBuilder}. This form of constructWithin() can only be used
      * to construct intrinsic objects that derive from {@link org.ObjectLayout.AbstractPrimitiveArray}.
      * <p>
-     * The field specified in {@code fieldName} must be annotated with {@link org.ObjectLayout.Intrinsic @Intrisic},
+     * The field specified in {@code fieldName} must be annotated with {@link org.ObjectLayout.Intrinsic @Intrinsic},
      * and must be declared private and final.
      *
      * @param lookup The lookup object to use for accessing the field
