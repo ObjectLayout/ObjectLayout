@@ -213,7 +213,7 @@ public class StructuredArrayBuilder<S extends StructuredArray<T>, T> {
 
     /**
      * Constructs a new {@link StructuredArrayBuilder} object for creating an array of type S with
-     * elements of type T, and the given length. Used when T extends PrimitiveArray, such that the
+     * elements of type T, and the given length. Used when T extends AbstractPrimitiveArray, such that the
      * arrays instantiated by this builder would include elements that are PrimitiveArrays.
      *
      * @param arrayClass The class of the array to be built by this builder
@@ -222,7 +222,7 @@ public class StructuredArrayBuilder<S extends StructuredArray<T>, T> {
      * @param length The length of the array to be build by this builder
      * @param <A> The class in the subArray (should match T for the StructuredArrayBuilder)
      */
-    public <A extends AbstractPrimitiveByteArray> StructuredArrayBuilder(final Class<S> arrayClass,
+    public <A extends AbstractPrimitiveArray> StructuredArrayBuilder(final Class<S> arrayClass,
                                                                          final PrimitiveArrayBuilder<A> subArrayBuilder,
                                                                          final long length) {
         this(noLookup, arrayClass, subArrayBuilder, length);
@@ -230,7 +230,7 @@ public class StructuredArrayBuilder<S extends StructuredArray<T>, T> {
 
     /**
      * Constructs a new {@link StructuredArrayBuilder} object for creating an array of type S with
-     * elements of type T, and the given length. Used when T extends PrimitiveArray, such that the
+     * elements of type T, and the given length. Used when T extends AbstractPrimitiveArray, such that the
      * arrays instantiated by this builder would include elements that are PrimitiveArrays.
      *
      * @param lookup The lookup object to use for accessing constructors when resolving this builder
@@ -240,7 +240,7 @@ public class StructuredArrayBuilder<S extends StructuredArray<T>, T> {
      * @param length The length of the array to be build by this builder
      * @param <A> The class in the subArray (should match T for the StructuredArrayBuilder)
      */
-    public <A extends AbstractPrimitiveByteArray> StructuredArrayBuilder(
+    public <A extends AbstractPrimitiveArray> StructuredArrayBuilder(
             MethodHandles.Lookup lookup,
             final Class<S> arrayClass,
             final PrimitiveArrayBuilder<A> subArrayBuilder,
