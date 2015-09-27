@@ -131,8 +131,10 @@ public class StructuredArrayBuilder<S extends StructuredArray<T>, T> {
                                   final Class<S> arrayClass,
                                   final Class<T> elementClass,
                                   final long length) {
-        if (elementClass.isAssignableFrom(StructuredArray.class)) {
-            throw new IllegalArgumentException("Cannot use this constructor form for nested StructuredArrays. " +
+        if (StructuredArray.class.isAssignableFrom(elementClass) ||
+                AbstractPrimitiveArray.class.isAssignableFrom(elementClass)) {
+            throw new IllegalArgumentException("Cannot use this constructor form for nested " +
+                    "StructuredArrays or PrimitiveArrays. " +
                     "Use the StructuredArrayBuilder(arrayClass, subArrayBuilder, length) form instead.");
         }
         this.lookup = lookup;
