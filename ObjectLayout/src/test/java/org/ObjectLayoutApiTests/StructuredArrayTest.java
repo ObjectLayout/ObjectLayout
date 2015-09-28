@@ -8,8 +8,6 @@ package org.ObjectLayoutApiTests;
 import org.ObjectLayout.*;
 import org.junit.Test;
 
-import java.awt.*;
-import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
