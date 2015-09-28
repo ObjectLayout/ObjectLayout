@@ -8,10 +8,10 @@ import java.lang.reflect.InvocationTargetException;
  * A builder used for instantiating a {@link AbstractPrimitiveArray}&lt;T&gt;
  * <p>
  * {@link org.ObjectLayout.PrimitiveArrayBuilder} follows the commonly used builder pattern, and is useful for
- * capturing the instantiation parameters of {@link org.ObjectLayout.StructuredArray}s.
+ * capturing the instantiation parameters of {@link StructuredArray}s.
  * </p>
  * <p>
- * {@link org.ObjectLayout.PrimitiveArrayBuilder}s can be created for "flat" and "nested" {@link org.ObjectLayout.StructuredArray}
+ * {@link org.ObjectLayout.PrimitiveArrayBuilder}s can be created for "flat" and "nested" {@link StructuredArray}
  * constructs, and can range from the simplest forms used when default constructors are employed, to forms that
  * supply customized per-element construction arguments that can take construction context (such as index,
  * containing array, and arbitrary data passed in a contextCookie) into account.

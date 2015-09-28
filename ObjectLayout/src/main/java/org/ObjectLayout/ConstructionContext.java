@@ -7,7 +7,7 @@ package org.ObjectLayout;
  */
 public class ConstructionContext<T> {
     private long index;
-    private StructuredArray<T> array;
+    private AbstractStructuredArray<T> array;
     private ConstructionContext containingContext;
     private Object contextCookie;
 
@@ -31,7 +31,7 @@ public class ConstructionContext<T> {
      *
      * @return the immediately containing StructuredArray
      */
-    public StructuredArray<T> getArray() {
+    public AbstractStructuredArray<T> getArray() {
         return array;
     }
 
@@ -41,9 +41,9 @@ public class ConstructionContext<T> {
      *
      * @return the containing context
      */
-    public ConstructionContext<StructuredArray<T>> getContainingContext() {
+    public ConstructionContext<AbstractStructuredArray<T>> getContainingContext() {
         @SuppressWarnings("unchecked")
-        ConstructionContext<StructuredArray<T>> c = containingContext;
+        ConstructionContext<AbstractStructuredArray<T>> c = containingContext;
         return c;
     }
 
@@ -68,7 +68,7 @@ public class ConstructionContext<T> {
         this.index = index;
     }
 
-    void setArray(StructuredArray<T> array) {
+    void setArray(AbstractStructuredArray<T> array) {
         this.array = array;
     }
 

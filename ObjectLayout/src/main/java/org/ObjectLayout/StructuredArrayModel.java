@@ -6,7 +6,7 @@ package org.ObjectLayout;
  * @param <S> The class of the StructuredArray modeled by the model
  * @param <T> The class of the elements in the StructuredArray modeled by the model
  */
-public class StructuredArrayModel<S extends StructuredArray<T>, T> extends
+public class StructuredArrayModel<S extends AbstractStructuredArray<T>, T> extends
         AbstractStructuredArrayModel<S, T> {
 
     /**
@@ -41,7 +41,7 @@ public class StructuredArrayModel<S extends StructuredArray<T>, T> extends
      * @param <A2> The class of the StructuredArray modeled by the subArrayModel
      * @param <T2> The class of the elements in the StructuredArray modeled by the subArrayModel
      */
-    public <A2 extends StructuredArray<T2>, T2>
+    public <A2 extends AbstractStructuredArray<T2>, T2>
     StructuredArrayModel(final Class<S> arrayClass,
                          final StructuredArrayModel<A2, T2> subArrayModel,
                          final long length) {

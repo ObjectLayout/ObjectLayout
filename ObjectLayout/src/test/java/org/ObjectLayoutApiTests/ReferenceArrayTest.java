@@ -3,6 +3,8 @@ package org.ObjectLayoutApiTests;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.*;
 
+import org.ObjectLayout.ProtectedReferenceArray;
+import org.ObjectLayout.ProtectedStructuredArray;
 import org.ObjectLayout.ReferenceArray;
 import org.junit.Test;
 
@@ -81,6 +83,42 @@ public class ReferenceArrayTest {
             return size;
         }
     }
+
+
+    public static class StackProtected extends ProtectedReferenceArray<Object> {
+        private int size = 0;
+        private final long capacity;
+
+        public static StackProtected newInstance(final long length) {
+            return newInstance(StackProtected.class, length);
+        }
+
+        public StackProtected() {
+            this.capacity = getLength();
+        }
+
+        public void push(Object o) {
+            if (size == capacity) {
+                throw new IndexOutOfBoundsException();
+            }
+
+            set(size, o);
+            size++;
+        }
+
+        public Object pop() {
+            if (size == 0) {
+                throw new IndexOutOfBoundsException();
+            }
+
+            Object o = get(--size);
+            return o;
+        }
+
+        public int size() {
+            return size;
+        }
+    }
     
     @Test
     public void pushesAndPops() throws Exception {
@@ -88,12 +126,13 @@ public class ReferenceArrayTest {
         Stack s = Stack.newInstance(10); // The convenient way...
 
         String foo = "foo";
-        
         s.push(foo);
         
         assertThat(s.size(), is(1));
         assertThat(s.pop(), is((Object) foo));
         assertThat(s.size(), is(0));
+
+        Object r = s.get(0); // So, this is possible on a ReferenceArray subclass (but not on ProtectedReferenceArray)....
     }
 
     @Test
@@ -102,7 +141,21 @@ public class ReferenceArrayTest {
         StackPublic s = StackPublic.newInstance(10); // The convenient way...
 
         String foo = "foo";
+        s.push(foo);
 
+        assertThat(s.size(), is(1));
+        assertThat(s.pop(), is((Object) foo));
+        assertThat(s.size(), is(0));
+
+        Object r = s.get(0); // So, this is possible on a ReferenceArray subclass (but not on ProtectedReferenceArray)....
+    }
+
+
+    @Test
+    public void pushesAndPopsProtected() throws Exception {
+        StackProtected s = StackProtected.newInstance(10); // The convenient way...
+
+        String foo = "foo";
         s.push(foo);
 
         assertThat(s.size(), is(1));

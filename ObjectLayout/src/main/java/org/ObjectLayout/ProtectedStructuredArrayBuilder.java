@@ -4,21 +4,21 @@ import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Constructor;
 
 /**
- * A builder used for instantiating a {@link StructuredArray}&lt;T&gt;
+ * A builder used for instantiating a {@link ProtectedStructuredArray}&lt;T&gt;
  * <p>
- * {@link org.ObjectLayout.StructuredArrayBuilder} follows the commonly used builder pattern, and is useful for
- * capturing the instantiation parameters of {@link StructuredArray}s.
+ * {@link ProtectedStructuredArrayBuilder} follows the commonly used builder pattern, and is useful for
+ * capturing the instantiation parameters of {@link ProtectedStructuredArray}s.
  * </p>
  * <p>
- * {@link org.ObjectLayout.StructuredArrayBuilder}s can be created for "flat" and "nested" {@link StructuredArray}
+ * {@link ProtectedStructuredArrayBuilder}s can be created for "flat" and "nested" {@link ProtectedStructuredArray}
  * constructs, and can range from the simplest forms used when default constructors are employed, to forms that
  * supply customized per-element construction arguments that can take construction context (such as index,
  * containing array, and arbitrary data passed in a contextCookie) into account.
  * </p>
- * A simple example of using a {@link org.ObjectLayout.StructuredArrayBuilder} to instantiate a StructuredArray is:
+ * A simple example of using a {@link ProtectedStructuredArrayBuilder} to instantiate a ProtectedStructuredArray is:
  * <blockquote><pre>
- * StructuredArray&lt;MyElementClass&gt; array =
- *      new StructuredArrayBuilder(StructuredArray.class, MyElementClass.class, length).
+ * ProtectedStructuredArray&lt;MyElementClass&gt; array =
+ *      new StructuredArrayBuilder(ProtectedStructuredArray.class, MyElementClass.class, length).
  *          build();
  * </pre></blockquote>
  * <p>
@@ -26,9 +26,9 @@ import java.lang.reflect.Constructor;
  * <blockquote><pre>
  * Constructor&lt;MyElementClass&gt; constructor = MyElementClass.class.getConstructor(int.Class, int.Class);
  *
- * StructuredArray&lt;MyElementClass&gt; array =
+ * ProtectedStructuredArray&lt;MyElementClass&gt; array =
  *      new StructuredArrayBuilder(
- *          StructuredArray.class,
+ *          ProtectedStructuredArray.class,
  *          MyElementClass.class,
  *          length).
  *          elementCtorAndArgs(constructor, initArg1, initArg2).
@@ -39,18 +39,18 @@ import java.lang.reflect.Constructor;
  * Constructor&lt;MyElementClass&gt; constructor = MyElementClass.class.getConstructor(long.Class, long.Class);
  *
  * // Using a pre-constructed elementCtorAndArgsProvider:
- * StructuredArray&lt;MyElementClass&gt; array =
+ * ProtectedStructuredArray&lt;MyElementClass&gt; array =
  *      new StructuredArrayBuilder(
- *          StructuredArray.class,
+ *          ProtectedStructuredArray.class,
  *          MyElementClass.class,
  *          length).
  *          elementCtorAndArgsProvider(myCtorAndArgsProvider).
  *          build();
  *
  * // Using a Lambda expression for elementCtorAndArgsProvider:
- * StructuredArray&lt;MyElementClass&gt; array2 =
+ * ProtectedStructuredArray&lt;MyElementClass&gt; array2 =
  *      new StructuredArrayBuilder(
- *          StructuredArray.class,
+ *          ProtectedStructuredArray.class,
  *          MyElementClass.class,
  *          length).
  *          elementCtorAndArgsProvider(
@@ -60,9 +60,9 @@ import java.lang.reflect.Constructor;
  *          build();
  *
  * // Using an anonymous class for elementCtorAndArgsProvider:
- * StructuredArray&lt;MyElementClass&gt; array3 =
+ * ProtectedStructuredArray&lt;MyElementClass&gt; array3 =
  *      new StructuredArrayBuilder(
- *          StructuredArray.class,
+ *          ProtectedStructuredArray.class,
  *          MyElementClass.class,
  *          length).
  *          elementCtorAndArgsProvider(
@@ -76,36 +76,36 @@ import java.lang.reflect.Constructor;
  *          build();
  * </pre></blockquote>
  *
- * @param <S> The class of the StructuredArray that is to be instantiated by the builder
- * @param <T> The class of the elements in the StructuredArray that is to be instantiated the builder
+ * @param <S> The class of the ProtectedStructuredArray that is to be instantiated by the builder
+ * @param <T> The class of the elements in the ProtectedStructuredArray that is to be instantiated the builder
  */
-public class StructuredArrayBuilder<S extends StructuredArray<T>, T>
+public class ProtectedStructuredArrayBuilder<S extends ProtectedStructuredArray<T>, T>
         extends AbstractStructuredArrayBuilder<S, T> {
 
     /**
-     * Constructs a new {@link StructuredArrayBuilder} object for creating arrays of type S with
+     * Constructs a new {@link ProtectedStructuredArrayBuilder} object for creating arrays of type S with
      * elements of type T, and the given length.
      *
-     * Note: This constructor form cannot be used with an element type T that extends StructuredArray. Use the
-     * constructor form {@link StructuredArrayBuilder#StructuredArrayBuilder(Class, StructuredArrayBuilder, long)}
+     * Note: This constructor form cannot be used with an element type T that extends ProtectedStructuredArray. Use the
+     * constructor form {@link ProtectedStructuredArrayBuilder#ProtectedStructuredArrayBuilder(Class, ProtectedStructuredArrayBuilder, long)}
      * to create builders that instantiate nested StructuredArrays.
      *
      * @param arrayClass The class of the array to be built by this builder
      * @param elementClass The class of elements in the array to be built by this builder
      * @param length The length of the array to be build by this builder
      */
-    public StructuredArrayBuilder(final Class<S> arrayClass,
-                                  final Class<T> elementClass,
-                                  final long length) {
+    public ProtectedStructuredArrayBuilder(final Class<S> arrayClass,
+                                           final Class<T> elementClass,
+                                           final long length) {
         super(arrayClass, elementClass, length);
     }
 
     /**
-     * Constructs a new {@link StructuredArrayBuilder} object for creating arrays of type S with
+     * Constructs a new {@link ProtectedStructuredArrayBuilder} object for creating arrays of type S with
      * elements of type T, and the given length.
      *
-     * Note: This constructor form cannot be used with an element type T that extends StructuredArray. Use the
-     * constructor form {@link StructuredArrayBuilder#StructuredArrayBuilder(Class, StructuredArrayBuilder, long)}
+     * Note: This constructor form cannot be used with an element type T that extends ProtectedStructuredArray. Use the
+     * constructor form {@link ProtectedStructuredArrayBuilder#ProtectedStructuredArrayBuilder(Class, ProtectedStructuredArrayBuilder, long)}
      * to create builders that instantiate nested StructuredArrays.
      *
      * @param lookup The lookup object to use for accessing constructors when resolving this builder
@@ -113,36 +113,36 @@ public class StructuredArrayBuilder<S extends StructuredArray<T>, T>
      * @param elementClass The class of elements in the array to be built by this builder
      * @param length The length of the array to be build by this builder
      */
-    public StructuredArrayBuilder(MethodHandles.Lookup lookup,
-                                  final Class<S> arrayClass,
-                                  final Class<T> elementClass,
-                                  final long length) {
+    public ProtectedStructuredArrayBuilder(MethodHandles.Lookup lookup,
+                                           final Class<S> arrayClass,
+                                           final Class<T> elementClass,
+                                           final long length) {
         super(lookup, arrayClass, elementClass, length);
     }
 
     /**
-     * Constructs a new {@link StructuredArrayBuilder} object for creating arrays of the given array model.
+     * Constructs a new {@link ProtectedStructuredArrayBuilder} object for creating arrays of the given array model.
      *
      * @param arrayModel The model of the array to be built by this builder
      */
-    public StructuredArrayBuilder(final StructuredArrayModel<S, T> arrayModel) {
+    public ProtectedStructuredArrayBuilder(final StructuredArrayModel<S, T> arrayModel) {
         super(arrayModel);
     }
 
     /**
-     * Constructs a new {@link StructuredArrayBuilder} object for creating arrays of the given array model.
+     * Constructs a new {@link ProtectedStructuredArrayBuilder} object for creating arrays of the given array model.
      *
      * @param lookup The lookup object to use for accessing constructors when resolving this builder
      * @param arrayModel The model of the array to be built by this builder
      */
-    public StructuredArrayBuilder(MethodHandles.Lookup lookup,
-                                  final StructuredArrayModel<S, T> arrayModel) {
+    public ProtectedStructuredArrayBuilder(MethodHandles.Lookup lookup,
+                                           final StructuredArrayModel<S, T> arrayModel) {
         super(lookup, arrayModel);
     }
 
     /**
-     * Constructs a new {@link StructuredArrayBuilder} object for creating an array of type S with
-     * elements of type T, and the given length. Used when T extends StructuredArray, such that the
+     * Constructs a new {@link ProtectedStructuredArrayBuilder} object for creating an array of type S with
+     * elements of type T, and the given length. Used when T extends ProtectedStructuredArray, such that the
      * arrays instantiated by this builder would include nested StructuredArrays.
      *
      * @param arrayClass The class of the array to be built by this builder
@@ -152,15 +152,16 @@ public class StructuredArrayBuilder<S extends StructuredArray<T>, T>
      * @param <A> The class or the subArray (should match T for the StructuredArrayBuilder)
      * @param <E> The element class in the subArray.
      */
-    public <A extends StructuredArray<E>, E> StructuredArrayBuilder(final Class<S> arrayClass,
-                                                                    final StructuredArrayBuilder<A, E> subArrayBuilder,
-                                                                    final long length) {
+    public <A extends ProtectedStructuredArray<E>, E> ProtectedStructuredArrayBuilder(final Class<S> arrayClass,
+                                                                             final ProtectedStructuredArrayBuilder<A,
+                                                                                     E> subArrayBuilder,
+                                                                             final long length) {
         super(arrayClass, subArrayBuilder, length);
     }
 
     /**
-     * Constructs a new {@link StructuredArrayBuilder} object for creating an array of type S with
-     * elements of type T, and the given length. Used when T extends StructuredArray, such that the
+     * Constructs a new {@link ProtectedStructuredArrayBuilder} object for creating an array of type S with
+     * elements of type T, and the given length. Used when T extends ProtectedStructuredArray, such that the
      * arrays instantiated by this builder would include nested StructuredArrays.
      *
      * @param lookup The lookup object to use for accessing constructors when resolving this builder
@@ -171,16 +172,16 @@ public class StructuredArrayBuilder<S extends StructuredArray<T>, T>
      * @param <A> The class or the subArray (should match T for the StructuredArrayBuilder)
      * @param <E> The element class in the subArray.
      */
-    public <A extends StructuredArray<E>, E> StructuredArrayBuilder(
+    public <A extends ProtectedStructuredArray<E>, E> ProtectedStructuredArrayBuilder(
             MethodHandles.Lookup lookup,
             final Class<S> arrayClass,
-            final StructuredArrayBuilder<A, E> subArrayBuilder,
+            final ProtectedStructuredArrayBuilder<A, E> subArrayBuilder,
             final long length) {
         super(lookup, arrayClass, subArrayBuilder, length);
     }
 
     /**
-     * Constructs a new {@link StructuredArrayBuilder} object for creating an array of type S with
+     * Constructs a new {@link ProtectedStructuredArrayBuilder} object for creating an array of type S with
      * elements of type T, and the given length. Used when T extends AbstractPrimitiveArray, such that the
      * arrays instantiated by this builder would include elements that are PrimitiveArrays.
      *
@@ -190,14 +191,14 @@ public class StructuredArrayBuilder<S extends StructuredArray<T>, T>
      * @param length The length of the array to be build by this builder
      * @param <A> The class in the subArray (should match T for the StructuredArrayBuilder)
      */
-    public <A extends AbstractPrimitiveArray> StructuredArrayBuilder(final Class<S> arrayClass,
-                                                                         final PrimitiveArrayBuilder<A> subArrayBuilder,
-                                                                         final long length) {
+    public <A extends AbstractPrimitiveArray> ProtectedStructuredArrayBuilder(final Class<S> arrayClass,
+                                                                              final PrimitiveArrayBuilder<A> subArrayBuilder,
+                                                                              final long length) {
         super(arrayClass, subArrayBuilder, length);
     }
 
     /**
-     * Constructs a new {@link StructuredArrayBuilder} object for creating an array of type S with
+     * Constructs a new {@link ProtectedStructuredArrayBuilder} object for creating an array of type S with
      * elements of type T, and the given length. Used when T extends AbstractPrimitiveArray, such that the
      * arrays instantiated by this builder would include elements that are PrimitiveArrays.
      *
@@ -208,7 +209,7 @@ public class StructuredArrayBuilder<S extends StructuredArray<T>, T>
      * @param length The length of the array to be build by this builder
      * @param <A> The class in the subArray (should match T for the StructuredArrayBuilder)
      */
-    public <A extends AbstractPrimitiveArray> StructuredArrayBuilder(
+    public <A extends AbstractPrimitiveArray> ProtectedStructuredArrayBuilder(
             MethodHandles.Lookup lookup,
             final Class<S> arrayClass,
             final PrimitiveArrayBuilder<A> subArrayBuilder,
@@ -222,15 +223,15 @@ public class StructuredArrayBuilder<S extends StructuredArray<T>, T>
      * construction context in determining the construction parameters.
      *
      * Note: This method overlaps in purpose with the alternate methods for controlling element
-     * construction. Namely {@link StructuredArrayBuilder#elementCtorAndArgs(CtorAndArgs)} and
-     * {@link StructuredArrayBuilder#elementCtorAndArgs(Constructor, Object...)}.
+     * construction. Namely {@link ProtectedStructuredArrayBuilder#elementCtorAndArgs(CtorAndArgs)} and
+     * {@link ProtectedStructuredArrayBuilder#elementCtorAndArgs(Constructor, Object...)}.
      *
      * @param ctorAndArgsProvider The provider used for determining the constructor and construction
      *                            arguments used for each element in instantiated arrays
      * @return The builder
      */
-    public StructuredArrayBuilder<S, T> elementCtorAndArgsProvider(final CtorAndArgsProvider<T> ctorAndArgsProvider) {
-        return (StructuredArrayBuilder<S, T>) super.elementCtorAndArgsProvider(ctorAndArgsProvider);
+    public ProtectedStructuredArrayBuilder<S, T> elementCtorAndArgsProvider(final CtorAndArgsProvider<T> ctorAndArgsProvider) {
+        return (ProtectedStructuredArrayBuilder<S, T>) super.elementCtorAndArgsProvider(ctorAndArgsProvider);
     }
 
     /**
@@ -238,14 +239,14 @@ public class StructuredArrayBuilder<S extends StructuredArray<T>, T>
      * the same constructor and the same arguments.
      *
      * Note: This method overlaps in purpose with the alternate methods for controlling element
-     * construction. Namely {@link StructuredArrayBuilder#elementCtorAndArgsProvider(CtorAndArgsProvider)} and
-     * {@link StructuredArrayBuilder#elementCtorAndArgs(Constructor, Object...)}.
+     * construction. Namely {@link ProtectedStructuredArrayBuilder#elementCtorAndArgsProvider(CtorAndArgsProvider)} and
+     * {@link ProtectedStructuredArrayBuilder#elementCtorAndArgs(Constructor, Object...)}.
      *
      * @param ctorAndArgs The constructor and arguments used for all elements in arrays
      * @return The builder
      */
-    public StructuredArrayBuilder<S, T> elementCtorAndArgs(final CtorAndArgs<T> ctorAndArgs) {
-        return (StructuredArrayBuilder<S, T>) super.elementCtorAndArgs(ctorAndArgs);
+    public ProtectedStructuredArrayBuilder<S, T> elementCtorAndArgs(final CtorAndArgs<T> ctorAndArgs) {
+        return (ProtectedStructuredArrayBuilder<S, T>) super.elementCtorAndArgs(ctorAndArgs);
     }
 
     /**
@@ -253,15 +254,15 @@ public class StructuredArrayBuilder<S extends StructuredArray<T>, T>
      * All elements will be constructed with the same constructor and the same arguments.
      *
      * Note: This method overlaps in purpose with the alternate methods for controlling element
-     * construction. Namely {@link StructuredArrayBuilder#elementCtorAndArgsProvider(CtorAndArgsProvider)} and
-     * {@link StructuredArrayBuilder#elementCtorAndArgs(CtorAndArgs)}.
+     * construction. Namely {@link ProtectedStructuredArrayBuilder#elementCtorAndArgsProvider(CtorAndArgsProvider)} and
+     * {@link ProtectedStructuredArrayBuilder#elementCtorAndArgs(CtorAndArgs)}.
      *
      * @param constructor The constructor used for all elements in arrays
      * @param args The construction arguments supplied for the constructor, used for all elements in the array
      * @return The builder
      */
-    public StructuredArrayBuilder<S, T> elementCtorAndArgs(final Constructor<T> constructor, final Object... args) {
-        return (StructuredArrayBuilder<S, T>) super.elementCtorAndArgs(constructor, args);
+    public ProtectedStructuredArrayBuilder<S, T> elementCtorAndArgs(final Constructor<T> constructor, final Object... args) {
+        return (ProtectedStructuredArrayBuilder<S, T>) super.elementCtorAndArgs(constructor, args);
     }
 
     /**
@@ -272,8 +273,8 @@ public class StructuredArrayBuilder<S extends StructuredArray<T>, T>
      * @param arrayCtorAndArgs The constructor and arguments used for constructing arrays
      * @return The builder
      */
-    public StructuredArrayBuilder<S, T> arrayCtorAndArgs(final CtorAndArgs<S> arrayCtorAndArgs) {
-        return (StructuredArrayBuilder<S, T>) super.arrayCtorAndArgs(arrayCtorAndArgs);
+    public ProtectedStructuredArrayBuilder<S, T> arrayCtorAndArgs(final CtorAndArgs<S> arrayCtorAndArgs) {
+        return (ProtectedStructuredArrayBuilder<S, T>) super.arrayCtorAndArgs(arrayCtorAndArgs);
     }
 
     /**
@@ -285,20 +286,20 @@ public class StructuredArrayBuilder<S extends StructuredArray<T>, T>
      * @param args The construction arguments supplied for the constructor
      * @return The builder
      */
-    public StructuredArrayBuilder<S, T> arrayCtorAndArgs(final Constructor<S> constructor, final Object... args) {
-        return (StructuredArrayBuilder<S, T>) super.arrayCtorAndArgs(constructor, args);
+    public ProtectedStructuredArrayBuilder<S, T> arrayCtorAndArgs(final Constructor<S> constructor, final Object... args) {
+        return (ProtectedStructuredArrayBuilder<S, T>) super.arrayCtorAndArgs(constructor, args);
     }
 
     /**
      * Set the (opaque) contextCookie object associated with this builder. This contextCookie object will be
-     * set in {@link org.ObjectLayout.ConstructionContext} object passed to the element
+     * set in {@link ConstructionContext} object passed to the element
      * {@link CtorAndArgsProvider} provider for each element in instantiated arrays.
      *
      * @param contextCookie the contextCookie object
      * @return The builder
      */
-    public StructuredArrayBuilder<S, T> contextCookie(final Object contextCookie) {
-        return (StructuredArrayBuilder<S, T>) super.contextCookie(contextCookie);
+    public ProtectedStructuredArrayBuilder<S, T> contextCookie(final Object contextCookie) {
+        return (ProtectedStructuredArrayBuilder<S, T>) super.contextCookie(contextCookie);
     }
 
     /**
@@ -310,13 +311,13 @@ public class StructuredArrayBuilder<S extends StructuredArray<T>, T>
      * @throws IllegalArgumentException if the array constructor or element constructor fail to resolve given
      * the current information in the builder
      */
-    public StructuredArrayBuilder<S, T> resolve() {
-        return (StructuredArrayBuilder<S, T>) super.resolve();
+    public ProtectedStructuredArrayBuilder<S, T> resolve() {
+        return (ProtectedStructuredArrayBuilder<S, T>) super.resolve();
     }
 
     /**
-     * Build a {@link StructuredArray} according to the information captured in this builder
-     * @return A newly instantiated {@link StructuredArray}
+     * Build a {@link ProtectedStructuredArray} according to the information captured in this builder
+     * @return A newly instantiated {@link ProtectedStructuredArray}
      *
      * @throws IllegalArgumentException if the array constructor or element constructor fail to resolve given
      * the current information in the builder
@@ -326,31 +327,31 @@ public class StructuredArrayBuilder<S extends StructuredArray<T>, T>
     }
 
     /**
-     * Get the {@link org.ObjectLayout.StructuredArrayModel} that describes the arrays built by this builder
+     * Get the {@link StructuredArrayModel} that describes the arrays built by this builder
      *
-     * @return The {@link org.ObjectLayout.StructuredArrayModel} that describes the arrays built by this builder
+     * @return The {@link StructuredArrayModel} that describes the arrays built by this builder
      */
     public StructuredArrayModel<S, T> getArrayModel() {
         return super.getArrayModel();
     }
 
     /**
-     * Get the {@link org.ObjectLayout.StructuredArrayBuilder} for the elements of the arrays built by
+     * Get the {@link ProtectedStructuredArrayBuilder} for the elements of the arrays built by
      * this builder. Null
      *
-     * @return The {@link org.ObjectLayout.StructuredArrayBuilder} for the elements of the arrays built by
-     * this builder. Null if the array element type T does not extend {@link StructuredArray}.
+     * @return The {@link ProtectedStructuredArrayBuilder} for the elements of the arrays built by
+     * this builder. Null if the array element type T does not extend {@link ProtectedStructuredArray}.
      */
-    public StructuredArrayBuilder getStructuredSubArrayBuilder() {
-        return (StructuredArrayBuilder) super.getStructuredSubArrayBuilder();
+    public ProtectedStructuredArrayBuilder getStructuredSubArrayBuilder() {
+        return (ProtectedStructuredArrayBuilder) super.getStructuredSubArrayBuilder();
     }
 
     /**
-     * Get the {@link org.ObjectLayout.StructuredArrayBuilder} for the elements of the arrays built by
+     * Get the {@link ProtectedStructuredArrayBuilder} for the elements of the arrays built by
      * this builder. Null
      *
-     * @return The {@link org.ObjectLayout.StructuredArrayBuilder} for the elements of the arrays built by
-     * this builder. Null if the array element type T does not extend {@link StructuredArray}.
+     * @return The {@link ProtectedStructuredArrayBuilder} for the elements of the arrays built by
+     * this builder. Null if the array element type T does not extend {@link ProtectedStructuredArray}.
      */
     public PrimitiveArrayBuilder getPrimitiveSubArrayBuilder() {
         return super.getPrimitiveSubArrayBuilder();
@@ -358,9 +359,9 @@ public class StructuredArrayBuilder<S extends StructuredArray<T>, T>
 
     /**
      * Get the {@link CtorAndArgs} describing the constructor and arguments used to instantiate arrays with
-     * this builder. May be null if non of {@link org.ObjectLayout.StructuredArrayBuilder#arrayCtorAndArgs},
-     * {@link org.ObjectLayout.StructuredArrayBuilder#resolve()} or
-     * {@link org.ObjectLayout.StructuredArrayBuilder#build()} have been called yet.
+     * this builder. May be null if non of {@link ProtectedStructuredArrayBuilder#arrayCtorAndArgs},
+     * {@link ProtectedStructuredArrayBuilder#resolve()} or
+     * {@link ProtectedStructuredArrayBuilder#build()} have been called yet.
      * @return The {@link CtorAndArgs} describing the constructor and arguments used to instantiate arrays with
      * this builder.
      */
@@ -371,10 +372,10 @@ public class StructuredArrayBuilder<S extends StructuredArray<T>, T>
     /**
      * Get the {@link CtorAndArgsProvider} which provides the constructor and arguments used to construct
      * individual elements of arrays instantiated with this builder. May be null if non of
-     * {@link org.ObjectLayout.StructuredArrayBuilder#elementCtorAndArgsProvider},
-     * {@link org.ObjectLayout.StructuredArrayBuilder#elementCtorAndArgs},
-     * {@link org.ObjectLayout.StructuredArrayBuilder#resolve} or
-     * {@link org.ObjectLayout.StructuredArrayBuilder#build} have been called yet.
+     * {@link ProtectedStructuredArrayBuilder#elementCtorAndArgsProvider},
+     * {@link ProtectedStructuredArrayBuilder#elementCtorAndArgs},
+     * {@link ProtectedStructuredArrayBuilder#resolve} or
+     * {@link ProtectedStructuredArrayBuilder#build} have been called yet.
      * @return The {@link CtorAndArgsProvider} which provides the constructor and arguments used to construct
      * individual elements of arrays instantiated with this builder
      */
@@ -384,7 +385,7 @@ public class StructuredArrayBuilder<S extends StructuredArray<T>, T>
 
     /**
      * Get the (opaque) contextCookie object associated with this builder. This contextCookie object will be
-     * set in {@link org.ObjectLayout.ConstructionContext} object passed to the element
+     * set in {@link ConstructionContext} object passed to the element
      * {@link CtorAndArgsProvider} provider for each element in instantiated arrays.
      * @return The (opaque) contextCookie object associated with this builder
      */

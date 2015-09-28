@@ -5,7 +5,6 @@
 
 package org.ObjectLayout;
 
-import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -183,14 +182,15 @@ final class IntrinsicObjectModel<T> extends AbstractIntrinsicObjectModel<T> {
                         constructPrimitiveArrayWithin(containingObject, objectConstructor, args);
             } else if (_isStructuredArray()) {
                 @SuppressWarnings("unchecked")
-                StructuredArrayBuilder<StructuredArray<E>, E> arrayBuilder =
+                AbstractStructuredArrayBuilder<AbstractStructuredArray<E>, E> arrayBuilder =
                         new StructuredArrayBuilder((StructuredArrayModel)_getStructuredArrayModel()).
                                 arrayCtorAndArgs(objectConstructor, args).resolve();
                 @SuppressWarnings("unchecked")
-                IntrinsicObjectModel<StructuredArray<E>> model =
-                        (IntrinsicObjectModel<StructuredArray<E>>) this;
+                IntrinsicObjectModel<AbstractStructuredArray<E>> model =
+                        (IntrinsicObjectModel<AbstractStructuredArray<E>>) this;
                 @SuppressWarnings("unchecked")
-                T array = (T) StructuredArray.constructStructuredArrayWithin(containingObject, model, arrayBuilder);
+                T array = (T) AbstractStructuredArray.constructStructuredArrayWithin(containingObject, model,
+                        arrayBuilder);
                 intrinsicInstance = array;
             } else {
                 intrinsicInstance =
@@ -212,13 +212,13 @@ final class IntrinsicObjectModel<T> extends AbstractIntrinsicObjectModel<T> {
         try {
             _sanityCheckInstantiation(containingObject);
             @SuppressWarnings("unchecked")
-            StructuredArrayBuilder<StructuredArray<E>, E> builder = arrayBuilder;
+            AbstractStructuredArrayBuilder<AbstractStructuredArray<E>, E> builder = arrayBuilder;
             @SuppressWarnings("unchecked")
-            IntrinsicObjectModel<StructuredArray<E>> model =
-                    (IntrinsicObjectModel<StructuredArray<E>>) this;
+            IntrinsicObjectModel<AbstractStructuredArray<E>> model =
+                    (IntrinsicObjectModel<AbstractStructuredArray<E>>) this;
             @SuppressWarnings("unchecked")
             T intrinsicInstance =
-                    (T) StructuredArray.constructStructuredArrayWithin(containingObject, model, builder);
+                    (T) AbstractStructuredArray.constructStructuredArrayWithin(containingObject, model, builder);
             return intrinsicInstance;
         } catch (InstantiationException ex) {
             throw new RuntimeException(ex);

@@ -9,7 +9,7 @@ import java.lang.reflect.Type;
  * @param <S> The class of the AbstractStructuredArray modeled by the model
  * @param <T> The class of the elements in the StructuredArray modeled by the model
  */
-abstract class AbstractStructuredArrayModel<S extends AbstractStructuredArray<T>, T> {
+abstract class AbstractStructuredArrayModel<S extends AbstractStructuredArrayBase<T>, T> {
     private final Class<S> arrayClass;
     private final long length;
     private final StructuredArrayModel structuredSubArrayModel;

@@ -6,10 +6,7 @@
 package org.ObjectLayout;
 
 import java.lang.invoke.MethodHandles;
-import java.lang.reflect.Array;
 import java.util.Collection;
-import java.util.Iterator;
-import java.util.NoSuchElementException;
 
 /**
  *     An array of non-replaceable objects.
@@ -18,7 +15,7 @@ import java.util.NoSuchElementException;
  *     and can support elements of any class that provides accessible constructors. The elements in a StructuredArray
  *     are all allocated and constructed at array creation time, and individual elements cannot be removed or
  *     replaced after array creation. Array elements can be accessed using an index-based accessor methods in
- *     the form of {@link StructuredArray#get}() using either int or long indices. Individual element contents
+ *     the form of {@link ProtectedStructuredArray#get}() using either int or long indices. Individual element contents
  *     can then be accessed and manipulated using any and all operations supported by the member element's class.
  * <p>
  *     While simple creation of default-constructed elements and fixed constructor parameters are available through
@@ -37,7 +34,7 @@ import java.util.NoSuchElementException;
  *
  * @param <T> The class of the array elements
  */
-public class StructuredArray<T> extends AbstractStructuredArray<T> implements Iterable<T> {
+public class ProtectedStructuredArray<T> extends AbstractStructuredArray<T> {
 
     // Single-dimensional newInstance forms:
 
@@ -50,11 +47,11 @@ public class StructuredArray<T> extends AbstractStructuredArray<T> implements It
      * @param <T> The class of the array elements
      * @return The newly created array
      */
-    public static <T> StructuredArray<T> newInstance(
+    protected static <T> ProtectedStructuredArray<T> newInstance(
             final Class<T> elementClass,
             final long length) {
         @SuppressWarnings("unchecked")
-        StructuredArray<T> instance = _newInstance(StructuredArray.class, elementClass, length);
+        ProtectedStructuredArray<T> instance = _newInstance(ProtectedStructuredArray.class, elementClass, length);
         return instance;
     }
 
@@ -68,12 +65,12 @@ public class StructuredArray<T> extends AbstractStructuredArray<T> implements It
      * @param <T> The class of the array elements
      * @return The newly created array
      */
-    public static <T> StructuredArray<T> newInstance(
+    protected static <T> ProtectedStructuredArray<T> newInstance(
             MethodHandles.Lookup lookup,
             final Class<T> elementClass,
             final long length) {
         @SuppressWarnings("unchecked")
-        StructuredArray<T> instance = _newInstance(lookup, StructuredArray.class, elementClass, length);
+        ProtectedStructuredArray<T> instance = _newInstance(lookup, ProtectedStructuredArray.class, elementClass, length);
         return instance;
     }
 
@@ -88,7 +85,7 @@ public class StructuredArray<T> extends AbstractStructuredArray<T> implements It
      * @param <T> The class of the array elements
      * @return The newly created array
      */
-    public static <S extends StructuredArray<T>, T> S newInstance(
+    protected static <S extends ProtectedStructuredArray<T>, T> S newInstance(
             final Class<S> arrayClass,
             final Class<T> elementClass,
             final long length) {
@@ -107,7 +104,7 @@ public class StructuredArray<T> extends AbstractStructuredArray<T> implements It
      * @param <T> The class of the array elements
      * @return The newly created array
      */
-    public static <S extends StructuredArray<T>, T> S newInstance(
+    protected static <S extends ProtectedStructuredArray<T>, T> S newInstance(
             MethodHandles.Lookup lookup,
             final Class<S> arrayClass,
             final Class<T> elementClass,
@@ -126,7 +123,7 @@ public class StructuredArray<T> extends AbstractStructuredArray<T> implements It
      * @param <T> The class of the array elements
      * @return The newly created array
      */
-    public static <S extends StructuredArray<T>, T> S newInstance(
+    protected static <S extends ProtectedStructuredArray<T>, T> S newInstance(
             final CtorAndArgs<S> arrayCtorAndArgs,
             final Class<T> elementClass,
             final long length) {
@@ -145,7 +142,7 @@ public class StructuredArray<T> extends AbstractStructuredArray<T> implements It
      * @param <T> The class of the array elements
      * @return The newly created array
      */
-    public static <S extends StructuredArray<T>, T> S newInstance(
+    protected static <S extends ProtectedStructuredArray<T>, T> S newInstance(
             MethodHandles.Lookup lookup,
             final CtorAndArgs<S> arrayCtorAndArgs,
             final Class<T> elementClass,
@@ -164,7 +161,7 @@ public class StructuredArray<T> extends AbstractStructuredArray<T> implements It
      * @param <T> The class of the array elements
      * @return The newly created array
      */
-    public static <S extends StructuredArray<T>, T> S newInstance(
+    protected static <S extends ProtectedStructuredArray<T>, T> S newInstance(
             final CtorAndArgs<S> arrayCtorAndArgs,
             final CtorAndArgs<T> elementCtorAndArgs,
             final long length) {
@@ -182,12 +179,12 @@ public class StructuredArray<T> extends AbstractStructuredArray<T> implements It
      * @param <T> The class of the array elements
      * @return The newly created array
      */
-    public static <T> StructuredArray<T> newInstance(
+    protected static <T> ProtectedStructuredArray<T> newInstance(
             final Class<T> elementClass,
             final CtorAndArgsProvider<T> ctorAndArgsProvider,
             final long length) {
         @SuppressWarnings("unchecked")
-        StructuredArray<T> instance = _newInstance(StructuredArray.class, elementClass, length, ctorAndArgsProvider);
+        ProtectedStructuredArray<T> instance = _newInstance(ProtectedStructuredArray.class, elementClass, length, ctorAndArgsProvider);
         return instance;
     }
 
@@ -205,7 +202,7 @@ public class StructuredArray<T> extends AbstractStructuredArray<T> implements It
      * @param <T> The class of the array elements
      * @return The newly created array
      */
-    public static <S extends StructuredArray<T>, T> S newInstance(
+    protected static <S extends ProtectedStructuredArray<T>, T> S newInstance(
             final Class<S> arrayClass,
             final Class<T> elementClass,
             final long length,
@@ -228,7 +225,7 @@ public class StructuredArray<T> extends AbstractStructuredArray<T> implements It
      * @param <T> The class of the array elements
      * @return The newly created array
      */
-    public static <S extends StructuredArray<T>, T> S newInstance(
+    protected static <S extends ProtectedStructuredArray<T>, T> S newInstance(
             MethodHandles.Lookup lookup,
             final Class<S> arrayClass,
             final Class<T> elementClass,
@@ -251,7 +248,7 @@ public class StructuredArray<T> extends AbstractStructuredArray<T> implements It
      * @param <T> The class of the array elements
      * @return The newly created array
      */
-    public static <S extends StructuredArray<T>, T> S newInstance(
+    protected static <S extends ProtectedStructuredArray<T>, T> S newInstance(
             final CtorAndArgs<S> arrayCtorAndArgs,
             final Class<T> elementClass,
             final long length,
@@ -269,7 +266,7 @@ public class StructuredArray<T> extends AbstractStructuredArray<T> implements It
      * @param <T> The class of the array elements
      * @return The newly created array
      */
-    public static <S extends StructuredArray<T>, T> S newInstance(
+    protected static <S extends ProtectedStructuredArray<T>, T> S newInstance(
             final Class<S> arrayClass,
             final Class<T> elementClass,
             final Collection<T> sourceCollection) {
@@ -287,7 +284,7 @@ public class StructuredArray<T> extends AbstractStructuredArray<T> implements It
      * @param <T> The class of the array elements
      * @return The newly created array
      */
-    public static <S extends StructuredArray<T>, T> S newInstance(
+    protected static <S extends ProtectedStructuredArray<T>, T> S newInstance(
             MethodHandles.Lookup lookup,
             final Class<S> arrayClass,
             final Class<T> elementClass,
@@ -303,7 +300,7 @@ public class StructuredArray<T> extends AbstractStructuredArray<T> implements It
      * @param <T> The class of the array elements
      * @return The newly created array
      */
-    public static <S extends StructuredArray<T>, T> S newInstance(
+    protected static <S extends StructuredArray<T>, T> S newInstance(
             final StructuredArrayBuilder<S, T> arrayBuilder) {
         return _newInstance(arrayBuilder);
     }
@@ -318,7 +315,7 @@ public class StructuredArray<T> extends AbstractStructuredArray<T> implements It
      * @param <T> The class of the array elements
      * @return The newly created array
      */
-    public static <S extends StructuredArray<T>, T> S copyInstance(
+    protected static <S extends ProtectedStructuredArray<T>, T> S copyInstance(
             final S source) {
         return _copyInstance(source);
     }
@@ -334,7 +331,7 @@ public class StructuredArray<T> extends AbstractStructuredArray<T> implements It
      * @param <T> The class of the array elements
      * @return The newly created array
      */
-    public static <S extends StructuredArray<T>, T> S copyInstance(
+    protected static <S extends ProtectedStructuredArray<T>, T> S copyInstance(
             MethodHandles.Lookup lookup,
             final S source) {
         return _copyInstance(lookup, source, 0, source.getLength());
@@ -352,7 +349,7 @@ public class StructuredArray<T> extends AbstractStructuredArray<T> implements It
      * @param <T> The class of the array elements
      * @return The newly created array
      */
-    public static <S extends StructuredArray<T>, T> S copyInstance(
+    protected static <S extends ProtectedStructuredArray<T>, T> S copyInstance(
             final S source,
             final long sourceOffset,
             final long count) {
@@ -372,7 +369,7 @@ public class StructuredArray<T> extends AbstractStructuredArray<T> implements It
      * @param <T> The class of the array elements
      * @return The newly created array
      */
-    public static <S extends StructuredArray<T>, T> S copyInstance(
+    protected static <S extends ProtectedStructuredArray<T>, T> S copyInstance(
             MethodHandles.Lookup lookup,
             final S source,
             final long sourceOffset,
@@ -396,7 +393,7 @@ public class StructuredArray<T> extends AbstractStructuredArray<T> implements It
      * @return The newly created array
      */
     @SuppressWarnings("unchecked")
-    public static <S extends StructuredArray<T>, T> S copyInstance(
+    protected static <S extends ProtectedStructuredArray<T>, T> S copyInstance(
             final S source,
             final long[] sourceOffsets,
             final long[] counts) {
@@ -420,7 +417,7 @@ public class StructuredArray<T> extends AbstractStructuredArray<T> implements It
      * @return The newly created array
      */
     @SuppressWarnings("unchecked")
-    public static <S extends StructuredArray<T>, T> S copyInstance(
+    protected static <S extends ProtectedStructuredArray<T>, T> S copyInstance(
             MethodHandles.Lookup lookup,
             final S source,
             final long[] sourceOffsets,
@@ -428,10 +425,10 @@ public class StructuredArray<T> extends AbstractStructuredArray<T> implements It
         return _copyInstance(lookup, source, sourceOffsets, counts);
     }
 
-    protected StructuredArray() {
+    protected ProtectedStructuredArray() {
     }
 
-    protected StructuredArray(StructuredArray<T> sourceArray) {
+    protected ProtectedStructuredArray(ProtectedStructuredArray<T> sourceArray) {
         // Support copy constructor. When we get here, everything is already set up for the regular
         // (default) construction path to perform the required copy.
         // Copying will actually be done according to the CtorAndArgsProvider and context already supplied,
@@ -446,7 +443,7 @@ public class StructuredArray<T> extends AbstractStructuredArray<T> implements It
      *
      * @return the number of elements in the array.
      */
-    public long getLength() {
+    protected long getLength() {
         return super.getLength();
     }
 
@@ -456,7 +453,7 @@ public class StructuredArray<T> extends AbstractStructuredArray<T> implements It
      *
      * @return the {@link Class} of elements stored in the array.
      */
-    public Class<T> getElementClass() {
+    protected Class<T> getElementClass() {
         return super.getElementClass();
     }
 
@@ -464,7 +461,7 @@ public class StructuredArray<T> extends AbstractStructuredArray<T> implements It
      * Get the array model
      * @return a model of this array
      */
-    public StructuredArrayModel<? extends StructuredArray<T>, T> getArrayModel() {
+    protected StructuredArrayModel<? extends StructuredArray<T>, T> getArrayModel() {
         @SuppressWarnings("unchecked")
         StructuredArrayModel<? extends StructuredArray<T>, T> model =
                 (StructuredArrayModel<? extends StructuredArray<T>, T>) super.getArrayModel();
@@ -477,7 +474,7 @@ public class StructuredArray<T> extends AbstractStructuredArray<T> implements It
      * @param index of the element to retrieve.
      * @return a reference to the indexed element.
      */
-    public T get(final long index) throws IllegalArgumentException {
+    protected T get(final long index) throws IllegalArgumentException {
         return super.get(index);
     }
 
@@ -487,208 +484,10 @@ public class StructuredArray<T> extends AbstractStructuredArray<T> implements It
      * @param index of the element to retrieve.
      * @return a reference to the indexed element.
      */
-    public T get(final int index) throws IllegalArgumentException {
+    protected T get(final int index) throws IllegalArgumentException {
         return super.get(index);
     }
-
-    //
-    //
-    // Collection interface support:
-    //
-    //
-
-    /**
-     * Return a representation of this StructuredArray as a Collection. Will throw an exception if array is
-     * too long to represent as a Collection.
-     *
-     * @return a representation of this StructuredArray as a Collection
-     * @throws IllegalStateException if array is too long to represent as a Collection
-     */
-    public Collection<T> asCollection() throws IllegalStateException {
-        long length = getLength();
-        if (length > Integer.MAX_VALUE) {
-            throw new IllegalStateException(
-                    "Cannot make Collection from array with more than Integer.MAX_VALUE elements (" + length + ")");
-        }
-        return new CollectionWrapper<>(this);
-    }
-
-    class CollectionWrapper<E> implements Collection<E> {
-        StructuredArray<E> array;
-
-        CollectionWrapper(StructuredArray<E> array) {
-            this.array = array;
-        }
-
-        @Override
-        public int size() {
-            return (int) array.getLength();
-        }
-
-        @Override
-        public boolean isEmpty() {
-            return array.getLength() != 0;
-        }
-
-        @Override
-        public boolean contains(Object o) {
-            for (E element : array) {
-                if (element == o) {
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public Iterator<E> iterator() {
-            return array.iterator();
-        }
-
-        @Override
-        public Object[] toArray() {
-            Object[] toArray = new Object[(int) array.getLength()];
-            for (int i = 0; i < toArray.length; i++) {
-                toArray[i] = array.get(i);
-            }
-            return toArray;
-        }
-
-        @Override
-        public <T1> T1[] toArray(T1[] a) {
-            int newLength = (int) array.getLength();
-            Class newType = a.getClass();
-            @SuppressWarnings("unchecked")
-            T1[] toArray = (newType == Object[].class)
-                    ? (T1[]) new Object[newLength]
-                    : (T1[]) Array.newInstance(newType.getComponentType(), newLength);
-
-            for (int i = 0; i < toArray.length; i++) {
-                @SuppressWarnings("unchecked")
-                T1 e = (T1) array.get(i);
-                toArray[i] = e;
-            }
-            return toArray;
-        }
-
-        @Override
-        public boolean add(E e) {
-            throw new UnsupportedOperationException("StructuredArrays are immutable collections");
-        }
-
-        @Override
-        public boolean remove(Object o) {
-            throw new UnsupportedOperationException("StructuredArrays are immutable collections");
-        }
-
-        @Override
-        public boolean containsAll(Collection<?> otherCollection) {
-            for (Object otherElement : otherCollection) {
-                if (!contains(otherElement)) {
-                    return false;
-                }
-            }
-            return true;
-        }
-
-        @Override
-        public boolean addAll(Collection<? extends E> c) {
-            throw new UnsupportedOperationException("StructuredArrays are immutable collections");
-        }
-
-        @Override
-        public boolean removeAll(Collection<?> c) {
-            throw new UnsupportedOperationException("StructuredArrays are immutable collections");
-        }
-
-        @Override
-        public boolean retainAll(Collection<?> c) {
-            throw new UnsupportedOperationException("StructuredArrays are immutable collections");
-        }
-
-        @Override
-        public void clear() {
-            throw new UnsupportedOperationException("StructuredArrays are immutable collections");
-        }
-    }
-
-    //
-    //
-    // Iterable interface support:
-    //
-    //
-
-    /**
-     * {@inheritDoc}
-     */
-    public ElementIterator iterator() {
-        return new ElementIterator();
-    }
-
-    /**
-     * Specialised {@link java.util.Iterator} with the ability to be {@link #reset()} enabling reuse.
-     */
-    public class ElementIterator implements Iterator<T> {
-        private long cursor = 0;
-        private final long initialOffset;
-        private final long end;
-
-        public ElementIterator() {
-            this(0, getLength());
-        }
-
-        public ElementIterator(long offset, long length) {
-            this.initialOffset = offset;
-            this.cursor = offset;
-            this.end = offset + length;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        public boolean hasNext() {
-            return cursor < end;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        public T next() {
-            if (cursor >= end) {
-                throw new NoSuchElementException();
-            }
-
-            final T element = get(cursor);
-
-            cursor++;
-
-            return element;
-        }
-
-        /**
-         * Remove operation is not supported on {@link StructuredArray}s.
-         *
-         * @throws UnsupportedOperationException if called.
-         */
-        public void remove() {
-            throw new UnsupportedOperationException();
-        }
-
-        /**
-         * Reset to the beginning of the collection enabling reuse of the iterator.
-         */
-        public void reset() {
-            cursor = initialOffset;
-        }
-
-        public long getCursor() {
-            return cursor;
-        }
-    }
-
+    
     //
     //
     // Shallow copy support:
@@ -713,7 +512,7 @@ public class StructuredArray<T> extends AbstractStructuredArray<T> implements It
      * the source or destination arrays have nested StructuredArrays within them, or if final fields are discovered
      * and all allowFinalFieldOverwrite is not true.
      */
-    public static <S extends StructuredArray<T>, T> void shallowCopy(
+    protected static <S extends ProtectedStructuredArray<T>, T> void shallowCopy(
             final S src,
             final long srcOffset,
             final S dst,
@@ -743,7 +542,7 @@ public class StructuredArray<T> extends AbstractStructuredArray<T> implements It
      * the source or destination arrays have nested StructuredArrays within them, or if final fields are discovered
      * and all allowFinalFieldOverwrite is not true.
      */
-    public static <S extends StructuredArray<T>, T> void shallowCopy(
+    protected static <S extends ProtectedStructuredArray<T>, T> void shallowCopy(
             final S src,
             final long srcOffset,
             final S dst,

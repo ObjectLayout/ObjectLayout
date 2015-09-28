@@ -9,16 +9,16 @@ import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Constructor;
 
 /**
- * Supports the construction of a {@link org.ObjectLayout.StructuredArray}'s individual elements using a
+ * Supports the construction of a {@link StructuredArray}'s individual elements using a
  * copy constructor, copying a source array's individual elements.
  * <p>
- * Expects the source {@link org.ObjectLayout.StructuredArray} to be provided as an opaque (Object) cookie
+ * Expects the source {@link StructuredArray} to be provided as an opaque (Object) cookie
  * in the {@link ConstructionContext} parameter passed to the
  * {@link org.ObjectLayout.CopyCtorAndArgsProvider#getForContext(ConstructionContext)} method.
  * <p>
- * If the source element being copied is itself an instance of {@link org.ObjectLayout.StructuredArray}, the
+ * If the source element being copied is itself an instance of {@link StructuredArray}, the
  * source element will be passed through as a contextCookie in the outgoing {@link org.ObjectLayout.CtorAndArgs},
- * and will become the source array (the context cookie) in the next {@link org.ObjectLayout.StructuredArray}
+ * and will become the source array (the context cookie) in the next {@link StructuredArray}
  * nesting level and it's calls to {@link CopyCtorAndArgsProvider#getForContext(ConstructionContext)}.
  * <p>
  * {@link CopyCtorAndArgsProvider} will attempt to efficiently recycle {@link org.ObjectLayout.CtorAndArgs}
