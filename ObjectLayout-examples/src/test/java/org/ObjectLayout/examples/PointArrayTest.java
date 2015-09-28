@@ -4,8 +4,6 @@ package org.ObjectLayout.examples;/*
  */
 
 import org.ObjectLayout.*;
-import org.ObjectLayout.examples.Point;
-import org.ObjectLayout.examples.PointArray;
 import org.hamcrest.CoreMatchers;
 import org.junit.Assert;
 import org.junit.Test;

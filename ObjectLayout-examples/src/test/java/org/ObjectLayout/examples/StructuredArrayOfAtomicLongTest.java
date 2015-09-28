@@ -4,7 +4,6 @@ package org.ObjectLayout.examples;/*
  */
 
 import org.ObjectLayout.StructuredArray;
-import org.ObjectLayout.examples.StructuredArrayOfAtomicLong;
 import org.hamcrest.CoreMatchers;
 import org.junit.Assert;
 import org.junit.Test;

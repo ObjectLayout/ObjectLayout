@@ -3,8 +3,6 @@ package org.ObjectLayout.examples;/*
  * as explained at http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-import org.ObjectLayout.examples.Octagons;
-import org.ObjectLayout.examples.PointArray;
 import org.hamcrest.CoreMatchers;
 import org.junit.Assert;
 import org.junit.Test;
