@@ -13,18 +13,18 @@ import java.lang.invoke.MethodHandles;
 
 
 /**
- * The {@link org.ObjectLayout.Intrinsic @Intrisic} annotation defines a declared object field to be
+ * The {@link org.ObjectLayout.Intrinsic @Intrinsic} annotation defines a declared object field to be
  * intrinsic to the class it is declared in. Intrinsic objects may have their layout within the
  * containing object instance optimized by JDK implementations, such that access to their content is
- * faster, and avoids certain de-referencing steps. {@link org.ObjectLayout.Intrinsic @Intrisic} fields
+ * faster, and avoids certain de-referencing steps. {@link org.ObjectLayout.Intrinsic @Intrinsic} fields
  * must be declared private and final.
  * <p>
- * Fields annotated with {@link org.ObjectLayout.Intrinsic @Intrisic} SHOULD be initialized using
+ * Fields annotated with {@link org.ObjectLayout.Intrinsic @Intrinsic} SHOULD be initialized using
  * one of the {@link IntrinsicObjects#constructWithin(MethodHandles.Lookup, String, Object)
  * IntrinsicObjects.constructWithin()}
  * variants.
  * <p>
- * An {@link org.ObjectLayout.Intrinsic @Intrisic} field that is NOT initialized using one of
+ * An {@link org.ObjectLayout.Intrinsic @Intrinsic} field that is NOT initialized using one of
  * the {@link IntrinsicObjects#constructWithin(MethodHandles.Lookup, String, Object)
  * IntrinsicObjects.constructWithin()} variants may not be treated as intrinsic, may result in slower
  * access behaviors, and may generate compile-time warnings.
