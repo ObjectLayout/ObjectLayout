@@ -18,5 +18,6 @@
     <modules>
         <module>ObjectLayout</module>
         <module>ObjectLayout-benchmarks</module>
+        <module>ObjectLayout-examples</module>
     </modules>
 </project>
