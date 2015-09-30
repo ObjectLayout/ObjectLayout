@@ -35,7 +35,7 @@ import static java.lang.reflect.Modifier.isStatic;
  *     layout of the implemented data structure would be possible on optimizing JVMs. Doing so provides for the
  *     possibility of matching access speed benefits that exist in data structures with similar semantics that
  *     are supported in other languages (e.g. an array of structs in C-like languages). While fully functional
- *     on all JVM implementation (of Java SE 6 and above), the semantics are such that a JVM may transparently
+ *     on all JVM implementation (of Java SE 7 and above), the semantics are such that a JVM may transparently
  *     optimise the implementation to provide a compact contiguous layout that facilitates consistent stride
  *     based memory access and dead-reckoning (as opposed to de-referenced) access to elements
  *
@@ -600,7 +600,7 @@ abstract class AbstractStructuredArray<T> extends AbstractStructuredArrayBase<T>
     private static <S extends AbstractStructuredArray<T>, T> S instantiate(
             final AbstractStructuredArrayBuilder<S, T> arrayBuilder) {
         ConstructionContext<T> context = new ConstructionContext<>(arrayBuilder.getContextCookie());
-        ConstructorMagicBase constructorMagic = getConstructorMagic();
+        ConstructorMagic constructorMagic = getConstructorMagic();
         constructorMagic.setConstructionArgs(arrayBuilder, context);
         try {
             arrayBuilder.resolve();
@@ -617,7 +617,7 @@ abstract class AbstractStructuredArray<T> extends AbstractStructuredArrayBase<T>
     protected AbstractStructuredArray() {
         checkConstructorMagic();
         // Extract locally needed args from constructor magic:
-        ConstructorMagicBase constructorMagic = getConstructorMagic();
+        ConstructorMagic constructorMagic = getConstructorMagic();
         @SuppressWarnings("unchecked")
         final ConstructionContext<T> context = constructorMagic.getContext();
         @SuppressWarnings("unchecked")
@@ -735,7 +735,7 @@ abstract class AbstractStructuredArray<T> extends AbstractStructuredArrayBase<T>
                                             final CtorAndArgs<T> subArrayCtorAndArgs) {
         ConstructionContext<T> subArrayContext = new ConstructionContext<>(subArrayCtorAndArgs.getContextCookie());
         subArrayContext.setContainingContext(context);
-        ConstructorMagicBase constructorMagic = getConstructorMagic();
+        ConstructorMagic constructorMagic = getConstructorMagic();
         constructorMagic.setConstructionArgs(subArrayBuilder, subArrayContext);
         try {
             constructorMagic.setActive(true);
@@ -834,7 +834,7 @@ abstract class AbstractStructuredArray<T> extends AbstractStructuredArrayBase<T>
             AbstractStructuredArrayBuilder<A, T> arrayBuilder)
             throws InstantiationException, IllegalAccessException, InvocationTargetException {
         ConstructionContext context = new ConstructionContext(arrayBuilder.getContextCookie());
-        ConstructorMagicBase constructorMagic = getConstructorMagic();
+        ConstructorMagic constructorMagic = getConstructorMagic();
         constructorMagic.setConstructionArgs(arrayBuilder, context);
         try {
             constructorMagic.setActive(true);
@@ -1013,7 +1013,7 @@ abstract class AbstractStructuredArray<T> extends AbstractStructuredArrayBase<T>
     //
     //
 
-    private static class ConstructorMagicBase {
+    private static class ConstructorMagic {
         private boolean isActive() {
             return active;
         }
@@ -1041,14 +1041,14 @@ abstract class AbstractStructuredArray<T> extends AbstractStructuredArrayBase<T>
         private ConstructionContext context;
     }
 
-    private static final ThreadLocal<ConstructorMagicBase> threadLocalConstructorMagic =
-            new ThreadLocal<ConstructorMagicBase>() {
-                @Override protected ConstructorMagicBase initialValue() {
-                    return new ConstructorMagicBase();
+    private static final ThreadLocal<ConstructorMagic> threadLocalConstructorMagic =
+            new ThreadLocal<ConstructorMagic>() {
+                @Override protected ConstructorMagic initialValue() {
+                    return new ConstructorMagic();
                 }
             };
 
-    private static ConstructorMagicBase getConstructorMagic() {
+    private static ConstructorMagic getConstructorMagic() {
         return threadLocalConstructorMagic.get();
     }
 

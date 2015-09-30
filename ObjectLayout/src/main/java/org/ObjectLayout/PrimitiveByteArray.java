@@ -11,9 +11,9 @@ import java.lang.reflect.Constructor;
 /**
  * A subclassable array of bytes.
  *
- * PrimitiveByteArray is designed with semantics specifically chosen and restricted such that a "flat" memory
- * layout of the implemented data structure would be possible on optimizing JVMs. While fully functional
- * on all JVM implementation (of Java SE 6 and above), the semantics are such that a JVM may transparently
+ * {@link PrimitiveByteArray} is designed with semantics specifically chosen and restricted such that a "flat"
+ * memory layout of the implemented data structure would be possible on optimizing JVMs. While fully functional
+ * on all JVM implementation (of Java SE 7 and above), the semantics are such that a JVM may transparently
  * optimise the implementation to provide a compact contiguous layout that facilitates dead-reckoning (as
  * opposed to de-referenced) access to elements
  */

@@ -19,7 +19,7 @@ import java.lang.reflect.InvocationTargetException;
  * reference.
  */
 
-public abstract class AbstractPrimitiveArray {
+abstract class AbstractPrimitiveArray {
 
     static final MethodHandles.Lookup noLookup = null;
 

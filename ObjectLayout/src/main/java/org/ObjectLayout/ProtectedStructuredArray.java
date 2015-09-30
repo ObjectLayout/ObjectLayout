@@ -9,7 +9,8 @@ import java.lang.invoke.MethodHandles;
 import java.util.Collection;
 
 /**
- *     An array of non-replaceable objects.
+ *     An array of non-replaceable objects. This protected variant keeps access to the subclassed array protected
+ *     such that inheriting classes can avoid unintentional exposure of the array and its contents to their users.
  * <p>
  *     A structured array contains array element objects of a fixed (at creation time, per array instance) class,
  *     and can support elements of any class that provides accessible constructors. The elements in a StructuredArray
@@ -28,7 +29,7 @@ import java.util.Collection;
  *     layout of the implemented data structure would be possible on optimizing JVMs. Doing so provides for the
  *     possibility of matching access speed benefits that exist in data structures with similar semantics that
  *     are supported in other languages (e.g. an array of structs in C-like languages). While fully functional
- *     on all JVM implementation (of Java SE 6 and above), the semantics are such that a JVM may transparently
+ *     on all JVM implementation (of Java SE 7 and above), the semantics are such that a JVM may transparently
  *     optimise the implementation to provide a compact contiguous layout that facilitates consistent stride
  *     based memory access and dead-reckoning (as opposed to de-referenced) access to elements
  *
