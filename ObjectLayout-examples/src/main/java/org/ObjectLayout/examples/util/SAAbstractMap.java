@@ -309,9 +309,28 @@ public abstract class SAAbstractMap<K,V> implements Map<K,V> {
      * Each of these fields are initialized to contain an instance of the
      * appropriate view the first time this view is requested.  The views are
      * stateless, so there's no reason to create more than one of each.
+     *
+     * <p>Since there is no synchronization performed while accessing these fields,
+     * it is expected that java.util.Map view classes using these fields have
+     * no non-final fields (or any fields at all except for outer-this). Adhering
+     * to this rule would make the races on these fields benign.
+     *
+     * <p>It is also imperative that implementations read the field only once,
+     * as in:
+     *
+     * <pre> {@code
+     * public Set<K> keySet() {
+     *   Set<K> ks = keySet;  // single racy read
+     *   if (ks == null) {
+     *     ks = new KeySet();
+     *     keySet = ks;
+     *   }
+     *   return ks;
+     * }
+     *}</pre>
      */
-    transient volatile Set<K>        keySet;
-    transient volatile Collection<V> values;
+    transient Set<K>        keySet;
+    transient Collection<V> values;
 
     /**
      * {@inheritDoc}
@@ -330,8 +349,9 @@ public abstract class SAAbstractMap<K,V> implements Map<K,V> {
      * method will not all return the same set.
      */
     public Set<K> keySet() {
-        if (keySet == null) {
-            keySet = new AbstractSet<K>() {
+        Set<K> ks = keySet;
+        if (ks == null) {
+            ks = new AbstractSet<K>() {
                 public Iterator<K> iterator() {
                     return new Iterator<K>() {
                         private Iterator<Entry<K,V>> i = entrySet().iterator();
@@ -366,8 +386,9 @@ public abstract class SAAbstractMap<K,V> implements Map<K,V> {
                     return SAAbstractMap.this.containsKey(k);
                 }
             };
+            keySet = ks;
         }
-        return keySet;
+        return ks;
     }
 
     /**
@@ -387,8 +408,9 @@ public abstract class SAAbstractMap<K,V> implements Map<K,V> {
      * method will not all return the same collection.
      */
     public Collection<V> values() {
-        if (values == null) {
-            values = new AbstractCollection<V>() {
+        Collection<V> vals = values;
+        if (vals == null) {
+            vals = new AbstractCollection<V>() {
                 public Iterator<V> iterator() {
                     return new Iterator<V>() {
                         private Iterator<Entry<K,V>> i = entrySet().iterator();
@@ -423,8 +445,9 @@ public abstract class SAAbstractMap<K,V> implements Map<K,V> {
                     return SAAbstractMap.this.containsValue(v);
                 }
             };
+            values = vals;
         }
-        return values;
+        return vals;
     }
 
     public abstract Set<Entry<K,V>> entrySet();
@@ -587,7 +610,7 @@ public abstract class SAAbstractMap<K,V> implements Map<K,V> {
      * @since 1.6
      */
     public static class SimpleEntry<K,V>
-            implements Entry<K,V>, java.io.Serializable
+        implements Entry<K,V>, java.io.Serializable
     {
         private static final long serialVersionUID = -8499721149061103585L;
 
@@ -691,7 +714,7 @@ public abstract class SAAbstractMap<K,V> implements Map<K,V> {
          */
         public int hashCode() {
             return (key   == null ? 0 :   key.hashCode()) ^
-                    (value == null ? 0 : value.hashCode());
+                   (value == null ? 0 : value.hashCode());
         }
 
         /**
@@ -717,7 +740,7 @@ public abstract class SAAbstractMap<K,V> implements Map<K,V> {
      * @since 1.6
      */
     public static class SimpleImmutableEntry<K,V>
-            implements Entry<K,V>, java.io.Serializable
+        implements Entry<K,V>, java.io.Serializable
     {
         private static final long serialVersionUID = 7138329143949025153L;
 
@@ -822,7 +845,7 @@ public abstract class SAAbstractMap<K,V> implements Map<K,V> {
          */
         public int hashCode() {
             return (key   == null ? 0 :   key.hashCode()) ^
-                    (value == null ? 0 : value.hashCode());
+                   (value == null ? 0 : value.hashCode());
         }
 
         /**
