@@ -40,6 +40,11 @@ public class PrimitiveArrayModel<S extends AbstractPrimitiveArray> extends Abstr
         return true;
     }
 
+    @Override
+    public int hashCode() {
+        return getArrayClass().hashCode() ^ ((int)(getLength()^(getLength()>>>32)));
+    }
+
     /**
      * Get the class of the PrimitiveArray modeled by this model
      * @return the class of the PrimitiveArray modeled by this model

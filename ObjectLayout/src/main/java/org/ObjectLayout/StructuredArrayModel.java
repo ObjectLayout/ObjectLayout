@@ -84,7 +84,7 @@ public class StructuredArrayModel<S extends AbstractStructuredArray<T>, T> exten
             return false;
         }
         if ((getPrimitiveSubArrayModel() == null) && (otherArray.getPrimitiveSubArrayModel() == null)) {
-            if ((getStructuredSubArrayModel() == null) &&(otherArray.getStructuredSubArrayModel() == null)) {
+            if ((getStructuredSubArrayModel() == null) && (otherArray.getStructuredSubArrayModel() == null)) {
                 return true;
             }
             // if either structuredSubArrayModel is null, they are not equal. Otherwise, compare subArrays:
@@ -99,6 +99,11 @@ public class StructuredArrayModel<S extends AbstractStructuredArray<T>, T> exten
         return (getPrimitiveSubArrayModel() != null) &&
                 (otherArray.getPrimitiveSubArrayModel() != null) &&
                 getPrimitiveSubArrayModel().equals(otherArray.getPrimitiveSubArrayModel());
+    }
+
+    @Override
+    public int hashCode() {
+        return getArrayClass().hashCode() ^ getElementClass().hashCode() ^ ((int)(getLength()^(getLength()>>>32)));
     }
 
     /**
