@@ -55,7 +55,7 @@ public class Octagon {
     public Octagon(final String color, final long centerX, final long centerY, final long radius) {
         this.color = color;
         for (int i = 0; i < 8; i++) {
-            Double angleRad = i * (2.0 * Math.PI) / 8.0;
+            double angleRad = i * (2.0 * Math.PI) / 8.0;
             long x = centerX + (long)(Math.cos(angleRad) * radius);
             long y = centerY + (long)(Math.sin(angleRad) * radius);
             points.get(i).setX(x);

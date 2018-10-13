@@ -1017,7 +1017,7 @@ public class SAHashMap<K,V> extends SAAbstractMap<K,V>
                     for (Node<K,V> e = tab.get(i); ((e != null) && !e.isSentinel()) ; e = e.next)
                         action.accept(e.key);
                 }
-                if (modCount != mc)
+                if (modCount != mc)         // lgtm [java/constant-comparison]
                     throw new ConcurrentModificationException();
             }
         }
@@ -1124,7 +1124,7 @@ public class SAHashMap<K,V> extends SAAbstractMap<K,V>
                     for (Node<K,V> e = tab.get(i); ((e != null) && !e.isSentinel()); e = e.next)
                         action.accept(e);
                 }
-                if (modCount != mc)
+                if (modCount != mc)     // lgtm [java/constant-comparison]
                     throw new ConcurrentModificationException();
             }
         }
@@ -1347,7 +1347,7 @@ public class SAHashMap<K,V> extends SAAbstractMap<K,V>
                 removeNode(hash, key, null, false, true);
             return v;
         }
-        if (value != null) {
+//        if (value != null) {
 //            if (t != null)
 //                t.putTreeVal(this, tab, hash, key, value);
 //            else {
@@ -1360,7 +1360,7 @@ public class SAHashMap<K,V> extends SAAbstractMap<K,V>
             ++modCount;
             ++size;
             afterNodeInsertion(true);
-        }
+//        }
         return value;
     }
 
@@ -1375,7 +1375,7 @@ public class SAHashMap<K,V> extends SAAbstractMap<K,V>
                 for (Node<K,V> e = tab.get(i); ((e != null) && !e.isSentinel()); e = e.next)
                     action.accept(e.key, e.value);
             }
-            if (modCount != mc)
+            if (modCount != mc)         // lgtm [java/constant-comparison]
                 throw new ConcurrentModificationException();
         }
     }
@@ -1392,7 +1392,7 @@ public class SAHashMap<K,V> extends SAAbstractMap<K,V>
                     e.value = function.apply(e.key, e.value);
                 }
             }
-            if (modCount != mc)
+            if (modCount != mc)         // lgtm [java/constant-comparison]
                 throw new ConcurrentModificationException();
         }
     }
